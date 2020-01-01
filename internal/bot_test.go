@@ -664,6 +664,30 @@ func TestConfigureQP_Postpone_DelPostpone(t *testing.T) {
 	}, t)
 }
 
+func TestConfigureQP_Empty_DelPostpone(t *testing.T) {
+	RunQuickPanelTc_Error(PrefTableTestCase{
+		[]string{""},
+		fake.NewUpdCmdFake(-1, tg.NewCmd("panel_del", []string{"postpone"})),
+		[]tg.Row{},
+	}, "Button doesn't exist in user's prefs: postpone", t)
+}
+
+func TestConfigureQP_Empty_DelUnknown(t *testing.T) {
+	RunQuickPanelTc_Error(PrefTableTestCase{
+		[]string{""},
+		fake.NewUpdCmdFake(-1, tg.NewCmd("panel_del", []string{"wrong"})),
+		[]tg.Row{},
+	}, "Button doesn't exist in user's prefs: wrong", t)
+}
+
+func TestConfigureQP_Empty_AddUnknown(t *testing.T) {
+	RunQuickPanelTc_Error(PrefTableTestCase{
+		[]string{""},
+		fake.NewUpdCmdFake(-1, tg.NewCmd("panel_add", []string{"wrong"})),
+		[]tg.Row{},
+	}, "Unknown command: wrong", t)
+}
+
 func RunQuickPanelTc(tc PrefTableTestCase, t *testing.T) {
 	var cnf = &userconfig.DefaultConfig
 	for _, opt := range tc.initial_opts {
@@ -676,6 +700,16 @@ func RunQuickPanelTc(tc PrefTableTestCase, t *testing.T) {
 	r.NoError(err)
 	r.Equal("Configure quick panel (➕ = add to panel, ➖ = to remove): ", tgram.SentText)
 	r.Equal(tg.NewKeyboard(tc.buttons), tgram.SentKeyboard)
+}
+
+func RunQuickPanelTc_Error(tc PrefTableTestCase, expectedErr string, t *testing.T) {
+	var cnf = &userconfig.DefaultConfig
+	for _, opt := range tc.initial_opts {
+		cnf.AddPanelButton(opt)
+	}
+	var bot, _, r = makeBot(t, cnf)
+	var actualErr = bot.Reply(tc.cmd_to_execute)
+	r.EqualError(actualErr, expectedErr)
 }
 
 type PrefTableTestCase struct {
