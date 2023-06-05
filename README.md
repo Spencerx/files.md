@@ -8,6 +8,13 @@
 make install && make run
 ```
 
+or
+
+```bash
+go get ./.. && go run 
+```
+
+
 ### Overarching design principles
 - `Clarity`: The code’s purpose and rationale is clear to the reader.
 - `Simplicity`: The code accomplishes its goal in the simplest way possible.
