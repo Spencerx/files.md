@@ -14,6 +14,7 @@ import (
 	"zakirullin/dumpbot/internal"
 	"zakirullin/dumpbot/internal/db"
 	"zakirullin/dumpbot/internal/fs"
+	"zakirullin/dumpbot/internal/i18n"
 	"zakirullin/dumpbot/internal/sched"
 	"zakirullin/dumpbot/pkg/tg"
 )
@@ -25,6 +26,11 @@ func main() {
 	err := godotenv.Load()
 	if err != nil {
 		panic(fmt.Sprintf("Error loading .env file: %s\n", err))
+	}
+
+	err = i18n.Load("assets/i18n/ru.json")
+	if err != nil {
+		panic(fmt.Sprintf("Error loading i18n: %s\n", err))
 	}
 
 	api, err := tgbotapi.NewBotAPI(os.Getenv("BOT_API_TOKEN"))

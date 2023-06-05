@@ -11,6 +11,7 @@ import (
 
 	"zakirullin/dumpbot/internal/db"
 	"zakirullin/dumpbot/internal/fs"
+	"zakirullin/dumpbot/internal/i18n"
 	"zakirullin/dumpbot/internal/sched"
 	"zakirullin/dumpbot/internal/stats"
 	"zakirullin/dumpbot/pkg/str"
@@ -681,6 +682,7 @@ func (b *Bot) showChecklist(params []string) error {
 }
 
 func (b *Bot) showToday(params []string) error {
+	fmt.Printf(i18n.Tr("hi"))
 	return b.showList([]string{fs.DirToday})
 }
 
@@ -1119,6 +1121,7 @@ func (b *Bot) todayLabel() (string, error) {
 	}
 	todo := len(tasks)
 
+	// TODO add POMODORO label
 	// TODO add short labels
 	label := "🌴 You don't have any tasks!"
 	if todo > 0 {
