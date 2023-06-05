@@ -1,7 +1,8 @@
 *
 !.gitignore
--read-
-_bin_
-inbox
-today
-later
+!-read-
+!_bin_
+!_img_
+!inbox
+!today
+!later
