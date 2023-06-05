@@ -50,7 +50,7 @@ func main() {
 		for {
 			select {
 			case <-ticker.C:
-				moveDueTasksForToday(redis, tg)
+				moveDueTasksToToday(redis, tg)
 			case <-quit:
 				ticker.Stop()
 				return
@@ -86,7 +86,7 @@ func main() {
 	}
 }
 
-func moveDueTasksForToday(redis *miniredis.Miniredis, tg *tg.TG) {
+func moveDueTasksToToday(redis *miniredis.Miniredis, tg *tg.TG) {
 	ids, err := fs.AllUserIDs()
 	if err != nil {
 		fmt.Printf("moveDueTasksForToday: %s\n", err)
@@ -107,7 +107,7 @@ func moveDueTasksForToday(redis *miniredis.Miniredis, tg *tg.TG) {
 		}
 		for filename, cron := range sch {
 			if time.Now().Unix() >= cron.RunAt {
-				err = moveTaskForToday(filename, fsys)
+				err = moveTaskToToday(filename, fsys)
 				if err != nil {
 					slog.Error(fmt.Sprintf("moveDueTasksForToday: can't move: %s", err))
 				}
@@ -130,7 +130,7 @@ func moveDueTasksForToday(redis *miniredis.Miniredis, tg *tg.TG) {
 	}
 }
 
-func moveTaskForToday(filename string, fsys *fs.FS) error {
+func moveTaskToToday(filename string, fsys *fs.FS) error {
 	dirsToLookFor := []string{fs.DirLater, fs.DirTrash}
 	for _, dir := range dirsToLookFor {
 		filenames, err := fsys.FilesAndDirs(dir)
