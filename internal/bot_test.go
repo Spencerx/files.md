@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/alicebob/miniredis/v2"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 
