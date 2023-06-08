@@ -64,10 +64,28 @@ func (tg *TG) Del(userID int64, msgID int) error {
 	return nil
 }
 
+// AnswerCallbackQuery answers to incoming callbacks (keyboard's button clicks)
 func (tg *TG) AnswerCallbackQuery(queryID string, text string) error {
 	_, err := tg.api.Send(tgbotapi.CallbackConfig{CallbackQueryID: queryID, Text: text})
 	if err != nil {
-		return fmt.Errorf("tg.AsnwerCallbackQuery: %w", err)
+		return fmt.Errorf("tg can't answer to callback query: %w", err)
+	}
+
+	return nil
+}
+
+// AnswerInlineQuery answers to incoming inline queries (@BotMention <text>)
+func (tg *TG) AnswerInlineQuery(queryID string, results []interface{}, cacheTime int, offset string) error {
+	config := tgbotapi.InlineConfig{
+		InlineQueryID: queryID,
+		Results:       results,
+		CacheTime:     cacheTime,
+		NextOffset:    offset,
+		IsPersonal:    true,
+	}
+	_, err := tg.api.Send(config)
+	if err != nil {
+		return fmt.Errorf("tg can't answer to inline query: %w", err)
 	}
 
 	return nil

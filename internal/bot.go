@@ -23,8 +23,9 @@ var now = func() time.Time {
 }
 
 const (
-	maxTitleLength   = 100
-	pomodoroDuration = 10 * time.Second
+	maxTitleLength         = 100
+	pomodoroDuration       = 10 * time.Second
+	inlineResultsCacheTime = 15 // seconds
 )
 
 // TGInterface provides a simple interface to telegram API
@@ -33,6 +34,7 @@ type TGInterface interface {
 	Edit(userID int64, msgID int, text string, kb *tg.Keyboard, markup string) error
 	Del(userID int64, msgID int) error
 	AnswerCallbackQuery(queryID string, text string) error
+	AnswerInlineQuery(queryID string, results []interface{}, cacheTime int, offset string) error
 }
 
 // UpdInterface represents incoming user updates
@@ -246,9 +248,24 @@ func (b *Bot) saveForward(u UpdInterface) error {
 }
 
 func (b *Bot) replyToInlineQuery(u UpdInterface) error {
-	//query, _ := u.InlineQuery()
+	//query, ok := u.InlineQuery()
+	//if !ok {
+	//	return nil
+	//}
 
-	//_ = search
+	fmt.Println("here")
+	//matchedNotes, err := b.fs.SearchNotes(query)
+	//if err != nil {
+	//	return fmt.Errorf("can't search for notes: %w", err)
+	//}
+	//
+	//var results []interface{}
+	//for id, note := range matchedNotes {
+	//	results = append(results, tgbotapi.NewInlineQueryResultArticle(strconv.Itoa(id), note.Title, note.Title))
+	//}
+	//
+	//queryID, _ := u.InlineQueryID()
+	//b.tg.AnswerInlineQuery(queryID, results, inlineResultsCacheTime, "")
 
 	// TODO move to config
 	//imgUrl := "http://inmind.tech/img/notev14.png"

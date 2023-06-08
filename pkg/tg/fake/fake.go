@@ -88,3 +88,7 @@ func (f *TG) Del(userID int64, msgID int) error {
 func (f *TG) AnswerCallbackQuery(queryID string, text string) error {
 	return nil
 }
+
+func (f *TG) AnswerInlineQuery(queryID string, results []interface{}, cacheTime int, offset string) error {
+	return nil
+}
