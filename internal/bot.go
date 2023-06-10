@@ -3,20 +3,19 @@ package internal
 import (
 	"errors"
 	"fmt"
-	"golang.org/x/exp/slog"
 	"strconv"
 	"strings"
 	"time"
 
-	"zakirullin/dumpbot/internal/userconfig"
-
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"golang.org/x/exp/slog"
 
 	"zakirullin/dumpbot/internal/db"
 	"zakirullin/dumpbot/internal/fs"
 	"zakirullin/dumpbot/internal/i18n"
 	"zakirullin/dumpbot/internal/sched"
 	"zakirullin/dumpbot/internal/stats"
+	"zakirullin/dumpbot/internal/userconfig"
 	"zakirullin/dumpbot/pkg/str"
 	"zakirullin/dumpbot/pkg/tg"
 )

@@ -260,14 +260,17 @@ func (fs FS) Dirs() ([]File, error) {
 	return dirs, nil
 }
 
+// Maybe we should replace / with | and use filepath.Clean by default
+// instead of throwing an error up the stack
 func (fs FS) isSafe(path string) bool {
-	if strings.Contains(path, "../data") {
-		return false
-	}
-
 	if !strings.HasPrefix(path, fs.rootPath) {
 		return false
 	}
+
+	//// Path traversal attack
+	//if strings.Contains(path, "..") {
+	//	return false
+	//}
 
 	return true
 }
