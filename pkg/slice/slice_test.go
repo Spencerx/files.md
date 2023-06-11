@@ -20,7 +20,6 @@ func TestSmallerChunk(t *testing.T) {
 	if !reflect.DeepEqual(chunks, expectedChunks) {
 		t.Errorf("Test case 1 failed. Expected chunks: %v, got: %v", expectedChunks, chunks)
 	}
-
 }
 
 func TestLargerChunk(t *testing.T) {
