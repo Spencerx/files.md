@@ -7,6 +7,7 @@ It's just a subset of the whole state machine
 stateDiagram    
     added: Added to Default Dir
     daySelectorOnce: Day Selector
+    daySelectorRecurrent: <a href="state_machine.md">Recurrent Day Selector</a>
     today: Today 
     later: Later
     state cmdType <<choice>>
@@ -26,8 +27,8 @@ stateDiagram
 
     later --> today : "Tasks for today" clicked
     today --> later : "Tasks for later" clicked
-    today --> today : Oneline task clicked
-    later --> later : Oneline task clicked
+    today --> today : One-line task clicked
+    later --> later : One-line task clicked
     today  --> multiline_task : Multiline task clicked
     later --> multiline_task : Multiline task clicked
 
