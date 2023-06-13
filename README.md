@@ -48,10 +48,11 @@ $ git checkout -b feature/feature_name
 Any file can be uniquely identified by filename and dir. We only support one level of nesting.
 
 ## ADRs (Architecture Decision Records)
-- everywhere where we have user input - we should use fs.hash, otherwise we get long filenames, and tg returns `INVALID_DATA` error (callbackData max 64 bytes)
-- introduced `db.go`. We had to abstract away Redis anyway (otherwise it's hard to write tests)
-- db.go doesn't store userID (we often use it separately...) Do we?
-- we can't ucfist filename in fs.Put - what if that was user-created file (outside the bot), i.e. it comes with lowercase
+- Markdown to HTML conversion. User can have invalid Markdown in his notes, and TG API would fail to send invalid Markdown directly. So, we need to convert user's Markdown to HTML first and then send it via Telegram as HTML.
+- File hashing. Everywhere where we have user input - we should use fs.hash, otherwise we get long filenames, and tg returns `INVALID_DATA` error (callbackData max 64 bytes)
+- Introduced `db.go`. We had to abstract away Redis anyway (otherwise it's hard to write tests)
+- Package db.go doesn't store userID (we often use it separately...) Do we?
+- We can't ucfist filename in fs.Put - what if that was user-created file (outside the bot), i.e. it comes with lowercase
 
 ## Why schedule is stored at once
 To lessen roundrip to redis (is it tangible at all?)
