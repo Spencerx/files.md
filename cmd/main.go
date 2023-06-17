@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"time"
@@ -88,6 +89,10 @@ func main() {
 					slog.Error("Bot panic", "err", err)
 				}
 			}()
+
+			var updJSON []byte
+			updJSON, _ = json.Marshal(upd)
+			slog.Debug("Bot update: ", "upd", updJSON)
 
 			u := tg.NewUpd(upd)
 			userID := u.UserID()
