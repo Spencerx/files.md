@@ -98,3 +98,27 @@ func TestSpacedItalic(t *testing.T) {
 	expectedMarkdown := "Header\nLeverage *one Minute Praising* instead"
 	r.Equal(expectedMarkdown, markdown)
 }
+
+func TestEmoji(t *testing.T) {
+	r := require.New(t)
+
+	text := "👍b"
+	var messageEntities = []tgbotapi.MessageEntity{
+		{Type: "bold", Offset: 2, Length: 1},
+	}
+
+	md := EntitiesToMarkdown(text, messageEntities)
+	r.Equal("👍**b**", md)
+}
+
+func TestSkinEmoji(t *testing.T) {
+	r := require.New(t)
+
+	text := "🤘🏾b"
+	var messageEntities = []tgbotapi.MessageEntity{
+		{Type: "bold", Offset: 4, Length: 1},
+	}
+
+	md := EntitiesToMarkdown(text, messageEntities)
+	r.Equal("🤘🏾**b**", md)
+}
