@@ -123,7 +123,9 @@ func main() {
 			}
 			defer func() {
 				err = userconf.Save(userconfPath)
-				slog.Error("Bot error: can't save userconfig", "err", err)
+				if err != nil {
+					slog.Error("Bot error: can't save userconfig", "err", err)
+				}
 			}()
 
 			bot := internal.NewBot(userID, telegram, userFS, db.NewDB(redis), userconf)
