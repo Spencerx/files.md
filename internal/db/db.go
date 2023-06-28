@@ -14,7 +14,6 @@ import (
 const (
 	redisLastKeyboardMsgID               = "last_keyboard"
 	redisReplaceWithDefaultKeyboardMsgID = "candidate_message_id"
-	redisSchedule                        = "schedule"
 	redisInputExpectation                = "input_expectation"
 )
 
@@ -46,9 +45,6 @@ func (db *DB) SetLastKeyboardMsgID(userID int64, ID int) error {
 
 func (db *DB) DelLastKeyboardMsgID(userID int64) error {
 	db.redis.Del(db.key(userID, redisLastKeyboardMsgID))
-	//if err {
-	//	return fmt.Errorf("db.DelLastKeyboardMsgID: %w", err)
-	//}
 
 	return nil
 }
