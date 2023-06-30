@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"zakirullin/dumpbot/pkg/tg"
+	"zakirullin/stuffbot/pkg/tg"
 
 	"golang.org/x/exp/slog"
 )
@@ -56,14 +56,14 @@ func (p *WorldClockPlugin) ExecutePlugin(msgText string) bool {
 
 	time, err = p.parseTime(msgText)
 	if err == nil {
-		message = p.buildMessage(time, fmtTimestamp)
+		message = p.buildMessage(time, p.fmtTimestamp)
 		p.tg.Send(p.userID, message, nil, tg.MarkupHTML)
 		return true
 	}
 
 	time, err = p.parseTimestamp(msgText)
 	if err == nil {
-		message = p.buildMessage(time, fmtTime)
+		message = p.buildMessage(time, p.fmtTime)
 		p.tg.Send(p.userID, message, nil, tg.MarkupHTML)
 		return true
 	}
@@ -76,7 +76,7 @@ func (p *WorldClockPlugin) parseTimestamp(message string) (time.Time, error) {
 	if err == nil && timestamp > 999999 {
 		return time.Unix(timestamp, 0).UTC(), nil
 	}
-	return time.Time{}, errors.New("Not a valid timestamp")
+	return time.Time{}, errors.New("Invalid timestamp")
 }
 
 func (p *WorldClockPlugin) parseTime(message string) (time.Time, error) {
@@ -84,28 +84,25 @@ func (p *WorldClockPlugin) parseTime(message string) (time.Time, error) {
 	if err == nil {
 		return parsedTime.UTC(), nil
 	}
-	return time.Time{}, errors.New("Not a valid time")
+	return time.Time{}, errors.New("Invalid time")
 }
 
 func (p *WorldClockPlugin) buildMessage(t time.Time, formatter func(time.Time) string) string {
 	messageParts := make([]string, len(locations))
 
-	for _, locName := range locationNames {
+	for i, locName := range locationNames {
 		timeInLocation := t.In(locations[locName])
 		formattedTime := formatter(timeInLocation)
-		messageParts = append(
-			messageParts,
-			fmt.Sprintf("%v %v %v", locationIcons[locName], formattedTime, locName),
-		)
+		messageParts[i] = fmt.Sprintf("%v %v %v", locationIcons[locName], formattedTime, locName)
 	}
 	return strings.Join(messageParts, "\n")
 }
 
-func fmtTime(t time.Time) string {
+func (p *WorldClockPlugin) fmtTime(t time.Time) string {
 	return t.Format(timeFormat)
 }
 
-func fmtTimestamp(t time.Time) string {
+func (p *WorldClockPlugin) fmtTimestamp(t time.Time) string {
 	_, offset := t.Zone()
 	timestampInLoc := t.Add(time.Duration(offset) * time.Second).Unix()
 	return strconv.FormatInt(timestampInLoc, 10)

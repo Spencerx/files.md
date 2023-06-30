@@ -66,6 +66,7 @@ func NewBot(userID int64, tg tg.TGInterface, fs *fs.FS, db *db.DB, conf *usercon
 		tg:     tg,
 		fs:     fs,
 		db:     db,
+		conf:   conf,
 		plugins: []BotPluginInterface{
 			plugins.NewWorldClockPlugin(userID, tg),
 		},
