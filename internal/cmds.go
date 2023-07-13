@@ -30,4 +30,8 @@ const (
 	cmdSchedule           = "sc"
 	cmdPomodoro           = "pomodoro"
 	cmdShowRecurringKB    = "recur_kb"
+	cmdShowSettings       = "settings"
+	cmdConfigurePanel     = "configure_panel"
+	cmdAddToPanel         = "panel_add"
+	cmdDelFromPanel       = "panel_del"
 )
