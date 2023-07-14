@@ -186,7 +186,6 @@ func TestToday(t *testing.T) {
 	r.Equal(tg.NewKeyboard([]tg.Row{
 		tg.NewBtn("First task", tg.NewCmd("comp", []string{"today", "0824149b387"})),
 		tg.NewBtn("Second task", tg.NewCmd("comp", []string{"today", "2940ad40402"})),
-		tg.NewRow(tg.NewBtn("📝", tg.NewCmd("docs", []string{}))),
 		tg.NewBtn("⏳ Later", tg.NewCmd("later", []string{"later"}))},
 	), tgram.SentKeyboard)
 }
@@ -215,7 +214,6 @@ func TestLater(t *testing.T) {
 	r.Equal(tg.NewKeyboard([]tg.Row{
 		tg.NewBtn("First task", tg.NewCmd("comp", []string{"later", "0824149b387"})),
 		tg.NewBtn("Second task", tg.NewCmd("comp", []string{"later", "2940ad40402"})),
-		tg.NewRow(tg.NewBtn("📝", tg.NewCmd("docs", []string{}))),
 		tg.NewBtn("🏠 Today", tg.NewCmd("today", []string{"today"}))},
 	), tgram.SentKeyboard)
 
@@ -246,7 +244,6 @@ func TestTodayWithMultilineTasks(t *testing.T) {
 	r.Equal(tg.NewKeyboard([]tg.Row{
 		tg.NewBtn("👀 First task", tg.NewCmd("task", []string{"today", "0824149b387"})),
 		tg.NewBtn("Second task", tg.NewCmd("comp", []string{"today", "2940ad40402"})),
-		tg.NewRow(tg.NewBtn("📝", tg.NewCmd("docs", []string{}))),
 		tg.NewBtn("⏳ Later", tg.NewCmd("later", []string{"later"}))},
 	), tgram.SentKeyboard)
 }

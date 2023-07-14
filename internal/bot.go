@@ -485,7 +485,10 @@ func (b *Bot) showList(params []string) error {
 		kb.AddRow(btn)
 	}
 
-	kb.AddRow(b.quickPanelRow())
+	var quickPanelRow = b.quickPanelRow()
+	if len(quickPanelRow) > 0 {
+		kb.AddRow(quickPanelRow)
+	}
 	kb.AddRow(tg.NewBtn(oppositeLabel, tg.NewCmd(oppositeDir, []string{oppositeDir})))
 
 	var msg string
@@ -1368,9 +1371,7 @@ func (b *Bot) showConfigureQuickPanel(params []string) error {
 		if b.conf.HasQuickPanelCmd(cmd) {
 			kb.AddRow(
 				tg.NewRow(
-					tg.NewBtn(pair.emoji, tg.NewCmd("", nil)),
-					tg.NewBtn(pair.desc, tg.NewCmd("", nil)),
-					tg.NewBtn("➖", tg.NewCmd(cmdDelFromPanel, []string{cmd}))))
+					tg.NewBtn(pair.emoji+" "+pair.desc+" ➖", tg.NewCmd(cmdDelFromPanel, []string{cmd}))))
 			enabled = append(enabled, cmd)
 		}
 	}
@@ -1391,9 +1392,7 @@ func (b *Bot) showConfigureQuickPanel(params []string) error {
 		// Command is not enabled, so add it to disabled list
 		if !cmdEnabled {
 			kb.AddRow(tg.NewRow(
-				tg.NewBtn(pair.emoji, tg.NewCmd("", nil)),
-				tg.NewBtn(pair.desc, tg.NewCmd("", nil)),
-				tg.NewBtn("➕", tg.NewCmd(cmdAddToPanel, []string{cmd}))))
+				tg.NewBtn(pair.emoji+" "+pair.desc+" ➕", tg.NewCmd(cmdAddToPanel, []string{cmd}))))
 		}
 	}
 
