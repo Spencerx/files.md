@@ -111,7 +111,6 @@ func (fs FS) Exists(dir, filename string) (bool, error) {
 	return exists, nil
 }
 
-// TODO refactor to read
 func (fs FS) Content(dir, filename string) (string, error) {
 	path := fs.Path(dir, filename)
 	if !fs.isSafe(path) {
@@ -344,7 +343,7 @@ func (fs FS) RestoreContent(dir, filename string) (string, error) {
 		msg = fmt.Sprintf("%s\n%s", title, content)
 	}
 
-	return msg, nil
+	return strings.TrimSpace(msg), nil
 }
 
 func IsChecklistItem(filename string) bool {

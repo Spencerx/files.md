@@ -52,6 +52,7 @@ $ git checkout -b feature/feature_name
 Any file can be uniquely identified by filename and dir. We only support one level of nesting.
 
 ## ADRs (Architecture Decision Records)
+- Gave up on AST parsing/rendering. 
 - Adherence to Tolerant Reader principles. If enconunter gibberish during parsing - we skip it, but if we encounter flags of valid data (let's say `###`) but data itself is invalid - we panic. TODO preserve gibberish during read-write cycle.
 - Usage of https://github.com/rivo/uniseg. In Go, strings are read-only slices of bytes. They can be turned into Unicode code points using the for loop or by casting: []rune(str). However, multiple code points may be combined into one user-perceived character or what the Unicode specification calls "grapheme cluster". For example, white circle "⚪" has two runes, but one grapheme cluster.
 - Markdown to HTML conversion. User can have invalid Markdown in his notes, and TG API would fail to send invalid Markdown directly. So, we need to convert user's Markdown to HTML first and then send it via Telegram as HTML.
