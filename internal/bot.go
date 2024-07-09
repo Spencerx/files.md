@@ -403,11 +403,11 @@ func (b *Bot) showMove(params []string) error {
 
 	btns := []tg.Btn{
 		tg.NewBtn(i18n.StrForTomorrow, tg.NewCmd(constants.CmdSchedule, []string{filenameHash, txt.I64(sched.Tomorrow()), ""})),
-		tg.NewBtn(i18n.StrForLater,    tg.NewCmd(constants.CmdMove, []string{fs.DirToday, filenameHash, "later"})),
-		tg.NewBtn(i18n.StrForDay,      tg.NewCmd(constants.CmdShowChooseDay, []string{filenameHash})),
-		tg.NewBtn(i18n.StrToFile,      tg.NewCmd(constants.CmdShowToFile, []string{filenameHash})),
-		tg.NewBtn(i18n.StrToChecklist, 	tg.NewCmd(constants.CmdShowToChecklist, []string{filenameHash})),
-		tg.NewBtn(i18n.StrToJournal,   tg.NewCmd(constants.CmdMoveJournal, []string{fs.DirToday, filenameHash})),
+		tg.NewBtn(i18n.StrForLater, tg.NewCmd(constants.CmdMove, []string{fs.DirToday, filenameHash, "later"})),
+		tg.NewBtn(i18n.StrForDay, tg.NewCmd(constants.CmdShowChooseDay, []string{filenameHash})),
+		tg.NewBtn(i18n.StrToFile, tg.NewCmd(constants.CmdShowToFile, []string{filenameHash})),
+		tg.NewBtn(i18n.StrToChecklist, tg.NewCmd(constants.CmdShowToChecklist, []string{filenameHash})),
+		tg.NewBtn(i18n.StrToJournal, tg.NewCmd(constants.CmdMoveJournal, []string{fs.DirToday, filenameHash})),
 	}
 
 	var kb tg.Keyboard

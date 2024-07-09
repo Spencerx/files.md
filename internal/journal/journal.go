@@ -37,10 +37,9 @@ func AddRecord(botFs *fs.FS, noteFilename string) error {
 		md = txt.NormNewLines(md)
 		md = strings.TrimSpace(md)
 		if len(md) != 0 {
-			md += "\n"	
+			md += "\n"
 		}
 	}
-
 
 	header := fmt.Sprintf("#### %d, %s", now().Day(), now().Weekday())
 	if !strings.Contains(md, header) {
