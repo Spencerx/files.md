@@ -18,7 +18,6 @@ type Configuration struct {
 var Config Configuration
 
 func LoadConfig() error {
-
 	if err := envconfig.Process("", &Config); err != nil {
 		return fmt.Errorf("can't load config: %w", err)
 	}
