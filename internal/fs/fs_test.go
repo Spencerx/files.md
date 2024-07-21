@@ -408,3 +408,14 @@ func TestIsSafePathTraversalAttackWithRelativePaths(t *testing.T) {
 	r.False(fs.isSafe("./a/../b"))
 	r.False(fs.isSafe("./a/../../b"))
 }
+
+func TestUnhashRootDirectory(t *testing.T) {
+	r := require.New(t)
+
+	fs, _ := NewFS(".", afero.NewMemMapFs())
+	unhashed, err := fs.Unhash("", "")
+	r.NoError(err)
+
+	r.Equal("", unhashed)
+
+}

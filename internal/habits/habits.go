@@ -31,7 +31,8 @@ var (
 	now                   = time.Now
 )
 
-// What if there's no file? Create empty from ./habits
+// TODO What if there's no file? Create empty from ./habits
+// Habit name => [day1 => 1, day2 => 0, ..., day365 => 0]
 func Habits(userFS *fs.FS, year int) (map[string]Year, error) {
 	filename := fmt.Sprintf("%d Habits.md", year)
 	habitsStr, err := userFS.Read(fs.DirInsights, filename)

@@ -814,3 +814,55 @@ type PrefTableTestCase struct {
 	cmd_to_execute *fake.Upd
 	buttons        []tg.Row
 }
+
+func TestShowToFileNoDirs(t *testing.T) {
+	r := require.New(t)
+
+	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	r.NoError(err)
+	err = userFS.Write("today", "Note.md", "")
+	r.NoError(err)
+
+	redis, err := miniredis.Run()
+	r.NoError(err)
+	defer redis.Close()
+
+	tgram := fake.NewTG()
+
+	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
+	err = bot.showToFile([]string{"345fbd7ab08"})
+	r.NoError(err)
+
+	r.Equal(tg.NewKeyboard([]tg.Row{
+		tg.NewRow(tg.NewBtn("Note", tg.NewCmd("mv_to_file", []string{"345fbd7ab08", "345fbd7ab08"}))),
+	},
+	), tgram.SentKeyboard)
+}
+
+func TestShowToFile(t *testing.T) {
+	r := require.New(t)
+
+	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	r.NoError(err)
+	err = userFS.Write("today", "Note.md", "")
+	r.NoError(err)
+	err = userFS.MakeDir("dir")
+	r.NoError(err)
+
+	redis, err := miniredis.Run()
+	r.NoError(err)
+	defer redis.Close()
+
+	tgram := fake.NewTG()
+
+	bot := NewBot(-1, tgram, userFS, db.NewDB(redis), &userconfig.DefaultConfig)
+	err = bot.showToFile([]string{"345fbd7ab08"})
+	r.NoError(err)
+
+	r.Equal(tg.NewKeyboard([]tg.Row{
+		tg.NewRow(tg.NewBtn("dir", tg.NewCmd("mv", []string{"", "345fbd7ab08", "dir"}))),
+		tg.NewBtn("Or choose a file:", tg.NewCmd("nothing", nil)),
+		tg.NewRow(tg.NewBtn("Note", tg.NewCmd("mv_to_file", []string{"345fbd7ab08", "345fbd7ab08"}))),
+	},
+	), tgram.SentKeyboard)
+}

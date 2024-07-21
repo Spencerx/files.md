@@ -1,6 +1,7 @@
 // Package fs provides a simple interface for files manipulations.
 // Bot users should have all their artefacts saved in cross-platform
 // plain text files, that's why we chose a filesystem over some database.
+// Each user should have its own isolated root folder.
 package fs
 
 import (
@@ -229,6 +230,10 @@ func Filename(title string) string {
 }
 
 func (fs FS) Unhash(dir, filenameHash string) (string, error) {
+	if dir == "" && filenameHash == "" {
+		return "", nil
+	}
+
 	// TODO add safety checks
 
 	filenames, err := fs.FilesAndDirs(dir)
@@ -410,11 +415,11 @@ func (fs FS) SearchNotes(query string) ([]File, error) {
 	}
 
 	var supposedDir, search string
-	exists, err := fs.Exists("", query)
+	dirExists, err := fs.Exists("", query)
 	if err != nil {
 		return nil, fmt.Errorf("search notes: %w", err)
 	}
-	if exists {
+	if dirExists {
 		supposedDir = query
 	} else {
 		parts := strings.SplitN(query, " ", 2)
@@ -424,7 +429,7 @@ func (fs FS) SearchNotes(query string) ([]File, error) {
 		}
 	}
 
-	// Find all similar notes directories
+	// Find match by notes directory name
 	var searchInDirs []string
 	notesDirs, err := fs.FilesAndDirs("")
 	if err != nil {
@@ -484,7 +489,7 @@ func ExcludeChecklists(dirs []File) []File {
 func ExcludeSystemDirs(dirs []File) []File {
 	var newDirs []File
 	for _, dir := range dirs {
-		if slices.Contains([]string{DirImg, DirArchive, DirJournal}, dir.Name) {
+		if slices.Contains([]string{DirImg, DirArchive, DirJournal, DirInsights}, dir.Name) {
 			continue
 		}
 

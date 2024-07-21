@@ -24,8 +24,6 @@ import (
 	"zakirullin/stuffbot/pkg/txt"
 )
 
-var now = time.Now
-
 var botPlugins []BotPluginInterface
 
 const (
@@ -87,6 +85,8 @@ var quickPanelAvailableCmds = []CmdMeta{
 	{constants.CmdShowShopChecklist, "Shop", i18n.Emoji("Shop")},
 }
 
+var now = time.Now
+
 func NewBot(userID int64, tg TGInterface, fs *fs.FS, db *db.DB, conf *userconfig.Config) *Bot {
 	botPlugins = append(botPlugins,
 		plugins.NewWorldClockPlugin(userID, tg),
@@ -98,7 +98,7 @@ func NewBot(userID int64, tg TGInterface, fs *fs.FS, db *db.DB, conf *userconfig
 // Reply to incoming text message or command (inline queries aren't supported yet)
 func (b *Bot) Reply(u UpdInterface) error {
 	if _, ok := u.InlineQueryID(); ok {
-		return b.replyToInlineQuery(u)
+		return b.search(u)
 	}
 
 	for _, plugin := range botPlugins {
@@ -183,6 +183,7 @@ func (b *Bot) handlers() map[string]func([]string) error {
 		constants.CmdConfigurePanel:     b.showConfigureQuickPanel,
 		constants.CmdAddToPanel:         b.addToPanel,
 		constants.CmdDelFromPonel:       b.delFromPanel,
+		// Used for button-like separators
 		constants.CmdDoNothing:          func(s []string) error { return nil },
 	}
 }
@@ -295,7 +296,7 @@ func (b *Bot) saveForward(u UpdInterface) error {
 	return b.showMove([]string{fs.Hash(filename)})
 }
 
-func (b *Bot) replyToInlineQuery(u UpdInterface) error {
+func (b *Bot) search(u UpdInterface) error {
 	query, ok := u.InlineQuery()
 	if !ok {
 		return nil
@@ -678,7 +679,8 @@ func (b *Bot) showRenameFile(params []string) error {
 		tg.NewRow(tg.NewBtn(i18n.StrBtnBack, tg.NewCmd(dir, []string{dir}))),
 	})
 
-	err = b.db.SetInputExpectation(b.userID, tg.NewCmd(constants.CmdMove, []string{dir, filename, dir, "%s"}))
+	cmd := tg.NewCmd(constants.CmdMove, []string{dir, filename, dir, "%s"})
+	err = b.db.SetInputExpectation(b.userID, cmd)
 	if err != nil {
 		return fmt.Errorf("show rename: can't set input expectation: %w", err)
 	}
@@ -1164,7 +1166,7 @@ func (b *Bot) showToFile(params []string) error {
 	if err != nil {
 		return fmt.Errorf("to file dialog: %w", err)
 	}
-	shouldAddSeparator := len(fileBtns) > 0
+	shouldAddSeparator := len(dirBtns) > 0 && len(fileBtns) > 0
 	if shouldAddSeparator {
 		kb.AddRow(tg.NewBtn("Or choose a file:", tg.NewCmd(constants.CmdDoNothing, nil)))
 	}
@@ -1230,7 +1232,7 @@ func (b *Bot) toFileKeyboardButtons(filenameHash string) ([]tg.Btn, error) {
 
 func (b *Bot) toDirKeyboardButtons(filenameHash string) ([]tg.Btn, error) {
 	newBtn := func(dir string) tg.Btn {
-		return tg.NewBtn(dir, tg.NewCmd(constants.CmdMove, []string{fs.DirInbox, filenameHash, dir}))
+		return tg.NewBtn(dir, tg.NewCmd(constants.CmdMove, []string{"", filenameHash, dir}))
 	}
 
 	dirs, err := b.fs.FilesAndDirs("")
