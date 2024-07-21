@@ -43,6 +43,5 @@ const (
 
 	CmdInlineQuerySearchEveryWhere = "search"
 	CmdInlineQuerySearchInDir      = "search_dir"
-
 	CmdWebAppHabits = "habits"
 )

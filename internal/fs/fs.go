@@ -224,12 +224,6 @@ func (fs FS) Rename(oldDir, oldFilename, newDir, newFilename string) error {
 	return nil
 }
 
-func Filename(title string) string {
-	// colon is a reserved character in Windows, so we need to replace it with Modifier Letter Colon (U+A789)
-	title = strings.ReplaceAll(title, ":", "꞉")
-	return txt.Ucfirst(title) + ".md"
-}
-
 func (fs FS) Unhash(dir, filenameHash string) (string, error) {
 	if dir == DirRoot && filenameHash == DirRoot {
 		return DirRoot, nil
@@ -366,11 +360,6 @@ func (fs FS) isSafe(path string) (bool, error) {
 	return true, nil
 }
 
-func (fs FS) md5(filename string) string {
-	hash := md5.Sum([]byte(filename))
-	return hex.EncodeToString(hash[:])[:11]
-}
-
 func (fs FS) IsMultiline(dir, filename string) (bool, error) {
 	path := fs.Path(dir, filename)
 	stat, err := fs.backend.Stat(path)
@@ -381,26 +370,21 @@ func (fs FS) IsMultiline(dir, filename string) (bool, error) {
 	return stat.Size() > 0, nil
 }
 
+func (fs FS) md5(filename string) string {
+	hash := md5.Sum([]byte(filename))
+	return hex.EncodeToString(hash[:])[:11]
+}
+
+func Filename(title string) string {
+	// colon is a reserved character in Windows, so we need to replace it with Modifier Letter Colon (U+A789)
+	title = strings.ReplaceAll(title, ":", "꞉")
+	return txt.Ucfirst(title) + ".md"
+}
+
 func IsChecklistItem(filename string) bool {
 	validChecklistItem := regexp.MustCompile(`^-.*?-(.+)`)
 
 	return validChecklistItem.MatchString(filename)
-}
-
-func Title(filename string) string {
-	// Once we move our items from checklists to _archive_,
-	// they got named like -checklist-itemName
-	stripChecklistChars := regexp.MustCompile(`^-.*?-(.+)`)
-	title := stripChecklistChars.ReplaceAllString(filename, "$1")
-	title = strings.TrimPrefix(strings.TrimSuffix(title, "-"), "-")
-	title = txt.Ucfirst(strings.TrimSuffix(strings.TrimSpace(title), ".md"))
-
-	return title
-}
-
-func Hash(filename string) string {
-	hash := md5.Sum([]byte(filename))
-	return hex.EncodeToString(hash[:])[:11]
 }
 
 // SearchNotes performs search among all user notes
@@ -473,6 +457,53 @@ func (fs FS) SearchNotes(query string) ([]File, error) {
 
 	return matchedNotes, nil
 }
+
+// TODO check if safe
+// Touch updates an existing file's access and modification times.
+// If there's no such file it creates an empty file.
+func (fs FS) Touch(dir, filename string) error {
+	exists, err := fs.Exists(dir, filename)
+	if err != nil {
+		return fmt.Errorf("touch: %w", err)
+	}
+	if exists {
+		err = fs.backend.Chtimes(fs.Path(dir, filename), time.Now(), time.Now())
+		if err != nil {
+			return fmt.Errorf("touch: can't update file's ctime: %w", err)
+		}
+		return nil
+	}
+	err = fs.Write(dir, filename, "")
+	if err != nil {
+		return fmt.Errorf("touch: can't create empty file: %w", err)
+	}
+	return nil
+}
+
+func (fs FS) Path(dir, filename string) string {
+	dir = strings.ReplaceAll(dir, "/", "|")
+	filename = strings.ReplaceAll(filename, "/", "|")
+	p := path.Join(fs.rootPath, dir, filename)
+
+	return p
+}
+
+func Title(filename string) string {
+	// Once we move our items from checklists to _archive_,
+	// they got named like -checklist-itemName
+	stripChecklistChars := regexp.MustCompile(`^-.*?-(.+)`)
+	title := stripChecklistChars.ReplaceAllString(filename, "$1")
+	title = strings.TrimPrefix(strings.TrimSuffix(title, "-"), "-")
+	title = txt.Ucfirst(strings.TrimSuffix(strings.TrimSpace(title), ".md"))
+
+	return title
+}
+
+func Hash(filename string) string {
+	hash := md5.Sum([]byte(filename))
+	return hex.EncodeToString(hash[:])[:11]
+}
+
 
 func ExcludeChecklists(dirs []File) []File {
 	var newDirs []File
@@ -603,36 +634,6 @@ func SortByCtime(entries []File) []File {
 	})
 
 	return entries
-}
-
-// TODO check if safe
-// Touch updates an existing file's access and modification times.
-// If there's no such file it creates an empty file.
-func (fs FS) Touch(dir, filename string) error {
-	exists, err := fs.Exists(dir, filename)
-	if err != nil {
-		return fmt.Errorf("touch: %w", err)
-	}
-	if exists {
-		err = fs.backend.Chtimes(fs.Path(dir, filename), time.Now(), time.Now())
-		if err != nil {
-			return fmt.Errorf("touch: can't update file's ctime: %w", err)
-		}
-		return nil
-	}
-	err = fs.Write(dir, filename, "")
-	if err != nil {
-		return fmt.Errorf("touch: can't create empty file: %w", err)
-	}
-	return nil
-}
-
-func (fs FS) Path(dir, filename string) string {
-	dir = strings.ReplaceAll(dir, "/", "|")
-	filename = strings.ReplaceAll(filename, "/", "|")
-	p := path.Join(fs.rootPath, dir, filename)
-
-	return p
 }
 
 func Exists(path string) (bool, error) {
