@@ -1408,7 +1408,7 @@ func (b *Bot) showToChecklist(params []string) error {
 	return nil
 }
 
-func (b *Bot) toFileKeyboardButtons(filenameHash string) ([]tg.Btn, error) {
+func (b *Bot) toFileKeyboardButtons(newFilenameHash string) ([]tg.Btn, error) {
 	files, err := b.fs.FilesAndDirs(fs.DirRoot)
 	if err != nil {
 		return nil, fmt.Errorf("to doc keyboard: %w", err)
@@ -1419,9 +1419,10 @@ func (b *Bot) toFileKeyboardButtons(filenameHash string) ([]tg.Btn, error) {
 	}
 
 	var buttons []tg.Btn
-	newBtn := func(title, fileHash string) tg.Btn {
+	newBtn := func(title, existingFilenameHash string) tg.Btn {
 		title = fmt.Sprintf("%s %s", i18n.Emoji("file"), title)
-		return tg.NewBtn(title, tg.NewCmd(constants.CmdMoveToExistingFile, []string{filenameHash, fileHash}))
+		params := []string{newFilenameHash, existingFilenameHash}
+		return tg.NewBtn(title, tg.NewCmd(constants.CmdMoveToExistingFile, params))
 	}
 	for _, file := range files {
 		buttons = append(buttons, newBtn(file.Title, file.Hash))
