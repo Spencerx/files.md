@@ -92,6 +92,15 @@ func TestSaveFromTextMsgWithSanitize(t *testing.T) {
 	content, err := bot.fs.Read("today", "New task{|}.md")
 	r.NoError(err)
 	r.Equal("New task/", content)
+
+	err = bot.Answer(fake.NewUpdCmdFake(-1, tg.NewCmd("today", nil)))
+	r.NoError(err)
+
+	r.Equal("<b>1</b> left", tgram.LastSentText)
+	r.Equal(tg.NewKeyboard([]tg.Row{
+		tg.NewBtn("👀 New task/", tg.NewCmd("task", []string{"today", "cd59b9e6546"})),
+	},
+	), tgram.SentKeyboard)
 }
 
 func TestAddMultilineTaskToToday(t *testing.T) {
