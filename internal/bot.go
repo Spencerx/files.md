@@ -1033,7 +1033,6 @@ func (b *Bot) moveToNewDir(params []string) error {
 	return b.move([]string{fs.DirInbox, filenameHash, dir})
 }
 
-// TODO add header
 func (b *Bot) moveToExistingFile(params []string) error {
 	// TODO Remove input expectations if dir is not list
 	filenameHash := params[0]
@@ -1070,13 +1069,10 @@ func (b *Bot) moveToExistingFile(params []string) error {
 	// We can tolerate this
 	_ = b.fs.Del(fs.DirRoot, filename)
 
-	existingContent = strings.TrimSpace(existingContent)
-	if len(existingContent) > 0 {
-		existingContent += "\n"
-	}
-	existingContent += fileContent
+	header := fmt.Sprintf("### %s", now().Format("02.01.2006 Monday"))
+	content := txt.InsertTextAfterHeader(existingContent, header, fileContent)
 
-	err = b.fs.Write(fs.DirRoot, existingFilename, existingContent)
+	err = b.fs.Write(fs.DirRoot, existingFilename, content)
 	if err != nil {
 		return fmt.Errorf("move to file: can't save file: %w", err)
 	}

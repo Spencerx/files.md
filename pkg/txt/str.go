@@ -86,8 +86,11 @@ func SplitTextIntoChunks(text string, maxLen int) []string {
 
 func InsertTextAfterHeader(existingContent, header, newContent string) string {
 	if !strings.Contains(existingContent, header) {
-		return fmt.Sprintf("%s\n%s\n%s", header, newContent, existingContent)
+		return strings.TrimSpace(fmt.Sprintf("%s\n%s\n%s", header, newContent, existingContent))
 	}
 
-	return strings.Replace(existingContent, header, fmt.Sprintf("%s\n%s", header, newContent), 1)
+	headerAndContent := fmt.Sprintf("%s\n%s", header, newContent)
+	content := strings.Replace(existingContent, header, headerAndContent, 1)
+
+	return strings.TrimSpace(content)
 }
