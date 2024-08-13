@@ -25,7 +25,7 @@ import (
 func MarkdownToHtml(markdown string) string {
 	// Define the regex patterns for different markdown elements
 	codeBlockPattern := regexp.MustCompile("```([\\s\\S]*?)```")
-	inlindeCodePattern := regexp.MustCompile("`([.+?]*?)`")
+	inlineCodePattern := regexp.MustCompile("`(.+?)`")
 	boldPattern := regexp.MustCompile(`(\*\*|__)(.+?)(\*\*|__)`)
 	italicPattern := regexp.MustCompile(`(\*|_)(.+?)(\*|_)`)
 	headerPattern := regexp.MustCompile(`(#{1,6})\s*(.+)`)
@@ -36,13 +36,9 @@ func MarkdownToHtml(markdown string) string {
 		placeholder := fmt.Sprintf("{{{CODEBLOCK_%d}}}", i)
 		markdown = strings.Replace(markdown, codeBlock[0], placeholder, 1)
 	}
-	inlineCodeBlocks := inlindeCodePattern.FindAllStringSubmatch(markdown, -1)
-	for i, inlineCode := range inlineCodeBlocks {
-		placeholder := fmt.Sprintf("{{{INLINECODE_%d}}}", i)
-		markdown = strings.Replace(markdown, inlineCode[0], placeholder, 1)
-	}
 
 	// Replace markdown elements with HTML tags
+	markdown = inlineCodePattern.ReplaceAllString(markdown, `<code>$1</code>`)
 	markdown = boldPattern.ReplaceAllString(markdown, `<b>$2</b>`)
 	markdown = italicPattern.ReplaceAllString(markdown, `<i>$2</i>`)
 	markdown = headerPattern.ReplaceAllString(markdown, `<b>$2</b>`)
@@ -53,11 +49,6 @@ func MarkdownToHtml(markdown string) string {
 		codeHTML := fmt.Sprintf("<pre>%s</pre>", codeBlock[1])
 		markdown = strings.Replace(markdown, placeholder, codeHTML, 1)
 	}
-	for i, inlineCode := range inlineCodeBlocks {
-		placeholder := fmt.Sprintf("{{{INLINECODE_%d}}}", i)
-		codeHTML := fmt.Sprintf("<code>%s</code>", inlineCode[1])
-		markdown = strings.Replace(markdown, placeholder, codeHTML, 1)
-	}
-	
+
 	return markdown
 }
