@@ -24,22 +24,22 @@ import (
 // <blockquote expandable>Expandable block quotation started\nExpandable block quotation continued\nExpandable block quotation continued\nHidden by default part of the block quotation started\nExpandable block quotation continued\nThe last line of the block quotation</blockquote>
 func MarkdownToHtml(markdown string) string {
 	// Define the regex patterns for different markdown elements
-	inlindeCodePattern := regexp.MustCompile("`([.+?]*?)`")
 	codeBlockPattern := regexp.MustCompile("```([\\s\\S]*?)```")
+	inlindeCodePattern := regexp.MustCompile("`([.+?]*?)`")
 	boldPattern := regexp.MustCompile(`(\*\*|__)(.+?)(\*\*|__)`)
 	italicPattern := regexp.MustCompile(`(\*|_)(.+?)(\*|_)`)
 	headerPattern := regexp.MustCompile(`(#{1,6})\s*(.+)`)
 
 	// Find and replace code blocks with placeholders
-	inlineCodeBlocks := inlindeCodePattern.FindAllStringSubmatch(markdown, -1)
-	for i, inlineCode := range inlineCodeBlocks {
-		placeholder := fmt.Sprintf("{{{INLINECODE_%d}}}", i)
-		markdown = strings.Replace(markdown, inlineCode[0], placeholder, 1)
-	}
 	codeBlocks := codeBlockPattern.FindAllStringSubmatch(markdown, -1)
 	for i, codeBlock := range codeBlocks {
 		placeholder := fmt.Sprintf("{{{CODEBLOCK_%d}}}", i)
 		markdown = strings.Replace(markdown, codeBlock[0], placeholder, 1)
+	}
+	inlineCodeBlocks := inlindeCodePattern.FindAllStringSubmatch(markdown, -1)
+	for i, inlineCode := range inlineCodeBlocks {
+		placeholder := fmt.Sprintf("{{{INLINECODE_%d}}}", i)
+		markdown = strings.Replace(markdown, inlineCode[0], placeholder, 1)
 	}
 
 	// Replace markdown elements with HTML tags
@@ -47,17 +47,17 @@ func MarkdownToHtml(markdown string) string {
 	markdown = italicPattern.ReplaceAllString(markdown, `<i>$2</i>`)
 	markdown = headerPattern.ReplaceAllString(markdown, `<b>$2</b>`)
 
-	// Replace placeholders with the original code blocks wrapped in <code> tags
-	for i, inlineCode := range inlineCodeBlocks {
-		placeholder := fmt.Sprintf("{{{INLINECODE_%d}}}", i)
-		codeHTML := fmt.Sprintf("<code>%s</code>", inlineCode[1])
-		markdown = strings.Replace(markdown, placeholder, codeHTML, 1)
-	}
+	// Replace placeholders with the original code blocks wrapped in appropriate tags
 	for i, codeBlock := range codeBlocks {
 		placeholder := fmt.Sprintf("{{{CODEBLOCK_%d}}}", i)
 		codeHTML := fmt.Sprintf("<pre>%s</pre>", codeBlock[1])
 		markdown = strings.Replace(markdown, placeholder, codeHTML, 1)
 	}
-
+	for i, inlineCode := range inlineCodeBlocks {
+		placeholder := fmt.Sprintf("{{{INLINECODE_%d}}}", i)
+		codeHTML := fmt.Sprintf("<code>%s</code>", inlineCode[1])
+		markdown = strings.Replace(markdown, placeholder, codeHTML, 1)
+	}
+	
 	return markdown
 }
