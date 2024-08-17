@@ -643,7 +643,7 @@ func (b *Bot) showLaterTasks(params []string) error {
 	}
 	kb.AddRow(tg.NewBtn(i18n.StrToday, tg.NewCmd(consts.CmdShowToday, nil)))
 
-	msg := b.tr("⏳ Your tasks for later:")
+	msg := b.tr("⏳ Your tasks for <b>later</b>:")
 	err = b.show(msg, &kb, tg.MarkupHTML)
 	if err != nil {
 		return fmt.Errorf("show list: %w", err)
