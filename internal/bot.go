@@ -623,14 +623,19 @@ func (b *Bot) showLaterTasks(params []string) error {
 	}
 
 	var kb tg.Keyboard
+	scheduled := sched.FormattedSchedule(b.conf)
 	for _, file := range files {
 		var btn tg.Btn
+		name := i18n.Emojify(fs.UnsanitizeFilename(file.Title))
+		if scheduledAt, ok := scheduled[name]; ok {
+			name = txt.Emoji(scheduledAt, name)
+		}
 		if file.IsMultiline {
 			cmd := tg.NewCmd(consts.CmdShowMultilineTask, []string{fs.DirLater, fs.Hash(file.Name)})
-			btn = tg.NewBtn(txt.Emoji(i18n.Emoji("eyes"), fs.UnsanitizeFilename(file.Title)), cmd)
+			btn = tg.NewBtn(txt.Emoji(i18n.Emoji("eyes"), name), cmd)
 		} else {
 			cmd := tg.NewCmd(consts.CmdComplete, []string{fs.DirLater, fs.Hash(file.Name)})
-			btn = tg.NewBtn(i18n.Emojify(fs.UnsanitizeFilename(file.Title)), cmd)
+			btn = tg.NewBtn(name, cmd)
 		}
 
 		kb.AddRow(btn)
@@ -1145,6 +1150,7 @@ func (b *Bot) moveToChecklist(params []string) error {
 		return fmt.Errorf("move to checklist: %w", err)
 	}
 
+	// TODO multiline splitting seems to be broken
 	if isMultiline && config.ShouldSplitChecklist(checklist) {
 		content, err := b.fs.Read(fs.DirToday, filename)
 		if err != nil {

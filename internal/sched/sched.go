@@ -75,6 +75,16 @@ func ScheduleReport(conf *userconfig.Config) string {
 	return strings.TrimSpace(report)
 }
 
+func FormattedSchedule(conf *userconfig.Config) map[string]string {
+	formatted := make(map[string]string)
+	scheduledTasks := conf.Schedules()
+	for _, task := range scheduledTasks {
+		formatted[task.Filename] = formatTaskDate(task.ScheduledAt)
+	}
+
+	return formatted
+}
+
 // TODO write tests for that
 func formatTaskDate(scheduledAt int64) string {
 	today := now().Truncate(24 * time.Hour)
