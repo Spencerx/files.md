@@ -572,15 +572,14 @@ func (b *Bot) quickBtns() []tg.Btn {
 	// We iterate through hardcoded panel to preserve order of buttons in UI
 	for _, cmd := range b.conf.QuickCmds() {
 		for _, btn := range userconfig.AvailableQuickBtns {
-			if btn.Cmd == cmd {
-				params := []string{}
-				if btn.Cmd == consts.CmdWebAppHabits {
+			if btn.Cmd.Name == cmd {
+				if btn.Cmd.Name == consts.CmdWebAppHabits {
 					habitsUrl := fmt.Sprintf("%s/habits_v2/%d", config.Config.Host, b.userID)
-					params = []string{habitsUrl}
+					btn.Cmd.Params = []string{habitsUrl}
 				}
+				btn.Name = i18n.Emoji(btn.Name)
 
-				button := tg.NewBtn(btn.Emoji, tg.NewCustomCmd(btn.Cmd, params, btn.CmdType))
-				quickPanelRow = append(quickPanelRow, button)
+				quickPanelRow = append(quickPanelRow, btn)
 				break
 			}
 		}
@@ -1557,19 +1556,19 @@ func (b *Bot) showConfigureQuickBtns(params []string) error {
 	var kb tg.Keyboard
 
 	// Step 1. Append all buttons that are already chosen by user
-	var usedBtns []string
+	var usedCmds []string
 
 	// We iterate through hardcoded panel to preserve order of buttons in UI
 	for _, cmd := range b.conf.QuickCmds() {
 		for _, btn := range userconfig.AvailableQuickBtns {
-			if btn.Cmd != cmd {
+			if btn.Cmd.Name != cmd {
 				continue
 			}
 
-			name := fmt.Sprintf("%s %s %s", btn.Emoji, btn.Description, userconfig.QuickPanelDelButton)
-			enabledCmd := tg.NewCmd(consts.CmdDelFromPonel, []string{btn.Cmd})
+			name := fmt.Sprintf("%s %s %s", i18n.Emoji(btn.Name), btn.Name, userconfig.QuickPanelDelButton)
+			enabledCmd := tg.NewCmd(consts.CmdDelFromPonel, []string{btn.Cmd.Name})
 			kb.AddRow(tg.NewBtn(name, enabledCmd))
-			usedBtns = append(usedBtns, cmd)
+			usedCmds = append(usedCmds, cmd)
 			break
 		}
 	}
@@ -1579,18 +1578,18 @@ func (b *Bot) showConfigureQuickBtns(params []string) error {
 	// Step 2. now, let's fill buttons that are not disabled...
 	for _, btn := range userconfig.AvailableQuickBtns {
 		// Check if command is enabled
-		btnUsed := false
-		for _, usedBtn := range usedBtns {
-			if btn.Cmd == usedBtn {
-				btnUsed = true
+		cmdUsed := false
+		for _, usedCmd := range usedCmds {
+			if btn.Cmd.Name == usedCmd {
+				cmdUsed = true
 			}
 		}
-		if btnUsed {
+		if cmdUsed {
 			continue
 		}
 		// Command is not enabled, so add it to disabled list
-		name := fmt.Sprintf("%s %s %s", btn.Emoji, btn.Description, userconfig.QuickPanelAddButton)
-		disabledCmd := tg.NewCmd(consts.CmdAddToPanel, []string{btn.Cmd})
+		name := fmt.Sprintf("%s %s %s", i18n.Emoji(btn.Name), btn.Name, userconfig.QuickPanelAddButton)
+		disabledCmd := tg.NewCmd(consts.CmdAddToPanel, []string{btn.Cmd.Name})
 		kb.AddRow(tg.NewBtn(name, disabledCmd))
 	}
 
@@ -1615,7 +1614,7 @@ func (b *Bot) addToPanel(params []string) error {
 	// Search whether a command is valid
 	found := false
 	for _, btn := range userconfig.AvailableQuickBtns {
-		if btn.Cmd == params[0] {
+		if btn.Cmd.Name == params[0] {
 			found = true
 			break
 		}

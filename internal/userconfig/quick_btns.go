@@ -1,39 +1,26 @@
 package userconfig
 
 import (
-	"zakirullin/stuffbot/i18n"
 	"zakirullin/stuffbot/internal/consts"
 	"zakirullin/stuffbot/pkg/tg"
 )
 
-type QuickBtn struct {
-	Cmd         string
-	CmdType     string
-	Emoji       string
-	Description string
-}
-
 var AvailableQuickBtns = []tg.Btn{
-	//tg.NewBtn("Later", tg.NewCmd(consts.)),
-	NewQuickBtn(consts.CmdLater, tg.CmdTypeCallback, i18n.Emoji("Later"), "Later"),
-	NewQuickBtn(consts.CmdInlineQuerySearchEveryWhere, tg.CmdTypeInlineQueryCurrentChat, i18n.Emoji("Search"), "Search"),
-	NewQuickBtn(consts.CmdShowFiles, tg.CmdTypeCallback, i18n.Emoji("Files"), "Files"),
-	NewQuickBtn(consts.CmdShowChecklists, tg.CmdTypeCallback, i18n.Emoji("Checklists"), "Checklists"),
-	NewQuickBtn(consts.CmdShowPostpone, tg.CmdTypeCallback, i18n.Emoji("Postpone"), "Postpone"),
-	NewQuickBtn(consts.CmdShowReadChecklist, tg.CmdTypeCallback, i18n.Emoji("Read"), "Read"),
-	NewQuickBtn(consts.CmdShowWatchChecklist, tg.CmdTypeCallback, i18n.Emoji("Watch"), "Watch"),
-	NewQuickBtn(consts.CmdShowShopChecklist, tg.CmdTypeCallback, i18n.Emoji("Shop"), "Shop"),
-	NewQuickBtn(consts.CmdWebAppHabits, tg.CmdTypeWebApp, i18n.Emoji("Habits"), "Habits"),
+	tg.NewBtn("Later", tg.NewCmd(consts.CmdLater, nil)),
+	tg.NewBtn("Search", tg.NewCustomCmd(consts.CmdInlineQuerySearchEveryWhere, nil, tg.CmdTypeInlineQueryCurrentChat)),
+	tg.NewBtn("Files", tg.NewCmd(consts.CmdShowFiles, nil)),
+	tg.NewBtn("Checklists", tg.NewCmd(consts.CmdShowChecklists, nil)),
+	tg.NewBtn("Postpone", tg.NewCmd(consts.CmdShowPostpone, nil)),
+	tg.NewBtn("Read", tg.NewCmd(consts.CmdShowReadChecklist, nil)),
+	tg.NewBtn("Watch", tg.NewCmd(consts.CmdShowWatchChecklist, nil)),
+	tg.NewBtn("Shop", tg.NewCmd(consts.CmdShowShopChecklist, nil)),
+	tg.NewBtn("Habits", tg.NewCustomCmd(consts.CmdWebAppHabits, nil, tg.CmdTypeWebApp)),
 }
 
 var (
 	QuickPanelAddButton = "➕"
 	QuickPanelDelButton = "➖"
 )
-
-func NewQuickBtn(cmd, cmdType, emoji, description string) QuickBtn {
-	return QuickBtn{cmd, cmdType, emoji, description}
-}
 
 func (c *Config) AddQuickBtn(button string) bool {
 	// Does this button already exist?

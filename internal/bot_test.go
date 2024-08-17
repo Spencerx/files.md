@@ -442,9 +442,9 @@ func TestTodayQuickMenuFilled(t *testing.T) {
 	r.Equal(tg.NewKeyboard([]tg.Row{
 		tg.NewBtn("First task", tg.NewCmd("c", []string{"today", "0824149b387"})),
 		tg.NewRow(
-			tg.NewBtn("📄", tg.NewCmd("files", []string{})),
-			tg.NewBtn("☑️", tg.NewCmd("checklists", []string{})),
-			tg.NewBtn("🦥", tg.NewCmd("postpone", []string{})),
+			tg.NewBtn("📄", tg.NewCmd("files", nil)),
+			tg.NewBtn("☑️", tg.NewCmd("checklists", nil)),
+			tg.NewBtn("🦥", tg.NewCmd("postpone", nil)),
 		),
 	},
 	), tgram.SentKeyboard)
