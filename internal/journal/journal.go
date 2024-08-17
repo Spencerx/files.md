@@ -14,7 +14,7 @@ import (
 
 var now = time.Now
 
-// AddRecord adds a record for the current day
+// AddRecord adds a record for the current day.
 // Creates a file if there's no one for the current month
 func AddRecord(userFS *fs.FS, noteFilename string) error {
 	record, err := userFS.Read(fs.DirToday, noteFilename)
@@ -50,10 +50,11 @@ func AddRecord(userFS *fs.FS, noteFilename string) error {
 		md += todayHeader() + "\n"
 	}
 
-	pattern := `(!\[\[.*?\]\]\s+)(.*)`
-	re := regexp.MustCompile(pattern)
+	imgPattern := `(!\[\[.*?\]\]\s+)(.*)`
+	re := regexp.MustCompile(imgPattern)
 	matches := re.FindStringSubmatch(record)
 	if len(matches) > 2 {
+		// If there's an image - place text under the image
 		modifiedText := fmt.Sprintf("%s%s ", matches[1], now().Format("`15:04`"))
 		record = strings.Replace(record, matches[1], modifiedText, 1)
 		record = fmt.Sprintf("%s\n", strings.TrimSpace(record))

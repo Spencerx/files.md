@@ -629,7 +629,7 @@ func (b *Bot) showLaterTasks(params []string) error {
 		var btn tg.Btn
 		name := i18n.Emojify(fs.UnsanitizeFilename(file.Title))
 		if scheduledAt, ok := scheduled[file.Name]; ok {
-			name = fmt.Sprintf("[%s] %s", scheduledAt, name)
+			name = fmt.Sprintf("%s [%s]", name, scheduledAt)
 		}
 		if file.IsMultiline {
 			cmd := tg.NewCmd(consts.CmdShowMultilineTask, []string{fs.DirLater, fs.Hash(file.Name)})
