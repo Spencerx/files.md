@@ -1303,7 +1303,7 @@ func (b *Bot) showChecklistItem(params []string) error {
 		return fmt.Errorf("show checklist item: %w", err)
 	}
 
-	return b.showChecklist([]string{dirHash})
+	return nil
 }
 
 func (b *Bot) schedule(params []string) error {
