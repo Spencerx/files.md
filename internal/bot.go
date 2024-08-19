@@ -1658,9 +1658,9 @@ func (b *Bot) showRecurringKeyboard(params []string) error {
 	}
 	kb.AddRow(tg.NewBtn(i18n.StrToday, tg.NewCmd(consts.CmdShowToday, nil)))
 
-	err := b.show(i18n.Tr("Configure schedule"), kb, tg.MarkupHTML)
+	err := b.show(i18n.Tr("Repeat the task"), kb, tg.MarkupHTML)
 	if err != nil {
-		return fmt.Errorf("showRecuringKeyBoard : %w", err)
+		return fmt.Errorf("showRecuringKeyboard : %w", err)
 	}
 
 	return nil

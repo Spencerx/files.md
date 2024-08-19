@@ -71,11 +71,13 @@ func MoveDueTasksToToday(
 				if err != nil {
 					slog.Error("schedule worker: can't move to later", "err", err)
 				}
+				// We don't need to save the schedule, since we didn't modify it
 				continue
 			} else {
 				continue
 			}
 
+			// Removing the task from the schedule
 			bot := internal.NewBot(userID, telegram, userFS, db.NewDB(), userconf)
 			_ = bot.ShowTodayTasks(nil)
 
@@ -87,7 +89,7 @@ func MoveDueTasksToToday(
 			}
 			userconf.DelFromSchedule(schedule.Filename)
 
-			// Schedule a recurring task
+			// Schedule a recurring task if cron is not empty
 			if len(schedule.Cron) != 0 {
 				scheduledAt := sched.Next(schedule.Cron)
 				userconf.AddToSchedule(schedule.Filename, scheduledAt, schedule.Cron)
