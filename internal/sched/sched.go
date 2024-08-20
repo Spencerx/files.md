@@ -44,7 +44,7 @@ func NextExcludeToday(crn string) int64 {
 		panic(fmt.Errorf("invalid cron expression %s: %w", crn, err))
 	}
 
-	return sched.Next(now().UTC().Add(24 * time.Hour)).Unix()
+	return sched.Next(now().Add(24 * time.Hour).UTC()).Unix()
 }
 
 func ScheduleReport(conf *userconfig.Config) string {

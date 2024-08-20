@@ -98,7 +98,6 @@ func MoveDueTasksToToday(
 				scheduledAt := sched.NextExcludeToday(schedule.Cron)
 				userconf.AddToSchedule(schedule.Filename, scheduledAt, schedule.Cron)
 				slog.Debug("Task was rescheduled", "filename", schedule.Filename, "schedule", schedule.Cron, "scheduledAt", scheduledAt)
-				continue
 			}
 
 			err = userconf.Save(userconfPath)
