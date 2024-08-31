@@ -354,13 +354,12 @@ func (fs FS) isSafe(path string) (bool, error) {
 }
 
 func (fs FS) IsMultiline(dir, filename string) (bool, error) {
-	path := fs.UnsafePath(dir, filename)
-	stat, err := fs.backend.Stat(path)
+	content, err := fs.Read(dir, filename)
 	if err != nil {
 		return false, fmt.Errorf("can't check for multiline: %w", err)
 	}
 
-	return stat.Size() > 0, nil
+	return len(content) > 0, nil
 }
 
 func (fs FS) md5(filename string) string {

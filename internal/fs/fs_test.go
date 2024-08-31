@@ -100,6 +100,13 @@ func TestIsMultiline(t *testing.T) {
 	isMultiline, err = fs.IsMultiline("today", "Second task.md")
 	r.NoError(err)
 	r.True(isMultiline)
+
+	err = fs.Write("today", "Third task.md", " \n ")
+	r.NoError(err)
+
+	isMultiline, err = fs.IsMultiline("today", "Third task.md")
+	r.NoError(err)
+	r.False(isMultiline)
 }
 
 func TestGetFilesInDir(t *testing.T) {
