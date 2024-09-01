@@ -1349,7 +1349,8 @@ func (b *Bot) addToRecentFileFromShortcut(params []string) error {
 		return fmt.Errorf("failed to move to recent file: can't add note: %w", err)
 	}
 
-	_, _ = b.tg.Send(b.userID, "Added to "+fs.Title(existingFilename), nil, tg.MarkupHTML)
+	msg := fmt.Sprintf(i18n.Tr("Added to <b>%s</b>"), fs.Title(existingFilename))
+	_, _ = b.tg.Send(b.userID, msg, nil, tg.MarkupHTML)
 
 	return b.ShowTodayTasks(nil)
 }
