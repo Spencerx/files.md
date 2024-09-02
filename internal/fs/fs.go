@@ -414,6 +414,7 @@ func (fs FS) SearchNotes(query string) ([]File, error) {
 	}
 	notesDirs = OnlyNoteDirs(notesDirs)
 	notesDirs = append(notesDirs, NewFile(DirRoot, "", DirRoot, 0, false, true, ""))
+	notesDirs = append(notesDirs, NewFile(DirJournal, Hash(DirJournal), DirJournal, 0, false, true, DirRoot))
 	for _, noteDir := range notesDirs {
 		if strings.HasPrefix(noteDir.Name, supposedDir) {
 			searchInDirs = append(searchInDirs, noteDir.Name)
