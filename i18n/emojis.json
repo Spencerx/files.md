@@ -5949,92 +5949,79 @@
   "📅": [
     "calendar",
     "calendar",
-    "schedule",
     "reschedule"
   ],
   "🕧": [
     "twelve_thirty",
     "time",
     "late",
-    "early",
-    "schedule"
+    "early"
   ],
   "🕐": [
     "one_o_clock",
     "time",
     "late",
-    "early",
-    "schedule"
+    "early"
   ],
   "🕜": [
     "one_thirty",
     "time",
     "late",
-    "early",
-    "schedule"
+    "early"
   ],
   "🕑": [
     "two_o_clock",
     "time",
     "late",
-    "early",
-    "schedule"
+    "early"
   ],
   "🕝": [
     "two_thirty",
     "time",
     "late",
-    "early",
-    "schedule"
+    "early"
   ],
   "🕒": [
     "three_o_clock",
     "time",
     "late",
-    "early",
-    "schedule"
+    "early"
   ],
   "🕞": [
     "three_thirty",
     "time",
     "late",
-    "early",
-    "schedule"
+    "early"
   ],
   "🕓": [
     "four_o_clock",
     "time",
     "late",
-    "early",
-    "schedule"
+    "early"
   ],
   "🕟": [
     "four_thirty",
     "time",
     "late",
-    "early",
-    "schedule"
+    "early"
   ],
   "🕔": [
     "five_o_clock",
     "time",
     "late",
-    "early",
-    "schedule"
+    "early"
   ],
   "🕠": [
     "five_thirty",
     "time",
     "late",
-    "early",
-    "schedule"
+    "early"
   ],
   "🕕": [
     "six_o_clock",
     "time",
     "late",
     "early",
-    "schedule",
     "dawn",
     "dusk"
   ],
@@ -6042,78 +6029,67 @@
     "six_thirty",
     "time",
     "late",
-    "early",
-    "schedule"
+    "early"
   ],
   "🕖": [
     "seven_o_clock",
     "time",
     "late",
-    "early",
-    "schedule"
+    "early"
   ],
   "🕢": [
     "seven_thirty",
     "time",
     "late",
-    "early",
-    "schedule"
+    "early"
   ],
   "🕗": [
     "eight_o_clock",
     "time",
     "late",
-    "early",
-    "schedule"
+    "early"
   ],
   "🕣": [
     "eight_thirty",
     "time",
     "late",
-    "early",
-    "schedule"
+    "early"
   ],
   "🕘": [
     "nine_o_clock",
     "time",
     "late",
-    "early",
-    "schedule"
+    "early"
   ],
   "🕤": [
     "nine_thirty",
     "time",
     "late",
-    "early",
-    "schedule"
+    "early"
   ],
   "🕙": [
     "ten_o_clock",
     "time",
     "late",
-    "early",
-    "schedule"
+    "early"
   ],
   "🕥": [
     "ten_thirty",
     "time",
     "late",
-    "early",
-    "schedule"
+    "early"
   ],
   "🕚": [
     "eleven_o_clock",
     "time",
     "late",
-    "early",
-    "schedule"
+    "early"
   ],
   "🕦": [
     "eleven_thirty",
     "time",
     "late",
-    "early",
-    "schedule"
+    "early"
   ],
   "🌑": [
     "new_moon",
@@ -7967,7 +7943,6 @@
   ],
   "📆": [
     "tear_off_calendar",
-    "schedule",
     "date",
     "planning",
     "move to a day"
@@ -7977,7 +7952,7 @@
     "memo",
     "stationery"
   ],
-  "🗓️": [
+  "🗓": [
     "spiral_calendar",
     "date",
     "schedule",
