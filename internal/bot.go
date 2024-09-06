@@ -765,11 +765,12 @@ func (b *Bot) showFiles(_ []string) error {
 		kb.AddRow(row)
 	}
 	inlineCmd := tg.NewCustomCmd(consts.CmdInlineQuerySearchEveryWhere, nil, tg.CmdTypeInlineQueryCurrentChat)
-	kb.AddRow(tg.NewBtn(i18n.Tr("🔎 Search"), inlineCmd))
 
+	footer := tg.NewRow(tg.NewBtn(i18n.Tr("🔎 Search"), inlineCmd))
 	if !b.cfg.FilesOnlyMode() {
-		kb.AddRow(tg.NewBtn(i18n.StrToday, tg.NewCmd(consts.CmdShowToday, nil)))
+		footer = append(footer, tg.NewBtn(i18n.StrToday, tg.NewCmd(consts.CmdShowToday, nil))
 	}
+	kb.AddRow(footer)
 
 	err = b.show(b.tr("📄 Your files:")+wideSpacer, &kb, tg.MarkupHTML)
 	if err != nil {
