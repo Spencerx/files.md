@@ -587,6 +587,15 @@ func (b *Bot) show(text string, kb *tg.Keyboard, markup string) error {
 func (b *Bot) showMoveTo(params []string) error {
 	filenameHash := params[0]
 	if b.cfg.FilesOnlyMode() {
+		filename, err := b.fs.Unhash(fs.DirToday, filenameHash)
+		if err != nil {
+			return fmt.Errorf("show move to: %w", err)
+		}
+		err = b.fs.Rename(fs.DirToday, filename, fs.DirRoot, filename)
+		if err != nil {
+			return fmt.Errorf("show move to: %w", err)
+		}
+
 		return b.showMoveToFileOrDir([]string{filenameHash})
 	}
 
