@@ -30,7 +30,7 @@ var closeTags = map[string]string{
 
 // MDtoHTML naively converts user's markdown to Telegram-supported subset of HTML.
 // We don't need to implement full-blown AST parser because TG only supports a few HTML tags.
-// Telegram supported tags:
+// Telegram supports the following HTML tags:
 // <b>bold</b>, <strong>bold</strong>
 // <i>italic</i>, <em>italic</em>
 // <u>underline</u>, <ins>underline</ins>
@@ -84,13 +84,19 @@ func MDtoHTML(md string) string {
 	return mdWithCode
 }
 
-// Parser Combinators. Watch an amazing video here: https://youtu.be/dDtZLm7HIJs
+// Parser Combinators. Watch an amazing video here: https://youtu.be/dDtZLm7HIJs.
+// We only support one level of nesting for bold and italic.
 func markdown() Parser {
 	text := notMarkdown()
 
+	italicWithoutBold := or(
+		and(openTerm("*"), and(text, closeTerm("*"))),
+		and(openTerm("_"), and(text, closeTerm("_"))),
+	)
+
 	bold := or(
-		and(openTerm("**"), and(oneOrMore(or(text, italicWithoutBold())), closeTerm("**"))),
-		and(openTerm("__"), and(oneOrMore(or(text, italicWithoutBold())), closeTerm("__"))),
+		and(openTerm("**"), and(oneOrMore(or(text, italicWithoutBold)), closeTerm("**"))),
+		and(openTerm("__"), and(oneOrMore(or(text, italicWithoutBold)), closeTerm("__"))),
 	)
 
 	italic := or(
@@ -101,15 +107,6 @@ func markdown() Parser {
 	span := or(bold, or(italic, text))
 
 	return oneOrMore(span)
-}
-
-func italicWithoutBold() Parser {
-	text := notMarkdown()
-
-	return or(
-		and(openTerm("*"), and(text, closeTerm("*"))),
-		and(openTerm("_"), and(text, closeTerm("_"))),
-	)
 }
 
 func openTerm(t string) Parser {
