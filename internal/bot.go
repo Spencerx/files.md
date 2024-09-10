@@ -134,34 +134,6 @@ func (b *Bot) Answer(u UpdInterface) error {
 		}
 	}
 
-	// Handle commands
-	cmd, err := b.extractCmd(u)
-	if err != nil {
-		return fmt.Errorf("answer: %w", err)
-	}
-	if cmd != nil {
-		if _, ok := u.CallbackQueryID(); !ok {
-			b.delAllKeyboards()
-		}
-
-		handler, ok := b.handlers()[cmd.Name]
-		if !ok {
-			return fmt.Errorf("no such command %s: %w", cmd.Name, errUnknownCommand)
-		}
-		slog.Debug("Command is called", "command", cmd.Name, "params", cmd.Params)
-		err = handler(cmd.Params)
-		if err != nil {
-			return err
-		}
-
-		if callbackQueryID, ok := u.CallbackQueryID(); ok {
-			// We can tolerate an error here, that won't affect UX
-			_ = b.tg.AnswerCallbackQuery(callbackQueryID, "")
-		}
-
-		return nil
-	}
-
 	// Handle inline query file requests
 	if u.IsSentViaBot() {
 		if strings.Contains(u.MsgText(), "../") || strings.Contains(u.MsgText(), "/..") {
@@ -209,6 +181,34 @@ func (b *Bot) Answer(u UpdInterface) error {
 		}
 
 		return b.showFile([]string{dir, filename})
+	}
+
+	// Handle commands
+	cmd, err := b.extractCmd(u)
+	if err != nil {
+		return fmt.Errorf("answer: %w", err)
+	}
+	if cmd != nil {
+		if _, ok := u.CallbackQueryID(); !ok {
+			b.delAllKeyboards()
+		}
+
+		handler, ok := b.handlers()[cmd.Name]
+		if !ok {
+			return fmt.Errorf("no such command %s: %w", cmd.Name, errUnknownCommand)
+		}
+		slog.Debug("Command is called", "command", cmd.Name, "params", cmd.Params)
+		err = handler(cmd.Params)
+		if err != nil {
+			return err
+		}
+
+		if callbackQueryID, ok := u.CallbackQueryID(); ok {
+			// We can tolerate an error here, that won't affect UX
+			_ = b.tg.AnswerCallbackQuery(callbackQueryID, "")
+		}
+
+		return nil
 	}
 
 	// Handle forwards
