@@ -1375,9 +1375,9 @@ func (b *Bot) moveToExistingNote(params []string) error {
 	}
 
 	// No worries if we can't delete - we'll have a redundant file
-	_ = b.fs.Del(fs.DirRoot, fromFilename)
+	_ = b.fs.Del(fs.DirToday, fromFilename)
 
-	return nil
+	return b.ShowToday(nil)
 }
 
 func (b *Bot) moveToChecklist(params []string) error {
