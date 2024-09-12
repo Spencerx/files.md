@@ -288,6 +288,7 @@ func (b *Bot) extractCmd(u UpdInterface) (*tg.Cmd, error) {
 			// it doesn't work for some reason
 			text := extractMarkdown(u)
 			text = string(re.ReplaceAll([]byte(text), []byte("")))
+			text = txt.Ucfirst(strings.TrimSpace(text))
 			shortCmd := tg.NewCmd(canonicalCMD, []string{text})
 
 			return &shortCmd, nil
@@ -1242,16 +1243,8 @@ func (b *Bot) showChecklist(params []string) error {
 	return nil
 }
 
-func (b *Bot) send(msg string) error {
-	_, err := b.tg.Send(b.userID, msg, nil, tg.MarkupHTML)
-	if err != nil {
-		return fmt.Errorf("start: can't send: %w", err)
-	}
-	return nil
-}
-
 func (b *Bot) showStart(_ []string) error {
-	_ = b.send("Welcome!")
+	_, _ = b.tg.Send(b.userID, "Welcome aboard 👋!", nil, tg.MarkupHTML)
 
 	return b.ShowToday(nil)
 }
@@ -1994,10 +1987,8 @@ func (b *Bot) togglePomodoro(_ []string) error {
 	}
 
 	if hasPomodoroInToday || hasPomodoroInTrash {
-		err := b.send(fmt.Sprintf("Pomodoro is stopped: no new \"%v\" tasks will appear automatially", fs.FilePomodoro))
-		if err != nil {
-			return fmt.Errorf("toggle pomodoro: failed to show pomodoro hint message %w", err)
-		}
+		// Just an informative messages
+		_, _ = b.tg.Send(b.userID, "Pomodoro is stopped", nil, tg.MarkupHTML)
 		return b.ShowToday(nil)
 	}
 
@@ -2007,9 +1998,7 @@ func (b *Bot) togglePomodoro(_ []string) error {
 		return fmt.Errorf("toggle pomodoro: failed to show pomodoro hint message %w", err)
 	}
 
-	err = b.send(fmt.Sprintf("Pomodoro is run: you can see \"%v\" task in your %v folder. Once are ready to focus on something and start working, just complete this task."+
-		" It will get back in %v to let you know that you worked enough and deserved a break. To stop it just use /%v comand again",
-		fs.FilePomodoro, fs.DirToday, b.cfg.PomodoroDuration(), consts.CmdPomodoro))
+	_, err = b.tg.Send(b.userID, i18n.PomodoroStarted, nil, tg.MarkupHTML)
 	if err != nil {
 		return fmt.Errorf("toggle pomodoro: failed to show pomodoro hint message %w", err)
 	}
