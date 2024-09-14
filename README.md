@@ -3,8 +3,8 @@
 # Files.md
 An application for your personal stuff:
 - ✅ Tasks  
-- 📝 Notes  
-- 💼 Projects
+- 📌 Notes  
+- 📝 Projects
 - 💚 Journal
 - 🛒 Checklists  
 - 🌱 Habits  
