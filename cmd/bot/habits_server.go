@@ -28,6 +28,9 @@ import (
 //go:embed templates/index.html
 var html string
 
+//go:embed templates/favicon.ico
+var favicon string
+
 // TODO release graceful shutdown etc
 func habitsServer(habitsHost, certDir, logFilename string) {
 	autocertManager := autocert.Manager{
@@ -92,11 +95,15 @@ func setupRouter(router *http.ServeMux, logger *log.Logger) {
 	// TODO before release habits_v2 => habits
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-
 		_, err := w.Write([]byte(html))
 		if err != nil {
 			logger.Printf("failed to write site response: %v", err)
 		}
+	})
+
+	router.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(favicon))
 	})
 
 	router.HandleFunc("GET /habits_v2/{userID}", func(w http.ResponseWriter, r *http.Request) {
