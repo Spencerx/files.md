@@ -651,6 +651,7 @@ func (b *Bot) showHTML(validHTML string, kb *tg.Keyboard) error {
 // Chat allows 1-4096 characters AFTER entities parsing,
 // meaning we can have 4096 plain chars + any amount of tags.
 func (b *Bot) showMD(probablyInvalidMD string, kb *tg.Keyboard) error {
+	probablyInvalidMD, _, _ = txt.ExtractTextImgsLinks(probablyInvalidMD)
 	mid, hasLastKeyboard := b.db.LastKeyboardMsgID(b.userID)
 	textChunks := txt.SplitTextIntoChunks(probablyInvalidMD, maxMsgLength)
 	if !hasLastKeyboard || len(textChunks) > 1 {

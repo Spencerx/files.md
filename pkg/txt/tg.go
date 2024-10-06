@@ -2,6 +2,8 @@ package txt
 
 import (
 	"fmt"
+	"regexp"
+	"strings"
 	"unicode"
 	"unicode/utf16"
 
@@ -94,4 +96,54 @@ func TelegramEntitiesToMarkdown(text string, messageEntities []tgbotapi.MessageE
 	output = append(output, []rune(insertions[utf16pos])...)
 
 	return string(output)
+}
+
+func ExtractTextImgsLinks(text string) (string, []string, map[string]string) {
+	images := []string{}
+	links := make(map[string]string)
+
+	// Regular expressions
+	linkRegexp := regexp.MustCompile(`\[\[(.+?)\|(.+?)\]\]`)
+	imageRegexp := regexp.MustCompile(`!\[\[(.+?)\]\]`)
+
+	// Eat bottom links
+	text = NormNewLines(text)
+	lines := strings.Split(text, "\n")
+	var processedLines []string
+	for _, line := range lines {
+		// If the line contains only a link reference, ignore it for now (bottom link)
+		trimmedLine := strings.TrimSpace(line)
+		if !linkRegexp.MatchString(trimmedLine) || trimmedLine != linkRegexp.FindString(line) {
+			processedLines = append(processedLines, line)
+		} else {
+			matches := linkRegexp.FindStringSubmatch(line)
+			if len(matches) == 3 {
+				links[matches[2]] = matches[1]
+			}
+		}
+	}
+	text = strings.Join(processedLines, "\n")
+
+	// Process inline links
+	text = linkRegexp.ReplaceAllStringFunc(text, func(match string) string {
+		matches := linkRegexp.FindStringSubmatch(match)
+		if len(matches) == 3 {
+			links[matches[2]] = matches[1]
+			return "<code>" + matches[2] + "<code>"
+		}
+		return match
+	})
+
+	// Process images
+	text = imageRegexp.ReplaceAllStringFunc(text, func(match string) string {
+		matches := imageRegexp.FindStringSubmatch(match)
+		if len(matches) == 2 {
+			fmt.Printf("%v\n", matches)
+			images = append(images, matches[1])
+			return "🖼"
+		}
+		return match
+	})
+
+	return strings.TrimSpace(text), images, links
 }

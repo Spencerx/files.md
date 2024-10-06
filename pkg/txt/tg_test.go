@@ -154,3 +154,106 @@ func TestDoesntEscapeBrokenMD(t *testing.T) {
 	md = TelegramEntitiesToMarkdown(text, nil)
 	r.Equal("___ *** __ ```", md)
 }
+
+func TestExtractTextImgsLinks(t *testing.T) {
+	tests := []struct {
+		name           string
+		input          string
+		expectedText   string
+		expectedImages []string
+		expectedLinks  map[string]string
+	}{
+		{
+			name: "Test with inline links, images, and bottom links",
+			input: `Text
+![[img/Pasted image 20240802153905.png]]
+Other text, some [[management/link|link]]
+
+[[management/test2|test2]]
+[[management/test1|test1]]`,
+			expectedText: `Text
+🖼
+Other text, some <code>link<code>`,
+			expectedImages: []string{"img/Pasted image 20240802153905.png"},
+			expectedLinks: map[string]string{
+				"link":  "management/link",
+				"test1": "management/test1",
+				"test2": "management/test2",
+			},
+		},
+		{
+			name:           "Test with no images and only inline links",
+			input:          `This is a sample text with a link: [[docs/page1|Page1]]`,
+			expectedText:   `This is a sample text with a link: <code>Page1<code>`,
+			expectedImages: []string{},
+			expectedLinks: map[string]string{
+				"Page1": "docs/page1",
+			},
+		},
+		{
+			name: "Test with no inline links, only bottom links",
+			input: `Some text here.
+
+[[path/to/test|Test Link]]`,
+			expectedText:   `Some text here.`,
+			expectedImages: []string{},
+			expectedLinks: map[string]string{
+				"Test Link": "path/to/test",
+			},
+		},
+		{
+			name: "Test with no inline links, only bottom links and spaces",
+			input: `Some text here.
+
+
+[[path/to/test|Test Link]]
+
+[[path/to/test2|Test Link2]]
+
+
+`,
+			expectedText:   `Some text here.`,
+			expectedImages: []string{},
+			expectedLinks: map[string]string{
+				"Test Link":  "path/to/test",
+				"Test Link2": "path/to/test2",
+			},
+		},
+
+		{
+			name: "Text, links then text and links again",
+			input: `Some text here.
+[[path/to/test|Test Link]]
+[[path/to/test2|Test Link2]]
+Text
+[[path/to/test|Test Link]]
+[[path/to/test2|Test Link2]]
+`,
+			expectedText:   "Some text here.\nText",
+			expectedImages: []string{},
+			expectedLinks: map[string]string{
+				"Test Link":  "path/to/test",
+				"Test Link2": "path/to/test2",
+			},
+		},
+		{
+			name: "Test with multiple images and no links",
+			input: `Here is an image: ![[img/image1.png]]
+And another one: ![[img/image2.png]]`,
+			expectedText: `Here is an image: 🖼
+And another one: 🖼`,
+			expectedImages: []string{"img/image1.png", "img/image2.png"},
+			expectedLinks:  map[string]string{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotText, gotImages, gotLinks := ExtractTextImgsLinks(tt.input)
+
+			require.Equal(t, tt.expectedText, gotText, "Processed text mismatch")
+			require.Equal(t, tt.expectedImages, gotImages, "Images mismatch")
+			require.Equal(t, tt.expectedLinks, gotLinks, "Links mismatch")
+		})
+	}
+}
