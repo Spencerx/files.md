@@ -152,11 +152,12 @@ func (c *Config) AddToSchedule(filename string, scheduleAt int64, cron string) e
 	}
 
 	found := false
-	for _, schedule := range cfg.Schedules {
-		if schedule.Filename == filename {
-			schedule.ScheduledAt = scheduleAt
-			schedule.Cron = cron
+	for i := range cfg.Schedules {
+		if cfg.Schedules[i].Filename == filename {
+			cfg.Schedules[i].ScheduledAt = scheduleAt
+			cfg.Schedules[i].Cron = cron
 			found = true
+			break
 		}
 	}
 	if !found {

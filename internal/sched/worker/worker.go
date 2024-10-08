@@ -72,11 +72,15 @@ func MoveDueTasks(
 				continue
 			}
 
-			err = moveTaskToToday(schedule.Filename, userFS)
+			moved, err := moveTaskToToday(schedule.Filename, userFS)
 			if err != nil {
 				slog.Error("schedule worker: can't move to today", "err", err)
 				continue
 			}
+			if !moved {
+				continue
+			}
+
 			infolog.Info("scheduled task moved to today", schedule.Filename, "filename")
 
 			bot := internal.NewBot(userID, telegram, userFS, db.NewDB(), userconf)
@@ -100,37 +104,18 @@ func MoveDueTasks(
 				slog.Error("schedule worker: can't delete from schedule", "err", err)
 				continue
 			}
-
 		}
 	}
 
 	return nil
 }
 
-func moveTaskToLater(filename string, userFS *fs.FS) error {
-	filenames, err := userFS.FilesAndDirs(fs.DirArchive)
-	if err != nil {
-		return fmt.Errorf("moveTaskToLater: %w", err)
-	}
-
-	for _, f := range filenames {
-		if f.Name == filename {
-			err = userFS.Rename(fs.DirArchive, filename, fs.DirLater, filename)
-			if err != nil {
-				return fmt.Errorf("moveTaskToLater: can't rename: %w", err)
-			}
-		}
-	}
-
-	return nil
-}
-
-func moveTaskToToday(filename string, userFS *fs.FS) error {
+func moveTaskToToday(filename string, userFS *fs.FS) (bool, error) {
 	dirsToLookFor := []string{fs.DirLater, fs.DirArchive}
 	for _, dir := range dirsToLookFor {
 		exists, err := userFS.Exists(dir, filename)
 		if err != nil {
-			return fmt.Errorf("moveTaskForToday: can't check for existence: %w", err)
+			return false, fmt.Errorf("moveTaskForToday: can't check for existence: %w", err)
 		}
 		if !exists {
 			continue
@@ -138,9 +123,11 @@ func moveTaskToToday(filename string, userFS *fs.FS) error {
 
 		err = userFS.Rename(dir, filename, fs.DirToday, filename)
 		if err != nil {
-			return fmt.Errorf("moveTaskForToday: can't rename: %w", err)
+			return false, fmt.Errorf("moveTaskForToday: can't rename: %w", err)
 		}
+
+		return true, nil
 	}
 
-	return nil
+	return false, nil
 }
