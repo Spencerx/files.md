@@ -8,8 +8,8 @@
     <style>
         :root { /* Flexoki theme */
             --color-tx: #100F0F;
-            --color-tx-faint: #B7B5AC;
             --color-tx-muted: #6F6E69;
+            --color-tx-faint: #B7B5AC;
             --color-tx-sel: rgba(187, 220, 206, 0.3);
             --color-bg: #FFFCF0; /* Paper color */
             --color-bg-code: #f2f0e5;
@@ -28,40 +28,89 @@
             --line-height: 1.5;
         }
 
+        @media (max-width: 1024px) {
+            :root {
+                #slider-container {
+                    padding-top: 30px;
+                    position: relative;
+                    flex-direction: column;
+                    align-items: center;
+                }
+
+                #slider {
+                    transform: rotate(0);
+                    width: 200px;
+                }
+
+                #slider-container-labels {
+                    position: relative;
+                    display: flex;
+                    flex-direction: row;
+                    justify-content: center;
+                    align-items: center;
+                    padding-right: 0;
+                    gap: 60px;
+                    margin-right: 16px;
+                }
+
+            }
+        }
         @media (max-width: 860px) {
             :root {
                 --wrap-normal: 88vw;
                 --wrap-wide: 100vw;
-                p, pre {
-                    margin-right: 30px;
-                }
-                hr {
-                    display: none;
-                }
-                .desktop {
-                    display: none;
-                }
-                .mobile {
-                    display: inline;
-                }
-                .slider-container input {
-                    position: absolute;
-                    right: -20px;
-                }
-                .slider-container-labels {
-                    padding-right: 20px;
-                }
             }
         }
 
-        @media (min-width: 861px) {
-            .mobile{
-                display: none;
-            }
-            .desktop {
-                display: inline;
-            }
+        #slider-container {
+            position: absolute;
+            padding-right: 30px;
+            right: 0;
+            top: 10px;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-direction: column;
         }
+
+        #slider-container input {
+            cursor: pointer;
+        }
+
+        #slider-container-labels {
+            color: var(--color-tx-muted);
+            padding-right: 110px;
+            position: absolute;
+            right: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 35px;
+            text-align: right;
+            cursor: pointer;
+        }
+
+        #slider::-webkit-slider-runnable-track {
+        }
+
+        #slider {
+        }
+
+        #slider::-webkit-slider-thumb {
+        }
+
+        #slider {
+            transform: rotate(90deg);
+        }
+
+        /*@media (min-width: 861px) {*/
+        /*    .mobile{*/
+        /*        display: none;*/
+        /*    }*/
+        /*    .desktop {*/
+        /*        display: inline;*/
+        /*    }*/
+        /*}*/
 
         html {
             box-sizing: border-box;
@@ -131,6 +180,14 @@
             color: var(--color-tx-muted);
         }
 
+        .faint {
+            color: var(--color-tx-faint);
+        }
+
+        .normal {
+            color: var(--color-tx);
+        }
+
         ::selection {
             background: var(--color-tx-sel);
         }
@@ -183,49 +240,6 @@
            padding-top: 8rem;
         }
 
-        .slider-container {
-            position: absolute;
-            padding-right: 30px;
-            right: 0;
-            top: 10px;
-            height: 100%;
-            display: flex;
-            align-items: end;
-            justify-content: center;
-            gap: 20px;
-            flex-direction: column;
-        }
-
-        .slider-container input {
-            cursor: pointer;
-        }
-
-        .slider-container-labels {
-            padding-right: 34px;
-            position: absolute;
-            right: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 35px;
-            color: var(--color-tx-faint);
-            text-align: left;
-            cursor: pointer;
-        }
-
-        #slider::-webkit-slider-runnable-track {
-        }
-
-        #slider {
-            /*-webkit-appearance: none;*/
-        }
-
-        #slider::-webkit-slider-thumb {
-        }
-
-        #slider {
-            transform: rotate(90deg); /* Rotates the range input to vertical */
-        }
-
         @keyframes highlight {
             0% { opacity: 1; }
             100% { opacity: 0; }
@@ -239,6 +253,17 @@
     </style>
 </head>
 <body>
+<div id="slider-container">
+    <input type="range" id="slider" min="1" max="3" value="1" class="slider">
+    <div id="slider-container-labels">
+        <span class="desktop" data-value="1">Quick</span>
+        <span class="desktop" data-value="2">Lazy</span>
+        <span class="desktop" data-value="3">Full</span>
+<!--        <span class="mobile" data-value="1">🚀</span>-->
+<!--        <span class="mobile" data-value="2">🦥</span>-->
+<!--        <span class="mobile" data-value="3">🐢</span>-->
+    </div>
+</div>
 <main>
     <article>
         <heading>
@@ -388,17 +413,6 @@ stuff // 🧠+
             <hr>
         </content>
     </article>
-    <div class="slider-container">
-        <input type="range" id="slider" min="1" max="3" value="1" class="slider">
-        <div class="slider-container-labels">
-            <span class="desktop" data-value="1">Quick</span>
-            <span class="desktop" data-value="2">Lazy</span>
-            <span class="desktop" data-value="3">Full</span>
-            <span class="mobile" data-value="1">🚀</span>
-            <span class="mobile" data-value="2">🦥</span>
-            <span class="mobile" data-value="3">🐢</span>
-        </div>
-    </div>
     <script>
         function updateContentBasedOnHash() {
             const currentHash = location.hash;
@@ -421,6 +435,14 @@ stuff // 🧠+
                 highlightNewBlocks('l3');
             }
 
+            const labels = document.querySelectorAll('#slider-container-labels span');
+            labels.forEach((label) => {
+                if (label.dataset.value === String(slider.value)) {
+                    label.classList.remove('faint');
+                } else {
+                    label.classList.add('faint');
+                }
+            });
         }
 
         function highlightNewBlocks(selector) {
@@ -452,7 +474,7 @@ stuff // 🧠+
             });
         });
 
-        document.querySelectorAll('.slider-container-labels span').forEach((label) => {
+        document.querySelectorAll('#slider-container-labels span').forEach((label) => {
             label.addEventListener('click', function() {
                 const slider = document.getElementById('slider');
                 slider.value = label.dataset.value;
