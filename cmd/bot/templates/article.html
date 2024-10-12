@@ -375,9 +375,9 @@ stuff // 🧠+
     <div class="slider-container">
         <input type="range" id="slider" min="1" max="3" value="1" class="slider">
         <div class="slider-container-labels">
-            <span>No time</span>
-            <span>Some</span>
-            <span>Plenty</span>
+            <span>Quick</span>
+            <span>Detailed</span>
+            <span>Full</span>
         </div>
     </div>
     <script>
@@ -386,11 +386,11 @@ stuff // 🧠+
             const slider = document.getElementById('slider');
 
             // Set slider and content based on the current hash
-            if (currentHash === '#notime') {
+            if (currentHash === '#quick') {
                 slider.value = 1;
                 document.querySelectorAll('l2').forEach(el => el.style.display = 'none');
                 document.querySelectorAll('l3').forEach(el => el.style.display = 'none');
-            } else if (currentHash === '#some') {
+            } else if (currentHash === '#detailed') {
                 slider.value = 2;
                 document.querySelectorAll('l2').forEach(el => el.style.display = 'inline');
                 document.querySelectorAll('l3').forEach(el => el.style.display = 'none');
@@ -422,9 +422,9 @@ stuff // 🧠+
         document.getElementById('slider').addEventListener('input', function() {
             const sliderValue = parseInt(this.value);
             if (sliderValue === 1) {
-                location.hash = 'notime';
+                location.hash = 'quick';
             } else if (sliderValue === 2) {
-                location.hash = 'some';
+                location.hash = 'detailed';
             } else if (sliderValue === 3) {
                 location.hash = 'full';
             }
