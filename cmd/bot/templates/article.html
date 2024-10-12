@@ -114,7 +114,7 @@
             right: 0;
             display: flex;
             flex-direction: column;
-            gap: 35px;
+            gap: 34px;
             text-align: right;
             cursor: pointer;
             z-index: 0;
@@ -445,37 +445,59 @@ stuff // 🧠+
         </content>
     </article>
     <script>
+        let previousLevel = 0;
+
         function updateContentBasedOnHash() {
             const currentHash = location.hash;
             const slider = document.getElementById('slider');
 
-            // Set slider and content based on the current hash
             if (currentHash === '#short') {
                 slider.value = 1;
-                document.querySelectorAll('l2').forEach(el => el.style.display = 'none');
-                document.querySelectorAll('l3').forEach(el => el.style.display = 'none');
+                handleContentVisibility(1, previousLevel);
             } else if (currentHash === '#medium') {
                 slider.value = 2;
-                document.querySelectorAll('l2').forEach(el => el.style.display = 'inline');
-                document.querySelectorAll('l3').forEach(el => el.style.display = 'none');
-                highlightNewBlocks('l2');
+                handleContentVisibility(2, previousLevel);
             } else if (currentHash === '#full') {
                 slider.value = 3;
-                document.querySelectorAll('l2').forEach(el => el.style.display = 'inline');
-                document.querySelectorAll('l3').forEach(el => el.style.display = 'inline');
-                highlightNewBlocks('l3');
+                handleContentVisibility(3, previousLevel);
             }
 
-            showMessage(slider.value);
+            previousLevel = slider.value
 
-            const labels = document.querySelectorAll('#slider-container-labels span');
-            labels.forEach((label) => {
-                if (label.dataset.value === String(slider.value)) {
-                    label.classList.remove('faint');
-                } else {
-                    label.classList.add('faint');
+            showMessage(slider.value);
+            updateLabels(slider.value);
+        }
+
+        function handleContentVisibility(currentValue, previousValue) {
+            let isMoreContent = currentValue > previousValue;
+            if (isMoreContent) {
+                if (currentValue >= 2) {
+                    document.querySelectorAll('l2').forEach(el => el.style.display = 'inline');
+                    if (previousValue < 2) {
+                        highlightNewBlocks('l2');
+                    }
                 }
-            });
+                if (currentValue === 3) {
+                    console.log("LEVEL3")
+                    document.querySelectorAll('l3').forEach(el => el.style.display = 'inline');
+                    highlightNewBlocks('l3');
+                }
+            } else {
+                if (currentValue < 3) {
+                    document.querySelectorAll('l3').forEach(el => {
+                        highlightRemovedBlocks(el, () => {
+                            el.style.display = 'none';
+                        });
+                    });
+                }
+                if (currentValue < 2) {
+                    document.querySelectorAll('l2').forEach(el => {
+                        highlightRemovedBlocks(el, () => {
+                            el.style.display = 'none';
+                        });
+                    });
+                }
+            }
         }
 
         function highlightNewBlocks(selector) {
@@ -488,14 +510,35 @@ stuff // 🧠+
             });
         }
 
-        const message = document.getElementById('slider-container-message');
-        const messages = {
-            1: "I am in a hurry",
-            2: "I got some time",
-            3: "Let me read it all!"
-        };
+        function highlightRemovedBlocks(block, callback) {
+            block.classList.add('highlight');
+
+            setTimeout(() => {
+                block.classList.remove('highlight');
+                callback();
+            }, 500);
+        }
+
+
+        function updateLabels(value) {
+            const labels = document.querySelectorAll('#slider-container-labels span');
+            labels.forEach((label) => {
+                if (label.dataset.value === String(value)) {
+                    label.classList.remove('faint');
+                } else {
+                    label.classList.add('faint');
+                }
+            });
+        }
 
         function showMessage(value) {
+            const message = document.getElementById('slider-container-message');
+            const messages = {
+                1: "I am in a hurry",
+                2: "I got some time",
+                3: "Let me read it all!"
+            };
+
             message.textContent = messages[value];   // Set the appropriate message
             message.classList.remove('fade-in-out'); // Reset animation
             void message.offsetWidth;                // Trigger reflow to restart animation
