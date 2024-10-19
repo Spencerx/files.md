@@ -1882,7 +1882,7 @@ func (b *Bot) toADayKeyboard(filenameHash string) (*tg.Keyboard, error) {
 		),
 	})
 
-	for _, iAndj := range [][]int{{1, 7}, {9, 16}, {17, 24}, {25, 31}} {
+	for _, iAndj := range [][]int{{1, 8}, {9, 16}, {17, 24}, {25, 31}} {
 		row := tg.NewRow()
 		for i := iAndj[0]; i <= iAndj[1]; i++ {
 			cron := fmt.Sprintf("0 0 %d * *", i)
