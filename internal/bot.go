@@ -416,7 +416,7 @@ func (b *Bot) saveFromForward(u Update) error {
 		content = ""
 	}
 
-	// When a user forwards message + sanitizedTitle we receive 2 updates from FakeTG.
+	// When a user forwards message + sanitizedTitle we receive 2 updates from TG.
 	// First we receive sanitizedTitle, then the message itself. We must add our
 	// forwarded message to previously saved task (by sanitizedTitle).
 	// We do sleep here because previous file might not be saved.

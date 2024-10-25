@@ -28,8 +28,10 @@ import (
 //go:embed all:frontend/dist
 var assets embed.FS
 
-var updater func(u internal.Update) error
-var chat *tg.FakeTG
+var (
+	updater func(u internal.Update) error
+	chat    *tg.FakeTG
+)
 
 type Update struct {
 	Message string
@@ -59,7 +61,6 @@ func main() {
 		},
 		EnableDefaultContextMenu: true,
 	})
-
 	if err != nil {
 		println("Error:", err.Error())
 	}
@@ -131,7 +132,6 @@ func initBot() {
 
 		return nil
 	}
-
 }
 
 type App struct {
