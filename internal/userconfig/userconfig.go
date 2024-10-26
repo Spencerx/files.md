@@ -97,6 +97,21 @@ func (c *Config) NotesOnlyMode() bool {
 	return cfg.NotesOnlyMode
 }
 
+func (c *Config) SetNotesOnlyMode(enabled bool) error {
+	lock := c.userLock()
+	lock.Lock()
+	defer lock.Unlock()
+
+	cfg, _ := c.read(c.filename)
+	cfg.NotesOnlyMode = enabled
+	err := c.write(cfg)
+	if err != nil {
+		return fmt.Errorf("set notes only mode: can't write config: %w", err)
+	}
+
+	return nil
+}
+
 func (c *Config) PomodoroDuration() time.Duration {
 	cfg, _ := c.read(c.filename)
 

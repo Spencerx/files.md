@@ -59,7 +59,7 @@ How to start a feature branch:
 ```bash
 $ git checkout main
 $ git pull
-$ git checkout -b feature/feature_name
+$ git checkout -b feature_name
 ```
 
 ## Glossary
@@ -119,8 +119,8 @@ Refer to [the following document](https://github.com/zakirullin/cognitive-load) 
 - With portability in mind, everything is stored in **plain text files**
 - We don't use get* prefix for methods
 - No panics, errors are part of business logic
-- No iterators for client code
 - If we are ignoring an error - we leave a WHY comment
 - We wrap errors all the time, we should add method's context
+- No iterators for client code
 - We prefer real implementations or at least fakes over mocks and stubs
 - Imports should only be renamed to avoid a name collision with other imports

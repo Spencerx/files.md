@@ -7587,7 +7587,6 @@
   "📔": [
     "notebook_with_decorative_cover",
     "classroom",
-    "notes",
     "record",
     "paper",
     "study"
@@ -7643,13 +7642,11 @@
     "notebook",
     "stationery",
     "record",
-    "notes",
     "paper",
     "study"
   ],
   "📒": [
     "ledger",
-    "notes",
     "paper"
   ],
   "📃": [
@@ -8009,7 +8006,8 @@
     "pushpin",
     "stationery",
     "mark",
-    "here"
+    "here",
+    "notes"
   ],
   "📍": [
     "round_pushpin",
@@ -9115,7 +9113,8 @@
     "agree",
     "vote",
     "election",
-    "tick"
+    "tick",
+    "tasks"
   ],
   "☑️": [
     "check_box_with_check",

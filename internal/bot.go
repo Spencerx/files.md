@@ -248,6 +248,9 @@ func (b *Bot) handlers() map[string]func([]string) error {
 		consts.CmdAddToJournalShortcut:        b.addToJournalFromShortcut,
 		consts.CmdAddToRecentFileShortcut:     b.addToRecentFileOrNoteFromShortcut,
 		consts.CmdRename:                      b.rename,
+		consts.CmdTasksOnlyMode:               b.tasksOnlyMode,
+		consts.CmdNotesOnlyMode:               b.notesOnlyMode,
+		consts.CmdFullMode:                    b.fullMode,
 		// Used for button-like separators
 		consts.CmdDoNothing: func(s []string) error { return nil },
 	}
@@ -1274,9 +1277,13 @@ func (b *Bot) showChecklist(params []string) error {
 }
 
 func (b *Bot) showStart(_ []string) error {
-	_, _ = b.tg.Send(b.userID, "Welcome aboard 👋!", nil, tg.MarkupHTML)
+	kb := tg.NewKeyboard([]tg.Row{
+		tg.NewRow(tg.NewBtn(txt.Emoji(i18n.Emoji("notes"), b.tr("Notes only")), tg.NewCmd(consts.CmdNotesOnlyMode, nil))),
+		tg.NewRow(tg.NewBtn(txt.Emoji(i18n.Emoji("tasks"), b.tr("Tasks only")), tg.NewCmd(consts.CmdTasksOnlyMode, nil))),
+		tg.NewRow(tg.NewBtn(txt.Emoji(i18n.Emoji("brain"), b.tr("Everything")), tg.NewCmd(consts.CmdFullMode, nil))),
+	})
 
-	return b.ShowToday(nil)
+	return b.showHTML("Welcome 👋! What is your interest?", kb)
 }
 
 func (b *Bot) moveToDir(params []string) error {
@@ -2159,6 +2166,69 @@ func (b *Bot) showHelp(_ []string) error {
 	_, err := b.tg.Send(b.userID, "Under construction", nil, tg.MarkupHTML)
 
 	return err
+}
+
+func (b *Bot) notesOnlyMode(_ []string) error {
+	return b.cfg.SetNotesOnlyMode(true)
+}
+
+func (b *Bot) tasksOnlyMode(_ []string) error {
+	err := b.cfg.SetNotesOnlyMode(false)
+	if err != nil {
+		return fmt.Errorf("tasks only mode: can't set notes only mode %w", err)
+	}
+
+	cmds, err := b.cfg.MoveToCmds()
+	if err != nil {
+		return fmt.Errorf("tasks only mode: can't get quick commands %w", err)
+	}
+
+	for _, cmd := range cmds {
+		err = b.cfg.DelMoveToCmd(cmd)
+		if err != nil {
+			return fmt.Errorf("tasks only mode: can't delete quick command %w", err)
+		}
+	}
+
+	moveToCmds := []string{
+		consts.CmdScheduleForTmrw,
+		consts.CmdMoveToLater,
+		consts.CmdShowScheduleForDay,
+	}
+	for _, cmd := range moveToCmds {
+		err = b.cfg.AddMoveToCmd(cmd)
+		if err != nil {
+			return fmt.Errorf("full mode: can't add quick command %w", err)
+		}
+	}
+
+	return nil
+}
+
+func (b *Bot) fullMode(_ []string) error {
+	err := b.cfg.SetNotesOnlyMode(false)
+	if err != nil {
+		return fmt.Errorf("full mode: can't set notes only mode %w", err)
+	}
+
+	moveToCmds := []string{
+		consts.CmdScheduleForTmrw,
+		consts.CmdMoveToLater,
+		consts.CmdShowScheduleForDay,
+		consts.CmdShowMoveToDirOrFile,
+		consts.CmdMoveToRead,
+		consts.CmdMoveToShop,
+		consts.CmdMoveToWatch,
+		consts.CmdMoveToJournal,
+	}
+	for _, cmd := range moveToCmds {
+		err = b.cfg.AddMoveToCmd(cmd)
+		if err != nil {
+			return fmt.Errorf("full mode: can't add quick command %w", err)
+		}
+	}
+
+	return nil
 }
 
 func extractMarkdown(u Update) string {
