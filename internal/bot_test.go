@@ -1251,7 +1251,7 @@ func TestShowMultilineFile(t *testing.T) {
 	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("task", []string{fs.DirToday, "501ef2410e2"})))
 	r.NoError(err)
 
-	r.Equal("New file\nContent", tgram.SentTexts[0])
+	r.Equal("<b>New file</b>\nNew file\nContent", tgram.SentTexts[0])
 }
 
 func TestMoveToExistingFile(t *testing.T) {
