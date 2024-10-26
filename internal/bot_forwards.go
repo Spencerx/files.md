@@ -22,7 +22,6 @@
 package internal
 
 import (
-	"fmt"
 	"sync"
 )
 
@@ -68,13 +67,11 @@ func setFirstMsgFilename(userID int64, filename string, time int) {
 
 func collapseToMsg(userID int64, time int) (string, bool) {
 	firstTime, ok := firstMsgTime(userID)
-	fmt.Println(firstTime)
 	if !ok {
 		return "", false
 	}
 
 	diff := time - firstTime
-	fmt.Println(diff)
 	// Sent in exactly same second or second after
 	if diff == 0 || diff == 1 {
 		return firstMsgFilename(userID)

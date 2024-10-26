@@ -2807,3 +2807,56 @@ func TestSaveToTodayTaskIntegration(t *testing.T) {
 	})
 	r.Equal(kb, tgram.LastEditedKeyboard)
 }
+
+func TestCollapseToMsg(t *testing.T) {
+	var userID int64 = -1
+	r := require.New(t)
+
+	clean := func() {
+		firstMsgFilenames.Range(func(key, value interface{}) bool {
+			firstMsgTimes.Delete(key)
+			return true
+		})
+		firstMsgTimes.Range(func(key, value interface{}) bool {
+			firstMsgTimes.Delete(key)
+			return true
+		})
+	}
+	clean()
+
+	// Collapse same second messages
+	setFirstMsgFilename(userID, "file1.md", 100)
+	setFirstMsgTime(userID, 100)
+	filename, shouldCollapse := collapseToMsg(userID, 100)
+	r.True(shouldCollapse)
+	r.Equal("file1.md", filename)
+	clean()
+
+	// Collapse next second messages
+	setFirstMsgFilename(userID, "file2.md", 100)
+	setFirstMsgTime(userID, 100)
+	filename, shouldCollapse = collapseToMsg(userID, 101)
+	require.True(t, shouldCollapse, "Expected to collapse the message")
+	require.Equal(t, "file2.md", filename, "Expected filename to match the first message")
+	clean()
+
+	// Do not collapse distant messages
+	setFirstMsgFilename(userID, "file3.md", 100)
+	setFirstMsgTime(userID, 100)
+	filename, shouldCollapse = collapseToMsg(userID, 103)
+	require.False(t, shouldCollapse, "Expected not to collapse the message")
+	require.Empty(t, filename, "Expected no filename for non-collapsing messages")
+	clean()
+
+	// Collapse consecutive batch messages
+	setFirstMsgFilename(userID, "file4.md", 200)
+	setFirstMsgTime(userID, 200)
+	// Loop to simulate a series of consecutive messages within a one-second interval
+	for i := 0; i < 5; i++ {
+		filename, shouldCollapse = collapseToMsg(userID, 200+i)
+		require.True(t, shouldCollapse, "Expected to collapse the message in the batch")
+		require.Equal(t, "file4.md", filename, "Expected filename to match the initial message")
+		setFirstMsgTime(userID, 200+i)
+	}
+	clean()
+}
