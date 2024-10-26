@@ -29,6 +29,7 @@ var userChannels = sync.Map{} // Updates are processed sequentially on per-user 
 
 func processUserUpdates(updates <-chan tgbotapi.Update, telegram *tg.TG, infolog *slog.Logger) {
 	for upd := range updates {
+		fmt.Println(upd.UpdateID)
 		u := tg.NewTGUpd(upd)
 		userID := u.UserID()
 
@@ -124,29 +125,27 @@ func main() {
 	tgConfig.Timeout = 60 // TODO release, check if it's enough
 	updates := api.GetUpdatesChan(tgConfig)
 	for upd := range updates {
-		go func(upd tgbotapi.Update) {
-			u := tg.NewTGUpd(upd)
-			userID := u.UserID()
+		u := tg.NewTGUpd(upd)
+		userID := u.UserID()
 
-			ch, loaded := userChannels.LoadOrStore(userID, make(chan tgbotapi.Update))
-			userCh := ch.(chan tgbotapi.Update)
+		ch, loaded := userChannels.LoadOrStore(userID, make(chan tgbotapi.Update))
+		userCh := ch.(chan tgbotapi.Update)
 
-			// Start per-user worker if none is running
-			if !loaded {
-				go func() {
-					defer func() {
-						err := recover()
-						if err != nil {
-							slog.Error("Bot panic", "err", err)
-						}
-					}()
-					defer userChannels.Delete(userID)
-
-					processUserUpdates(userCh, telegram, infolog)
+		// Start per-user worker if none is running
+		if !loaded {
+			go func() {
+				defer func() {
+					err := recover()
+					if err != nil {
+						slog.Error("Bot panic", "err", err)
+					}
 				}()
-			}
+				defer userChannels.Delete(userID)
 
-			userCh <- upd
-		}(upd)
+				processUserUpdates(userCh, telegram, infolog)
+			}()
+		}
+
+		userCh <- upd
 	}
 }
