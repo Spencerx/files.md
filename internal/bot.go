@@ -346,7 +346,8 @@ func (b *Bot) saveFromRegularMsg(u Update) error {
 	if sanitizedTitle == content {
 		content = ""
 	}
-	// If title is already in the content, remove it
+	// If title is already in the content, remove it.
+	// See bot.filenameAndContent method to see how the content is restored.
 	if strings.HasPrefix(content, sanitizedTitle) {
 		content = strings.TrimSpace(strings.TrimPrefix(content, sanitizedTitle))
 	}
@@ -2255,7 +2256,7 @@ func (b *Bot) filenameAndContent(dir, filename string) (string, error) {
 	}
 
 	title := fs.Title(filename)
-	filenameHasContent := !strings.HasPrefix(strings.ToLower(content), strings.ToLower(title))
+	filenameHasContent := !strings.HasPrefix(strings.ToLower(content), strings.TrimRight(strings.ToLower(title), "..."))
 	if len(content) == 0 {
 		content = title
 	} else if filenameHasContent {
