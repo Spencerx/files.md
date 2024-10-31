@@ -43,7 +43,7 @@ const (
 	maxBtns                = 50
 	maxBtnsInChecklist     = 5 // For _read_ and _watch_ checklists, so we're less likely to be overwhelmed :)
 	maxBtnsInMoveTo        = 6
-	maxInlineResults       = 50
+	maxInlineResults       = 20
 	maxMsgLength           = 4096 // In UTF-8 characters (runes), skin-tone emojis count as 2
 	maxMsgsToSendAtOnce    = 5    // For lengthy messages
 	imgWidth               = 400  // We insert images into *.md files with the specified width
