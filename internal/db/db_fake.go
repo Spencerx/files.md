@@ -79,12 +79,12 @@ func (db *FakeDB) SetRecentCommandParams(_ int64, params []string) {
 	db.RecentCMDParams = params
 }
 
-func (db *FakeDB) SetImageMsgID(userID int64, msgID int) {
+func (db *FakeDB) AddImageMsgID(userID int64, msgID int) {
 }
 
-func (db *FakeDB) ImageMsgID(userID int64) (int, bool) {
-	return 0, false
+func (db *FakeDB) ImageMsgIDs(userID int64) ([]int, bool) {
+	return nil, false
 }
 
-func (db *FakeDB) DelImageMsgID(userID int64) {
+func (db *FakeDB) DelImageMsgIDs(userID int64) {
 }

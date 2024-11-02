@@ -74,7 +74,7 @@ type Update interface {
 // Chat provides a simple interface to chat API like Telegram
 type Chat interface {
 	Send(userID int64, text string, kb *tg.Keyboard, markup string) (int, error)
-	SendImages(userID int64, images []string) (int, error)
+	SendImages(userID int64, images []string) ([]int, error)
 	Edit(userID int64, msgID int, text string, kb *tg.Keyboard, markup string) error
 	Del(userID int64, msgID int) error
 	AnswerCallbackQuery(queryID string, text string) error
@@ -97,9 +97,9 @@ type Database interface {
 	SetRecentCommand(userID int64, cmd string)
 	RecentCommandParams(userID int64) ([]string, bool)
 	SetRecentCommandParams(userID int64, params []string)
-	SetImageMsgID(userID int64, msgID int)
-	ImageMsgID(userID int64) (int, bool)
-	DelImageMsgID(userID int64)
+	AddImageMsgID(userID int64, msgID int)
+	ImageMsgIDs(userID int64) ([]int, bool)
+	DelImageMsgIDs(userID int64)
 }
 
 // Bot provides commands that can be invoked by a user so to query
@@ -682,10 +682,11 @@ func (b *Bot) showMD(probablyInvalidMD string, kb *tg.Keyboard) error {
 		// Sending a gallery of images if there are any
 		if len(images) > 0 {
 			// We tolerate errors with the image gallery for now, text is more important
-			imgMid, imgErr := b.tg.SendImages(b.userID, images)
-			fmt.Printf("imgMid: %d, imgErr: %v\n", imgMid, imgErr)
+			mids, imgErr := b.tg.SendImages(b.userID, images)
 			if imgErr == nil {
-				b.db.SetImageMsgID(b.userID, imgMid)
+				for _, imgMid := range mids {
+					b.db.AddImageMsgID(b.userID, imgMid)
+				}
 			}
 		}
 
@@ -1874,12 +1875,6 @@ func (b *Bot) delAllKeyboards() {
 		msgIDs = append(msgIDs, mid)
 	}
 
-	mid, hasImageSent := b.db.ImageMsgID(b.userID)
-	if hasImageSent {
-		b.db.DelImageMsgID(b.userID)
-		msgIDs = append(msgIDs, mid)
-	}
-
 	// No worries if we fail - it will be cleaned up by the worker
 	for _, msgID := range msgIDs {
 		// If we fail to del - user would get a bunch
@@ -1889,15 +1884,17 @@ func (b *Bot) delAllKeyboards() {
 }
 
 func (b *Bot) delAllImages() {
-	mid, hasImageSent := b.db.ImageMsgID(b.userID)
+	mids, hasImageSent := b.db.ImageMsgIDs(b.userID)
 	if !hasImageSent {
 		return
 	}
 
-	b.db.DelImageMsgID(b.userID)
-	// If we fail to del - user would get a bunch
-	// of keyboards in one chat, which is messy but not critical
-	_ = b.tg.Del(b.userID, mid)
+	b.db.DelImageMsgIDs(b.userID)
+	for _, mid := range mids {
+		// If we fail to del - user would get a bunch
+		// of keyboards in one chat, which is messy but not critical
+		_ = b.tg.Del(b.userID, mid)
+	}
 }
 
 func (b *Bot) showToADay(params []string) error {

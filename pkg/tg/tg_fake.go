@@ -44,8 +44,8 @@ func (f *FakeTG) Send(userID int64, text string, kb *Keyboard, markup string) (i
 	return f.LastSentMessageID, nil
 }
 
-func (tg *FakeTG) SendImages(userID int64, images []string) (int, error) {
-	return 0, nil
+func (tg *FakeTG) SendImages(userID int64, images []string) ([]int, error) {
+	return nil, nil
 }
 
 func (f *FakeTG) Edit(userID int64, msgID int, text string, kb *Keyboard, markup string) error {
