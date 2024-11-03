@@ -74,7 +74,7 @@ type Update interface {
 // Chat provides a simple interface to chat API like Telegram
 type Chat interface {
 	Send(userID int64, text string, kb *tg.Keyboard, markup string) (int, error)
-	SendImages(userID int64, images []string) ([]int, error)
+	SendPhotos(userID int64, photos []string) ([]int, error)
 	Edit(userID int64, msgID int, text string, kb *tg.Keyboard, markup string) error
 	Del(userID int64, msgID int) error
 	AnswerCallbackQuery(queryID string, text string) error
@@ -705,7 +705,7 @@ func (b *Bot) showMD(probablyInvalidMD string, kb *tg.Keyboard) error {
 		// Sending a gallery of images if there are any
 		if len(images) > 0 {
 			// We tolerate errors with the image gallery for now, text is more important
-			mids, imgErr := b.tg.SendImages(b.userID, images)
+			mids, imgErr := b.tg.SendPhotos(b.userID, images)
 			if imgErr == nil {
 				for _, imgMid := range mids {
 					b.db.AddImageMsgID(b.userID, imgMid)

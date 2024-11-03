@@ -43,9 +43,9 @@ func (tg *TG) Send(userID int64, text string, kb *Keyboard, markup string) (int,
 	return resp.MessageID, nil
 }
 
-func (tg *TG) SendImages(userID int64, images []string) ([]int, error) {
+func (tg *TG) SendPhotos(userID int64, photos []string) ([]int, error) {
 	var files []interface{}
-	for _, img := range images {
+	for _, img := range photos {
 		files = append(files, tgbotapi.NewInputMediaPhoto(tgbotapi.FileID(img)))
 	}
 
@@ -54,7 +54,7 @@ func (tg *TG) SendImages(userID int64, images []string) ([]int, error) {
 	responses, err := tg.api.SendMediaGroup(msg)
 	if err != nil {
 		js, _ := json.Marshal(msg)
-		return nil, fmt.Errorf("tg send images: can't send json %s: %w", js, err)
+		return nil, fmt.Errorf("tg send photos: can't send json %s: %w", js, err)
 	}
 
 	var msgIDs []int
