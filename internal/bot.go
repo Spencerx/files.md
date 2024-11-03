@@ -304,7 +304,9 @@ func (b *Bot) extractCmd(u Update) (*tg.Cmd, error) {
 			escapedShortcut := regexp.QuoteMeta(shortcut)
 			re := regexp.MustCompile(fmt.Sprintf(`(?i)^%s\s+|\s+%s$`, escapedShortcut, escapedShortcut))
 
-			if !re.MatchString(u.MsgText()) {
+			doesntMatchText := !re.MatchString(u.MsgText())
+			doesntMatchCaption := !re.MatchString(u.Caption())
+			if doesntMatchText && doesntMatchCaption {
 				continue
 			}
 
@@ -2302,7 +2304,12 @@ func (b *Bot) fullMode(_ []string) error {
 }
 
 func extractMarkdown(u Update) string {
-	content := txt.TelegramEntitiesToMarkdown(u.MsgText(), u.MsgEntities())
+	content := ""
+	if u.Caption() != "" {
+		content = txt.TelegramEntitiesToMarkdown(u.Caption(), u.CaptionEntities())
+	} else {
+		content = txt.TelegramEntitiesToMarkdown(u.MsgText(), u.MsgEntities())
+	}
 	content = strings.TrimSpace(txt.NormNewLines(content))
 
 	return txt.Ucfirst(content)
