@@ -355,6 +355,11 @@
             event.preventDefault();
             openSearchModal();
         }
+
+        if (event.metaKey && event.key === 'k') {
+            event.preventDefault();
+            openSearchModal();
+        }
     });
 
     function closeSearchModal() {
