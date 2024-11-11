@@ -192,7 +192,7 @@ a:hover {
 }
 
 .hmd-hidden-token {
-    display: none;
+    display: none !important;
 }
 
 .cm-header-4 {

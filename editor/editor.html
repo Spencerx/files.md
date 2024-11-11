@@ -71,12 +71,19 @@
         },
     });
     editor.setSize(null, "100%");
-    editor.hmdResolveURL = function (path) {
+    editor.hmdResolveURL = async function (path, s) {
+        console.log(path,s );
         if (typeof path === 'undefined') {
             return path
         }
 
         path = path.replace(/%20/g, " ");
+
+        if (/^(?!http|https|\[).+\.md$/.test(path)) {
+            let parts = path.split('/');
+            await showFile(parts[0], parts[1]);
+            return path;
+        }
 
         const match = path.match(/^img\/(.+\.(png|jpg|jpeg|gif))$/i);
 
@@ -284,7 +291,7 @@
         let targetLine = lastLine;
         for (let i = lastLine; i >= 0; i--) {
             const lineContent = editor.getLine(i).trim();
-            if (!lineContent.startsWith("[[") && !lineContent.endsWith("]]")) {
+            if (!lineContent.startsWith("[") && (!lineContent.endsWith("]") || !lineContent.endsWith(")"))) {
                 targetLine = i;
                 break;
             }

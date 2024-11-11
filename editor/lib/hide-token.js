@@ -34,7 +34,7 @@
     exports.defaultOption = {
         enabled: false,
         line: true,
-        tokenTypes: "em|strong|strikethrough|code|linkText|task".split("|"),
+        tokenTypes: "em|strong|strikethrough|code|linkText|linkHref|task".split("|"),
     };
     exports.suggestedOption = {
         enabled: true,
@@ -145,6 +145,12 @@
                             // if (DEBUG) console.log("DOMNODE", shallHideTokens, domNode, begin, span)
                             // good. this token can be changed
                             var domParent = domNode.parentElement;
+                            if (domNode.textContent === "(") {
+                                if (shallHideTokens ? addClass(domNode.parentElement.nextSibling, hideClassName) : rmClass(domNode.parentElement.nextSibling, hideClassName)) {
+                                    // if (DEBUG) console.log("HEAD DOM CHANGED")
+                                    changed = true;
+                                }
+                            }
                             if (shallHideTokens ? addClass(domParent, hideClassName) : rmClass(domParent, hideClassName)) {
                                 // if (DEBUG) console.log("HEAD DOM CHANGED")
                                 changed = true;
