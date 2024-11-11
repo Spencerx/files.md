@@ -534,7 +534,7 @@
 .cm-s-hypermd-light img.hmd-image {
   vertical-align: middle;
   width: auto;
-  max-width: 100%;
+  max-width: 400px; /* CUSTOMIZED */
   height: auto;
   display: block;
   margin: 0 auto;

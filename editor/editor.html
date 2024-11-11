@@ -66,6 +66,12 @@
     });
     editor.setSize(null, "100%");
     editor.hmdResolveURL = function (path) {
+        if (typeof path === 'undefined') {
+            return path
+        }
+
+        path = path.replace(/%20/g, " ");
+
         const match = path.match(/^img\/(.+\.(png|jpg|jpeg|gif))$/i);
 
         if (match && zettel['img'] && zettel['img'][match[1]]) {

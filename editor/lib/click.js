@@ -17,7 +17,6 @@
     /********************************************************************************** */
     //#region defaultClickHandler
     exports.defaultClickHandler = function (info, cm) {
-        console.log('clicked');
         var text = info.text, type = info.type, url = info.url, pos = info.pos;
         if (type === 'url' || type === 'link') {
             var footnoteRef = text.match(/\[[^\[\]]+\](?:\[\])?$/); // bare link, footref or [foot][] . assume no escaping char inside
@@ -229,7 +228,9 @@
                                 url = null;
                             else {
                                 // remove title part (if exists)
-                                url = read_link_1.splitLink(t2.content).url;
+                                if (read_link_1 && typeof read_link_1.splitLink === 'function') {
+                                    url = read_link_1.splitLink(t2.content).url;
+                                }
                             }
                         }
                         else if ((mat = text.match(/^\<(.+)\>$/)) || // <http://laobubu.net>
