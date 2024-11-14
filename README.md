@@ -18,8 +18,8 @@ It works like a regular chat, so it's easier to use because there's less resista
 [Tasks management via bot](https://club.mnogosdelal.ru/post/180/)  
 [Notes taking via bot](https://vas3k.club/post/18815/)
 
-## App
-[app.files.md](https://app.files.md), an application for viewing/editing files, alpha version. Works offline.
+## App 📝
+[app.files.md](https://app.files.md), a standalone application for viewing/editing files, alpha version. Works offline.
 
 `/app` - directory with the app's source code. All other directories and files are part of the Golang bot.
 
@@ -34,7 +34,7 @@ $ go run ./cmd/bot
 
 Bot's artifacts can be seen in `./storage/<USER_ID>` folder
 
-## Local Bot 🚀
+## Local Bot 🤖
 1) Install [Go](https://go.dev/doc/install) and [Wails](https://wails.io/docs/gettingstarted/installation)
 2) Run the app:
 ```bash
