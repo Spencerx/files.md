@@ -1393,6 +1393,13 @@ func (b *Bot) moveToDir(params []string) error {
 		return fmt.Errorf("move: can't move: %w", err)
 	}
 
+	notesDir := fs.OnlyNoteDirs([]fs.File{{Name: toDir}})
+	isNotesDir := len(notesDir) == 1
+	if isNotesDir {
+		// We can tolerate this, as this is informative logging
+		_ = journal.AddRecord(b.fs, fmt.Sprintf("📌 %s", fs.Title(filename)), b.cfg.Timezone())
+	}
+
 	if toDir != fs.DirLater {
 		b.db.SetRecentCommand(b.userID, consts.CmdMoveToExistingDir)
 		// Move from dir is today, because quick command
