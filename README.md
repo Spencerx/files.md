@@ -31,23 +31,23 @@ It works like a regular chat, so it's easier to use because there's less resista
 3) Copy your bot token to `.env` file (see `.env.example`)
 4) Run the bot:
 ```bash
-$ go run ./cmd/bot
+$ go run ./cmd/tgbot
 ```
 
 Bot's artifacts can be seen in `./storage/<USER_ID>` folder
 
-## Local Bot 🤖
+## Local Standalone Bot 🤖
 1) Install [Go](https://go.dev/doc/install) and [Wails](https://wails.io/docs/gettingstarted/installation)
-2) Run the app:
+2) Run the bot:
 ```bash
-$ make gui
+$ make bot
 ```
 
 ## App 📝
 [app.files.md](https://app.files.md), a standalone application for viewing/editing files, alpha version. Works offline.
 1) Open `/app/app.html`
 
-## File structure
+## Storage file structure
 We differentiate the following types of files (with `/` denoting your root folder):
 - Tasks: `/today/Pay the bills.md` (`/today/*.md`, `/later/*.md`)
 - Notes: `/brain/Brain is the most complex object.md` (`/*/*.md`)
