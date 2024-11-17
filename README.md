@@ -19,8 +19,8 @@ It works like a regular chat, so it's easier to use because there's less resista
 [Notes taking via bot](https://vas3k.club/post/18815/)
 
 ## Repository structure
-`/cmd/tgbot` - entrypoint for telegram bot
-`/cmd/bot` - entrypoint for local bot 
+`/cmd/tgbot` - entrypoint for telegram bot (stable release)
+`/cmd/bot` - entrypoint for local standalone bot (beta version)
 `/internal` - bot's code (reused for both telegram/local bots)  
 `/pkg` - various packages   
 `/app` - standalone PWA app for viewing/editing files (alpha version)   
