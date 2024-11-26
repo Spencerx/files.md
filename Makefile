@@ -21,6 +21,24 @@ init_server:
 		chown -R www-data:www-data /app && \
 		chown -R www-data:www-data /var/log/files.md && \
 		chown -R www-data:www-data /opt/files.md && \
+		( \
+			echo '[Unit]' > /etc/systemd/system/bot.service && \
+			echo 'Description=Bot Service' >> /etc/systemd/system/bot.service && \
+			echo 'After=network.target' >> /etc/systemd/system/bot.service && \
+			echo '' >> /etc/systemd/system/bot.service && \
+			echo '[Service]' >> /etc/systemd/system/bot.service && \
+			echo 'User=www-data' >> /etc/systemd/system/bot.service && \
+			echo 'ExecStart=/app/bot' >> /etc/systemd/system/bot.service && \
+			echo 'WorkingDirectory=/app' >> /etc/systemd/system/bot.service && \
+			echo 'Restart=always' >> /etc/systemd/system/bot.service && \
+			echo 'RestartSec=5' >> /etc/systemd/system/bot.service && \
+			echo 'StandardOutput=append:/app/log' >> /etc/systemd/system/bot.service && \
+			echo 'StandardError=append:/app/log' >> /etc/systemd/system/bot.service && \
+			echo 'AmbientCapabilities=CAP_NET_BIND_SERVICE' >> /etc/systemd/system/bot.service && \
+			echo '' >> /etc/systemd/system/bot.service && \
+			echo '[Install]' >> /etc/systemd/system/bot.service && \
+			echo 'WantedBy=multi-user.target' >> /etc/systemd/system/bot.service \
+		) || echo 'Failed to write service file. Check permissions.'; \
 		echo 'Directories created and permissions set successfully.' \
 	"
 
