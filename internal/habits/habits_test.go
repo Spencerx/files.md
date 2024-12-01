@@ -24,6 +24,9 @@ var lastMonthMD string
 //go:embed testdata/two_months_habits.md
 var twoMonthsMD string
 
+//go:embed testdata/two_months_only_first_day.md
+var twoMonthsOnlyFirstDayMD string
+
 func init() {
 	fs.Ctime = func(fi os.FileInfo) int64 {
 		return 0
@@ -123,6 +126,33 @@ func TestLastWeekHabitsWhenWeekFallsIntoTwoMonths(t *testing.T) {
 	r.Len(habits, 2)
 	r.Len(habits["Habit"], 7)
 	r.EqualValues(Year{271: 0, 272: 1, 273: 0, 274: 0, 275: 0, 276: 1, 277: 0}, habits["Habit"])
+}
+
+func TestLastWeekHabitsWhenWeekFallsIntoTwoMonthsOnlyFirstDay(t *testing.T) {
+	r := require.New(t)
+
+	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	r.NoError(err)
+	err = userFS.CreateDirsIfNotExist()
+	r.NoError(err)
+	_ = userFS.Write(fs.DirInsights, "2024 Habits.md", twoMonthsOnlyFirstDayMD)
+	_ = userFS.Write(fs.DirHabits, "2 minute morning workout", "")
+	_ = userFS.Write(fs.DirHabits, "Ate consciously", "")
+
+	savedNow := now
+	defer func() {
+		now = savedNow
+	}()
+	now = func() time.Time {
+		return time.Date(2024, time.December, 1, 0, 0, 0, 0, time.Local)
+	}
+
+	habits, err := LastWeekHabits(userFS)
+	r.NoError(err)
+	r.Len(habits, 2)
+	r.Len(habits["Ate consciously"], 7)
+	r.EqualValues(Year{330: 0, 331: 0, 332: 0, 333: 0, 334: 0, 335: 1, 336: 1}, habits["2 minute morning workout"])
+	r.EqualValues(Year{330: 0, 331: 0, 332: 1, 333: 1, 334: 1, 335: 0, 336: 0}, habits["Ate consciously"])
 }
 
 func TestLastMonthHabitsMoods(t *testing.T) {
