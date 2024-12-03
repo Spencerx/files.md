@@ -255,10 +255,9 @@ a:hover {
     color: #4D978A !important;
 }
 
-.CodeMirror .cm-list-1,
-.CodeMirror .cm-list-2,
-.CodeMirror .cm-list-3 {
-    margin: 3px !important;
+.cm-formatting-list {
+    margin-left: 5px !important;
+    /*margin-right: 1px !important;*/
 }
 
 .CodeMirror .HyperMD-list-line {
