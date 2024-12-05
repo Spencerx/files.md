@@ -104,21 +104,36 @@ function initHyperMD(el) {
         }
     });
     editor.addKeyMap({
-        // For some reason in default configuration cursor can't be moved up if we have an image above
-        "Up": function(cm) {
-            const cursor = cm.getCursor();
-            let lineAbove = cursor.line - 1;
-            lineAbove = Math.max(0, lineAbove);
+        'Cmd-B': function (cm) {
+            const selectedText = cm.getSelection();
+            const isBold = selectedText.startsWith("**") && selectedText.endsWith("**");
 
-            const aboveLineContent = cm.getLine(lineAbove);
-            let imgRE = /!\[.*?\]\(.*?\)/
-            const hasImageAbove = imgRE.test(aboveLineContent) || imgRE.test(cm.getLine(cursor.line));
-            if (hasImageAbove) {
-                cm.setCursor(lineAbove, 0);
+            let start = cm.getCursor("start");
+            let end = cm.getCursor("end");
+            if (isBold) {
+                cm.replaceSelection(selectedText.slice(2, -2));
+                cm.setSelection({ line: start.line, ch: start.ch }, { line: end.line, ch: end.ch - 4 });
             } else {
-                cm.execCommand("goLineUp");
+                cm.replaceSelection(`**${selectedText}**`);
+                cm.setSelection({ line: start.line, ch: start.ch }, { line: end.line, ch: end.ch + 4 });
             }
-        }
+            cm.focus();
+        },
+        'Cmd-I': function (cm) {
+            const selectedText = cm.getSelection();
+            const isItalic = selectedText.startsWith("*") && selectedText.endsWith("*");
+
+            let start = cm.getCursor("start");
+            let end = cm.getCursor("end");
+            if (isItalic) {
+                cm.replaceSelection(selectedText.slice(1, -1));
+                cm.setSelection({ line: start.line, ch: start.ch }, { line: end.line, ch: end.ch - 2 });
+            } else {
+                cm.replaceSelection(`*${selectedText}*`);
+                cm.setSelection({ line: start.line, ch: start.ch }, { line: end.line, ch: end.ch + 2 });
+            }
+            cm.focus();
+        },
     });
 }
 
@@ -626,7 +641,6 @@ document.addEventListener('keydown', function (event) {
     if ((event.altKey || event.metaKey) && event.key === 'Enter') {
         event.preventDefault();
         const sidebar = document.getElementById('editor-sidebar');
-        console.log(sidebar.style.display);
         if (sidebar.style.display === 'none') {
             sidebar.style.display = 'block';
         } else {
