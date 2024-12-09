@@ -72,8 +72,8 @@ function initEditor(el) {
 
         const match = path.match(/^img\/(.+\.(png|jpg|jpeg|gif))$/i);
 
-        if (match && zettel['img'] && zettel['img'][match[1]]) {
-            return zettel['img'][match[1]].imageUrl;
+        if (match && files['img'] && files['img'][match[1]]) {
+            return files['img'][match[1]].imageUrl;
         }
 
         return path;
@@ -173,10 +173,10 @@ function createAutocompleteDict() {
     const dict = {};
     const ignoredFolders = ["img", "archive", "_read_", "_watch_", "_shop_", "today", "later", "journal", "journal/past", "habits", "triggers", "places", ""];
 
-    Object.keys(zettel).forEach(folder => {
+    Object.keys(files).forEach(folder => {
         if (ignoredFolders.includes(folder)) return;
 
-        Object.keys(zettel[folder]).forEach(filename => {
+        Object.keys(files[folder]).forEach(filename => {
             const key = `${filename.replace(/\.md$/, "")}`;
             const filePath = `${filename.replace(/\.md$/, "")}](${folder}/${filename})`;
             dict[key] = filePath;
@@ -212,13 +212,13 @@ async function getImageUrl(fileHandle) {
 
 function buildSidebar() {
     let root = new TreeNode("zettel"); // Create the root-node
-    for (dir in zettel) {
+    for (dir in files) {
         if (dir === '' || dir === 'img') {
             continue;
         }
 
         let dirNode = new TreeNode(dir, {expanded: false});
-        for (let file in zettel[dir]) {
+        for (let file in files[dir]) {
             let fileNode = new TreeNode(file.replace(/\.md$/, ''), {expanded: false});
             fileNode.on('click', async function (n, node) {
                 await showFile(node.parent.toString(), node.toString() + ".md");
@@ -228,9 +228,9 @@ function buildSidebar() {
         root.addChild(dirNode);
     }
 
-    if (zettel['']) {
+    if (files['']) {
         // Adding root files after folders
-        for (let file in zettel[""]) {
+        for (let file in files[""]) {
             let fileNode = new TreeNode(file.replace(/\.md$/, ''), {expanded: false});
             fileNode.on('click', async function (n, node) {
                 await showFile("", node.toString() + ".md");
@@ -267,26 +267,26 @@ async function loadDirectory(dirHandle, path = "", depth = 1) {
 
             if (depth < 5) {
                 const folder = `${path}${filename}/`;
-                zettel[filename] = {};
+                files[filename] = {};
                 await loadDirectory(entry, folder, depth + 1);
             }
         } else if (entry.kind === 'file' &&  allowedFileTypes.includes(filename.split('.').pop())
         ) {
             const folder = path.split('/').filter(Boolean).join('/');
-            if (!zettel[folder]) zettel[folder] = {};
+            if (!files[folder]) files[folder] = {};
             let file = await entry.getFile();
 
-            zettel[folder][filename] = {handle: entry, lastModified: file.lastModified};
+            files[folder][filename] = {handle: entry, lastModified: file.lastModified};
             if (folder === 'img') {
-                zettel[folder][filename].imageUrl = await getImageUrl(entry)
+                files[folder][filename].imageUrl = await getImageUrl(entry)
             }
         }
     }
 
     // Remove empty folders
-    for (const folder in zettel) {
-        if (Object.keys(zettel[folder]).length === 0) {
-            delete zettel[folder];
+    for (const folder in files) {
+        if (Object.keys(files[folder]).length === 0) {
+            delete files[folder];
         }
     }
     buildSidebar();
@@ -296,10 +296,10 @@ async function showRandomFile() {
     const ignoredFolders = ["img", "archive", "_read_", "_watch_", "_shop_", "today", "later", "journal", "habits", "triggers", "places", ""];
 
     const allFiles = [];
-    for (let folder in zettel) {
+    for (let folder in files) {
         if (ignoredFolders.includes(folder)) continue;
 
-        for (let file in zettel[folder]) {
+        for (let file in files[folder]) {
             allFiles.push({folder, file});
         }
     }
@@ -320,7 +320,7 @@ async function showRandomFile() {
 
 async function showFile(folder, filename, saveToHistory = true) {
     filename = filename.normalize("NFC");
-    const fileData = zettel[folder][filename];
+    const fileData = files[folder][filename];
     const file = await fileData.handle.getFile();
     const header = filename.replace(/\.md$/, "").replace(/^\w/, (c) => c.toUpperCase());
     let content = await file.text();
@@ -361,7 +361,7 @@ async function showFile(folder, filename, saveToHistory = true) {
 async function saveFile() {
     const folder = editor.currentFolder;
     const filename = editor.currentFile;
-    const fileData = zettel[folder][filename];
+    const fileData = files[folder][filename];
     if (fileData && fileData.handle) {
         let content = editor.getValue();
         const header = filename.replace('.md', '').replace(/^\w/, (c) => c.toUpperCase());
@@ -470,13 +470,13 @@ function closeSearchModal() {
 
 function loadRecentFiles() {
     const ignoredDirs = ["archive", "_read_", "_watch_", "_shop_", "habits", "triggers", "journal", "today", "later", "insights"];
-    let searchableFiles = Object.keys(zettel)
+    let searchableFiles = Object.keys(files)
         .filter(folder => folder !== 'img')
         .flatMap(folder =>
-            Object.keys(zettel[folder]).map(filename => ({
+            Object.keys(files[folder]).map(filename => ({
                 folder,
                 filename,
-                lastModified: zettel[folder][filename].lastModified,
+                lastModified: files[folder][filename].lastModified,
             }))
         );
 
@@ -501,13 +501,13 @@ function filterFiles() {
 
     let results = [];
 
-    let searchableFiles = Object.keys(zettel)
+    let searchableFiles = Object.keys(files)
         .filter(folder => folder !== 'img')
         .flatMap(folder =>
-            Object.keys(zettel[folder]).map(filename => ({
+            Object.keys(files[folder]).map(filename => ({
                 folder,
                 filename,
-                lastModified: zettel[folder][filename].lastModified,
+                lastModified: files[folder][filename].lastModified,
             }))
         );
 
