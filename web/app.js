@@ -1,5 +1,34 @@
+// Files structure:
+// {
+//   folder: [
+//     {
+//       filename: [
+//         {
+//           content: "File content here...",
+//           lastModified: <timestamp>,
+//           handle: <file handle>,
+//           imageUrl: <image url if any>
+//         },
+//         ...
+//       ]
+//     },
+//     ...
+//   ]
+// }
 let files = [];
+const allowedFileTypes = [
+    'md',
+    'txt',
+    'png',
+    'jpg',
+    'jpeg',
+    'webp',
+    'gif',
+];
+
+// Codemirror editor
 let editor = null;
+
 let focusedItemIndex = -1;
 
 function initEditor(el) {
@@ -44,7 +73,7 @@ function initEditor(el) {
         const match = path.match(/^img\/(.+\.(png|jpg|jpeg|gif))$/i);
 
         if (match && zettel['img'] && zettel['img'][match[1]]) {
-            return zettel['img'][match[1]].url;
+            return zettel['img'][match[1]].imageUrl;
         }
 
         return path;
@@ -141,20 +170,20 @@ function initEditor(el) {
 }
 
 function createAutocompleteDict() {
-    const emojiDict = {};
+    const dict = {};
     const ignoredFolders = ["img", "archive", "_read_", "_watch_", "_shop_", "today", "later", "journal", "journal/past", "habits", "triggers", "places", ""];
 
     Object.keys(zettel).forEach(folder => {
         if (ignoredFolders.includes(folder)) return;
 
         Object.keys(zettel[folder]).forEach(filename => {
-            const emojiKey = `${filename.replace(/\.md$/, "")}`;
+            const key = `${filename.replace(/\.md$/, "")}`;
             const filePath = `${filename.replace(/\.md$/, "")}](${folder}/${filename})`;
-            emojiDict[emojiKey] = filePath;
+            dict[key] = filePath;
         });
     });
 
-    return emojiDict;
+    return dict;
 }
 
 async function saveImageToDirectory(file, fileName) {
@@ -231,38 +260,29 @@ async function loadDirectory(dirHandle, path = "", depth = 1) {
     }
     entries.sort((a, b) => a.name.localeCompare(b.name));
 
-    for await (const entry of entries) {
+    for (const entry of entries) {
         const filename = entry.name.normalize("NFC");
         if (entry.kind === 'directory') {
             if (filename.startsWith('.')) continue;
 
-            if (depth < 10) {
+            if (depth < 5) {
                 const folder = `${path}${filename}/`;
                 zettel[filename] = {};
                 await loadDirectory(entry, folder, depth + 1);
             }
-        } else if (entry.kind === 'file' && filename.endsWith('.png') ||
-            filename.endsWith('.jpg') ||
-            filename.endsWith('.jpeg') ||
-            filename.endsWith('.webp') ||
-            filename.endsWith('.gif') ||
-            filename.endsWith('.md') ||
-            filename.endsWith('.txt')
+        } else if (entry.kind === 'file' &&  allowedFileTypes.includes(filename.split('.').pop())
         ) {
             const folder = path.split('/').filter(Boolean).join('/');
             if (!zettel[folder]) zettel[folder] = {};
             let file = await entry.getFile();
+
+            zettel[folder][filename] = {handle: entry, lastModified: file.lastModified};
             if (folder === 'img') {
-                zettel[folder][filename] = {
-                    handle: entry,
-                    url: await getImageUrl(entry),
-                    lastModified: await file.lastModified
-                };
-            } else {
-                zettel[folder][filename] = {handle: entry, lastModified: file.lastModified};
+                zettel[folder][filename].imageUrl = await getImageUrl(entry)
             }
         }
     }
+
     // Remove empty folders
     for (const folder in zettel) {
         if (Object.keys(zettel[folder]).length === 0) {
@@ -453,7 +473,11 @@ function loadRecentFiles() {
     let searchableFiles = Object.keys(zettel)
         .filter(folder => folder !== 'img')
         .flatMap(folder =>
-            Object.keys(zettel[folder]).map(filename => ({folder, filename, lastModified: zettel[folder][filename].lastModified,}))
+            Object.keys(zettel[folder]).map(filename => ({
+                folder,
+                filename,
+                lastModified: zettel[folder][filename].lastModified,
+            }))
         );
 
     let results = [...searchableFiles]
@@ -480,7 +504,11 @@ function filterFiles() {
     let searchableFiles = Object.keys(zettel)
         .filter(folder => folder !== 'img')
         .flatMap(folder =>
-            Object.keys(zettel[folder]).map(filename => ({folder, filename, lastModified: zettel[folder][filename].lastModified,}))
+            Object.keys(zettel[folder]).map(filename => ({
+                folder,
+                filename,
+                lastModified: zettel[folder][filename].lastModified,
+            }))
         );
 
     // Levenshtein distance
