@@ -417,6 +417,10 @@ func (b *Bot) saveFromImage(u Update) error {
 		return fmt.Errorf("save from image: %w", err)
 	}
 
+	if b.cfg.JournalOnlyMode() {
+		return b.moveToJournal([]string{fs.Hash(filename)})
+	}
+
 	return b.showMoveTo([]string{fs.Hash(filename)})
 }
 
