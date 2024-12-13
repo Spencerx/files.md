@@ -855,6 +855,7 @@ func TestSettingsMainPanel(t *testing.T) {
 	r.Equal(tg.NewKeyboard([]tg.Row{
 		tg.NewBtn("📌 Notes only mode", tg.NewCmd("notes_only", nil)),
 		tg.NewBtn("✅ Tasks only mode", tg.NewCmd("tasks_only", nil)),
+		tg.NewBtn("💚 Journal only mode", tg.NewCmd("journal_only", nil)),
 		tg.NewBtn("🧠 Full mode", tg.NewCmd("full", nil)),
 		tg.NewBtn("-", tg.NewCmd("nothing", nil)),
 		tg.NewBtn("⚡️ Quick buttons", tg.NewCmd("c_quick_btns", nil)),
