@@ -2306,16 +2306,16 @@ func (b *Bot) addToFile(dir, filename, content string) error {
 
 // TODO release add help
 func (b *Bot) showHelp(_ []string) error {
-	_, err := b.tg.Send(b.userID, "Under construction", nil, tg.MarkupHTML)
+	kb := tg.NewKeyboard([]tg.Row{tg.NewBtn(i18n.StrToday, tg.NewCmd(consts.CmdShowToday, nil))})
 
-	return err
+	return b.showHTML("Not yet implemented 🏗! Wanna contribute some code?\n\nhttps://github.com/zakirullin/files.md", kb)
 }
 
 // TODO
 func (b *Bot) download(_ []string) error {
-	_, err := b.tg.Send(b.userID, "Not yet implemented 🏗! Wanna contribute some code? https://github.com/zakirullin/files.md", nil, tg.MarkupHTML)
+	kb := tg.NewKeyboard([]tg.Row{tg.NewBtn(i18n.StrToday, tg.NewCmd(consts.CmdShowToday, nil))})
 
-	return err
+	return b.showHTML("Not yet implemented 🏗! Wanna contribute some code?\n\nhttps://github.com/zakirullin/files.md", kb)
 }
 
 func (b *Bot) tasksOnlyMode(_ []string) error {
