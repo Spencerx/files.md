@@ -887,6 +887,7 @@ func (b *Bot) ShowToday(_ []string) error {
 	row = append(row, tg.NewBtn("🚶‍♂️", tg.NewCmd(consts.CmdDoNothing, nil)))
 	row = append(row, tg.NewBtn("📵", tg.NewCmd(consts.CmdDoNothing, nil)))
 	row = append(row, tg.NewBtn("💪", tg.NewCmd(consts.CmdDoNothing, nil)))
+	kb.AddRow(row)
 
 	quickBtns := b.quickBtns()
 	if len(quickBtns) > 0 {
