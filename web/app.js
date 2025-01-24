@@ -34,6 +34,7 @@ async function init(el) {
     const savedDirectoryHandle = await getSavedDirectoryHandle();
     const userHasOpenedDirectory = savedDirectoryHandle instanceof FileSystemDirectoryHandle;
     if (!userHasOpenedDirectory) {
+        document.getElementById('welcome').style.display = 'block';
         files = defaultFiles;
         buildSidebar();
         return;
@@ -41,7 +42,7 @@ async function init(el) {
 
     const permission = await savedDirectoryHandle.queryPermission({mode: 'read'});
     if (permission !== 'granted') {
-        document.getElementById('welcome').style.display = 'flex';
+        document.getElementById('welcome').style.display = 'block';
     }
 
     files = await loadFiles(savedDirectoryHandle);
