@@ -4,7 +4,7 @@
 }
 
 .tj_container ul{
-	padding-left: 2em;
+	padding-left: 0em;
 	list-style-type: none;
 	cursor: pointer;
 }
@@ -59,6 +59,7 @@
 }
 
 .tj_container li span.tj_description.tj_leaf{
+	padding-left: 2em;
 }
 
 .tj_container li[disabled=""]{
