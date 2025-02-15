@@ -176,35 +176,59 @@ function initEditor(el) {
         'Cmd-Y': function (cm) {
             cm.replaceSelection('✅ ');
             cm.focus();
-        }, 'Cmd-B': function (cm) {
-            const selectedText = cm.getSelection();
-            const isBold = selectedText.startsWith("**") && selectedText.endsWith("**");
+        },
+        'Cmd-B': function (cm) {
+            let selection = cm.getSelection();
+            let trimmedSelection = selection.trim();
+            let prefix = selection.slice(0, selection.indexOf(trimmedSelection));
+            let suffix = selection.slice(selection.indexOf(trimmedSelection) + trimmedSelection.length);
+
+            const isBold = trimmedSelection.startsWith("**") && trimmedSelection.endsWith("**");
 
             let start = cm.getCursor("start");
             let end = cm.getCursor("end");
+
             if (isBold) {
-                cm.replaceSelection(selectedText.slice(2, -2));
-                cm.setSelection({line: start.line, ch: start.ch}, {line: end.line, ch: end.ch - 4});
+                cm.replaceSelection(prefix + trimmedSelection.slice(2, -2) + suffix);
+                cm.setSelection(
+                    { line: start.line, ch: start.ch + prefix.length },
+                    { line: end.line, ch: end.ch - suffix.length - 4 }
+                );
             } else {
-                cm.replaceSelection(`**${selectedText}**`);
-                cm.setSelection({line: start.line, ch: start.ch}, {line: end.line, ch: end.ch + 4});
-            }
-            cm.focus();
-        }, 'Cmd-I': function (cm) {
-            const selectedText = cm.getSelection();
-            const isItalic = selectedText.startsWith("*") && selectedText.endsWith("*");
-
-            let start = cm.getCursor("start");
-            let end = cm.getCursor("end");
-            if (isItalic) {
-                cm.replaceSelection(selectedText.slice(1, -1));
-                cm.setSelection({line: start.line, ch: start.ch}, {line: end.line, ch: end.ch - 2});
-            } else {
-                cm.replaceSelection(`*${selectedText}*`);
-                cm.setSelection({line: start.line, ch: start.ch}, {line: end.line, ch: end.ch + 2});
+                cm.replaceSelection(prefix + `**${trimmedSelection}**` + suffix);
+                cm.setSelection(
+                    { line: start.line, ch: start.ch + prefix.length },
+                    { line: end.line, ch: end.ch - suffix.length + 4 }
+                );
             }
             cm.focus();
         },
+        'Cmd-I': function (cm) {
+            let selection = cm.getSelection();
+            let trimmedSelection = selection.trim();
+            let prefix = selection.slice(0, selection.indexOf(trimmedSelection));
+            let suffix = selection.slice(selection.indexOf(trimmedSelection) + trimmedSelection.length);
+
+            const isItalic = trimmedSelection.startsWith("*") && trimmedSelection.endsWith("*");
+
+            let start = cm.getCursor("start");
+            let end = cm.getCursor("end");
+
+            if (isItalic) {
+                cm.replaceSelection(prefix + trimmedSelection.slice(1, -1) + suffix);
+                cm.setSelection(
+                    { line: start.line, ch: start.ch + prefix.length },
+                    { line: end.line, ch: end.ch - suffix.length - 2 }
+                );
+            } else {
+                cm.replaceSelection(prefix + `*${trimmedSelection}*` + suffix);
+                cm.setSelection(
+                    { line: start.line, ch: start.ch + prefix.length },
+                    { line: end.line, ch: end.ch - suffix.length + 2 }
+                );
+            }
+            cm.focus();
+        }
     });
 }
 
