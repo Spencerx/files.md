@@ -19,15 +19,8 @@
     "Roboto Mono", "DejaVu Sans Mono", "Liberation Mono", Menlo, Monaco,
     "Consolas", "Source Code Pro", monospace;
 
-    --wide-width: 800px;
     --normal-width: 800px;
     --line-height: 1.5;
-}
-
-@media (min-width: 1441px) {
-    .container {
-        --wide-width: 1000px;
-    }
 }
 
 html {
@@ -82,13 +75,9 @@ body {
 #content, CodeMirror-wrap {
         box-sizing: border-box;
         overflow: auto;
-        /*max-width: var(--wide-width);*/
-        /*width: var(--normal-width);*/
-        /*margin: 0 auto;*/
         flex-grow: 1;
         padding-top: 1px;
         padding-bottom: 6px;
-        /*padding: 1em 0;*/
         width: 100%;
 }
 
