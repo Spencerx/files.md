@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"path"
+	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -44,6 +45,34 @@ func (tg *TG) Send(userID int64, text string, kb *Keyboard, markup string) (int,
 }
 
 func (tg *TG) SendImages(userID int64, photos []string) ([]int, error) {
+	var files []interface{}
+	for _, img := range photos {
+		// It seems like file_ids of images begin with "AgACA" pattern
+		isPhoto := strings.HasPrefix(img, "AgACA")
+		if isPhoto {
+			files = append(files, tgbotapi.NewInputMediaPhoto(tgbotapi.FileID(img)))
+		} else {
+			files = append(files, tgbotapi.NewInputMediaDocument(tgbotapi.FileID(img)))
+		}
+	}
+
+	msg := tgbotapi.NewMediaGroup(userID, files)
+
+	responses, err := tg.api.SendMediaGroup(msg)
+	if err != nil {
+		js, _ := json.Marshal(msg)
+		return nil, fmt.Errorf("tg send photos: can't send json %s: %w", js, err)
+	}
+
+	var msgIDs []int
+	for _, resp := range responses {
+		msgIDs = append(msgIDs, resp.MessageID)
+	}
+
+	return msgIDs, nil
+}
+
+func (tg *TG) sendDocuments(userID int64, photos []string) ([]int, error) {
 	var files []interface{}
 	for _, img := range photos {
 		files = append(files, tgbotapi.NewInputMediaDocument(tgbotapi.FileID(img)))
