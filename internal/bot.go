@@ -739,6 +739,8 @@ func (b *Bot) showMD(probablyInvalidMD string, kb *tg.Keyboard) error {
 				for _, imgMid := range mids {
 					b.db.AddImgMsgID(imgMid)
 				}
+			} else {
+				slog.Error("Can't send images", "error", imgErr)
 			}
 		}
 
