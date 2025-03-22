@@ -43,8 +43,17 @@ type SyncResponse struct {
 func getDirectoryTimestamps(rootPath string) (map[string]time.Time, error) {
 	timestamps := make(map[string]time.Time)
 
+	// Resolve the symlink if it exists
+	realPath, err := filepath.EvalSymlinks(rootPath)
+	if err != nil {
+		log.Printf("Warning: Could not resolve symlink: %v. Using original path.", err)
+		realPath = rootPath
+	} else {
+		log.Printf("Resolved symlink: %s -> %s", rootPath, realPath)
+	}
+
 	// Walk through the directory
-	err := filepath.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(realPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return nil // Skip files with errors
 		}
@@ -55,7 +64,7 @@ func getDirectoryTimestamps(rootPath string) (map[string]time.Time, error) {
 		}
 
 		// Get the relative path
-		relPath, err := filepath.Rel(rootPath, path)
+		relPath, err := filepath.Rel(realPath, path)
 		if err != nil {
 			return nil
 		}
@@ -97,6 +106,7 @@ func getDirectoryTimestamps(rootPath string) (map[string]time.Time, error) {
 func validateAuthToken(r *http.Request) bool {
 	token := r.Header.Get("Authorization")
 
+	// Check for "Bearer " prefix and remove if present
 	if strings.HasPrefix(token, "Bearer ") {
 		token = token[7:]
 	}
@@ -115,8 +125,8 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-// Timestamps handles the endpoint for getting current timestamps
-func Timestamps(w http.ResponseWriter, r *http.Request) {
+// HandleGetTimestamps handles the endpoint for getting current timestamps
+func HandleGetTimestamps(w http.ResponseWriter, r *http.Request) {
 	// Auth check is now handled by middleware
 	// Get the latest timestamps for all directories and files
 	timestamps, err := getDirectoryTimestamps(StorageDir)
@@ -141,8 +151,8 @@ func Timestamps(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Sync processes a bulk sync request
-func Sync(w http.ResponseWriter, r *http.Request) {
+// HandleSync processes a bulk sync request
+func HandleSync(w http.ResponseWriter, r *http.Request) {
 	// Auth check is now handled by middleware
 
 	// Only allow POST method
@@ -224,8 +234,14 @@ func Sync(w http.ResponseWriter, r *http.Request) {
 			needsMerge := false
 			existingContent := ""
 
+			// Resolve the symlink path
+			realStorageDir, err := filepath.EvalSymlinks(StorageDir)
+			if err != nil {
+				realStorageDir = StorageDir
+			}
+
 			// Check if the file exists on the server and has been modified
-			localPath := filepath.Join(StorageDir, fileName)
+			localPath := filepath.Join(realStorageDir, fileName)
 			if serverTime, exists := serverTimestamps[fileName]; exists {
 				if !clientTimestamp.IsZero() && serverTime.After(clientTimestamp) {
 					// File exists and has been modified since the client's version
@@ -277,8 +293,15 @@ func Sync(w http.ResponseWriter, r *http.Request) {
 	// Find files that need to be sent to the client
 	filesToSync := make([]FileInfo, 0)
 
+	// Resolve the symlink if needed
+	realStorageDir, err := filepath.EvalSymlinks(StorageDir)
+	if err != nil {
+		log.Printf("Warning: Could not resolve symlink: %v. Using original path.", err)
+		realStorageDir = StorageDir
+	}
+
 	// Walk through all server files
-	err = filepath.Walk(StorageDir, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(realStorageDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return nil // Skip files with errors
 		}
@@ -289,7 +312,7 @@ func Sync(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Get the relative path
-		relPath, err := filepath.Rel(StorageDir, path)
+		relPath, err := filepath.Rel(realStorageDir, path)
 		if err != nil {
 			return nil
 		}
