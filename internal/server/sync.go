@@ -112,6 +112,10 @@ func Sync(w http.ResponseWriter, r *http.Request) {
 	for path, serverTime := range serverTimestamps {
 		parts := strings.Split(path, string(os.PathSeparator))
 		dir := parts[0]
+		if dir == "" {
+			dir = "."
+		}
+		
 		existingTimestamp, exists := dirTimestamps[dir]
 		if !exists {
 			dirTimestamps[dir] = serverTime
