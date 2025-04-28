@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -25,7 +26,13 @@ type File struct {
 }
 
 type syncRequest struct {
-	Timestamps map[string]int64 `json:"timestamps"`
+	Timestamps map[string]int64      `json:"timestamps"`
+	Files      map[string]ClientFile `json:"files"` // New files from client
+}
+
+type ClientFile struct {
+	Content          string `json:"content"`
+	LastServerUpdate int64  `json:"last_server_update"` // Last timestamp the client saw from server
 }
 
 type syncResponse struct {
@@ -98,8 +105,45 @@ func Sync(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Update server files with client files
+	for path, clientFile := range request.Files {
+		fullPath := filepath.Join(StorageDir, path)
+
+		serverModTime := int64(0)
+		if info, err := os.Stat(fullPath); err == nil {
+			serverModTime = info.ModTime().Unix()
+		}
+		var contentToWrite string
+
+		if err != nil && !os.IsNotExist(err) {
+			log.Printf("Error reading file %s: %v", fullPath, err)
+			continue
+		} else if os.IsNotExist(err) {
+			contentToWrite = clientFile.Content
+		} else {
+			if clientFile.LastServerUpdate < serverModTime {
+				serverContent, err := ioutil.ReadFile(fullPath)
+				if err != nil {
+					log.Printf("Error reading file %s: %v", fullPath, err)
+					continue
+				}
+				contentToWrite = Merge(string(serverContent), clientFile.Content)
+			} else {
+				// Server file hasn't changed since client's last sync
+				contentToWrite = clientFile.Content
+			}
+		}
+
+		//// Write the content to the file
+		_ = contentToWrite
+
+		serverTimestamps[path] = time.Now().Unix()
+	}
+
+	// Prepare the list of files to send to the client
 	dirTimestamps := make(map[string]int64)
 	missingFiles := make([]File, 0)
+
 	for path, serverTime := range serverTimestamps {
 		parts := strings.Split(path, string(os.PathSeparator))
 		dir := parts[0]
@@ -110,7 +154,20 @@ func Sync(w http.ResponseWriter, r *http.Request) {
 
 		requestTime, exists := request.Timestamps[dir]
 		if !exists || serverTime > requestTime {
-			missingFiles = append(missingFiles, File{path, 0, false, "content"})
+			// Client needs this file - read its content
+			fullPath := filepath.Join(StorageDir, path)
+			content, err := ioutil.ReadFile(fullPath)
+			if err != nil {
+				log.Printf("Error reading file %s: %v", fullPath, err)
+				continue
+			}
+
+			missingFiles = append(missingFiles, File{
+				Path:         path,
+				LastModified: serverTime,
+				IsDir:        false,
+				Content:      string(content),
+			})
 		}
 
 		existingTimestamp, exists := dirTimestamps[dir]
