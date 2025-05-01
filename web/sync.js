@@ -205,27 +205,3 @@ async function init(el) {
     buildSidebar();
     await showRandomFile();
 }
-
-// // Sync a single file with the server
-// async function syncFileWithServer(dir, filename, content, hash) {
-//     try {
-//         const response = await fetch(`/sync/upload`, {
-//             method: 'POST',
-//             headers: { 'Content-Type': 'application/json' },
-//             body: JSON.stringify({ dir, filename, content })
-//         });
-//
-//         if (response.ok) {
-//             // Update server file state
-//             if (!filesMetadata[dir]) filesMetadata[dir] = {};
-//             filesMetadata[dir][filename] = {
-//                 hash,
-//                 lastModified: Date.now()
-//             };
-//             saveFilesMetadata();
-//         }
-//     } catch (error) {
-//         console.error(`Error syncing ${dir}/${filename}:`, error);
-//     }
-// }
-//
