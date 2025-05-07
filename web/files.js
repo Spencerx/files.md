@@ -33,9 +33,10 @@ const SYNC_STORAGE_KEY = 'files';
 // }
 // The code is quite messy. We have to make lots of optimizations,
 // otherwise it's going to be slow even with 5K files.
-async function loadLocalFiles(dirHandle) {
+async function loadLocalFiles(rootDirHandle) {
     let newFiles = {};
 
+    // Loads files recursively
     async function loadDir(dirHandle, path = "", depth = 1) {
         const entries = [];
         for await (const entry of dirHandle.values()) {
@@ -80,8 +81,7 @@ async function loadLocalFiles(dirHandle) {
             loadDir(handle, dir, depth)
         ));
     }
-
-    await loadDir(dirHandle);
+    await loadDir(rootDirHandle);
 
     // Remove empty dirs
     for (const dir in newFiles) {
@@ -105,7 +105,7 @@ async function syncWithServer() {
 
     // Send locally modified files and timestamps of last seen dirs from the server
     let server = {};
-    let filesToSend = await collectModifiedFiles();
+    let filesToSend = await collectLocallyModifiedFiles();
     try {
         let response = await fetch('https://habits.files.md/sync', {
             method: 'POST',
@@ -183,24 +183,22 @@ async function syncWithServer() {
     console.log("Sync completed in " + (performance.now() - startTime) + "ms");
 }
 
-async function collectModifiedFiles() {
+async function collectLocallyModifiedFiles() {
     const filesToSend = [];
-    const fileProcessingPromises = [];
-
+    const promises = [];
     for (const dir in files) {
         if (dir === 'img') continue; // Skip image directory
 
         for (const filename in files[dir]) {
-            const processPromise = collectFile(dir, filename)
+            const promise = collectFile(dir, filename)
                 .then(result => {
                     if (result) filesToSend.push(result);
                 });
-
-            fileProcessingPromises.push(processPromise);
+            promises.push(promise);
         }
     }
 
-    await Promise.all(fileProcessingPromises);
+    await Promise.all(promises);
     return filesToSend;
 }
 
