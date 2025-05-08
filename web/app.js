@@ -1,5 +1,5 @@
 // HyperMD/Codemirror editor
-let editor = null;
+let editor;
 let focusedItemIndex = -1;
 
 // Normalize text to use only \n as line endings
@@ -10,7 +10,7 @@ function norm(text) {
 async function init(el) {
     initEditor(el);
 
-    const savedDirectoryHandle = await getSavedDirectoryHandle();
+    const savedDirectoryHandle = await getRootDirHandle();
     const userHasOpenedDirectory = savedDirectoryHandle instanceof FileSystemDirectoryHandle;
     if (!userHasOpenedDirectory) {
         document.getElementById('welcome').style.display = 'block';
@@ -25,28 +25,7 @@ async function init(el) {
         document.getElementById('welcome').style.display = 'block';
     }
 
-    // Track time to load
-    const startTime = performance.now();
-    files = await loadLocalFiles(savedDirectoryHandle);
-    console.log(`Files loaded in ${performance.now() - startTime}ms`);
-    await syncWithServer();
-
-    window.loader = setInterval(async function() {
-        // Check if current file has been modified
-        let dir = editor.currentDir;
-        let file = editor.currentFile;
-        // TODO handle removed file cases etc
-        const updatedFile = await files[dir]?.[file].handle.getFile();
-        let newContent = await updatedFile.text();
-        // TODO dirty hack, we replace links on the fly
-        let currentContent = getCurrentContent();
-        if (saveQueue.length === 0) {
-            newContent = newContent.replace(/\[\[(.+?)\|.*?\]\]/g, '[[$1]]');
-            if (norm(currentContent) !== norm(newContent)) {
-                await showFile(dir, file, false);
-            }
-        }
-    }, loaderInterval)
+    await initFiles();
     buildSidebar();
     await showRandomFile();
 }
@@ -610,7 +589,7 @@ async function saveDirectoryHandle(directoryHandle) {
     await store.put(directoryHandle, 'savedDirectoryHandle');
 }
 
-async function getSavedDirectoryHandle() {
+async function getRootDirHandle() {
     const db = await initDB();
     return new Promise((resolve, reject) => {
         const transaction = db.transaction('handles', 'readonly');
@@ -620,25 +599,6 @@ async function getSavedDirectoryHandle() {
         request.onerror = () => reject(request.error);
     });
 }
-
-// Worker to process the saving queue
-let isProcessing = false;
-window.saver = setInterval(async function processSaveQueue() {
-    if (isProcessing) return;
-    if (saveQueue.length === 0) return;
-
-    isProcessing = true;
-    while (saveQueue.length > 0) {
-        try {
-            await saveFile();
-        } catch (error) {
-            console.error("Error during save:", error);
-        }
-        saveQueue.shift();
-    }
-
-    isProcessing = false;
-}, saverInterval);
 
 document.addEventListener('mousedown', (event) => {
     const goToFile = document.getElementById('search');
@@ -650,7 +610,7 @@ document.addEventListener('mousedown', (event) => {
 
 // Reload files once the app gains focus
 window.addEventListener("focus", async () => {
-    const savedDirectoryHandle = await getSavedDirectoryHandle();
+    const savedDirectoryHandle = await getRootDirHandle();
     files = await loadLocalFiles(savedDirectoryHandle);
     console.log("Files loaded");
     syncWithServer()

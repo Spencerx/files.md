@@ -1,7 +1,8 @@
-const saverInterval = 50; // ms
-const loaderInterval = 3000; // ms
+const saverInterval = 50; // ms, how often to save currently open file
+const loaderInterval = 3000; // ms, how often to load files from local system and sync with server
 
 let saveQueue = [];
+let isSaving = false;
 
 // Files structure:
 // {
@@ -116,7 +117,9 @@ async function syncWithServer() {
             method: 'POST',
             headers: {'Content-Type': 'application/json', 'Authorization': localStorage.getItem('token')},
             body: JSON.stringify({
-                files: filesToSend,
+                // TODO rem
+                files: [],
+                // files: filesToSend,
                 timestamps: filesMetadata['timestamps'] || [],
             })
         });
@@ -149,7 +152,7 @@ async function syncWithServer() {
         // TODO if file was modified locally, we need to re-read it before writing.
         const dirs = path.split('/');
         dirs.pop() // remove filename
-        let currentDirHandle = await getSavedDirectoryHandle();
+        let currentDirHandle = await getRootDirHandle();
         for (const dirName of dirs) {
             if (dirName) {
                 currentDirHandle = await currentDirHandle.getDirectoryHandle(dirName, {create: true});
@@ -170,9 +173,10 @@ async function syncWithServer() {
         let serverHash = hash(content);
         if (clientHash !== serverHash) {
             console.log("Hashes do not match, writing file...");
-            const writable = await fileHandle.createWritable();
-            await writable.write(content);
-            await writable.close();
+            // TODO rem
+            // const writable = await fileHandle.createWritable();
+            // await writable.write(content);
+            // await writable.close();
         } else {
             console.log("Hashes match, no need to write file.");
         }
@@ -255,6 +259,24 @@ async function saveFile() {
     }
 }
 
+// Worker to process the saving queue
+window.saver = setInterval(async function processSaveQueue() {
+    if (isSaving) return;
+    if (saveQueue.length === 0) return;
+
+    isSaving = true;
+    while (saveQueue.length > 0) {
+        try {
+            await saveFile();
+        } catch (error) {
+            console.error("Error during save:", error);
+        }
+        saveQueue.shift();
+    }
+
+    isSaving = false;
+}, saverInterval);
+
 function hash(str) {
     let hash = 0;
     for (let i = 0, len = str.length; i < len; i++) {
@@ -263,6 +285,32 @@ function hash(str) {
         hash |= 0;
     }
     return hash;
+}
+
+async function initFiles() {
+    const rootDirHandle = await getRootDirHandle();
+
+    const startTime = performance.now();
+    files = await loadLocalFiles(rootDirHandle);
+    console.log(`Files loaded in ${performance.now() - startTime}ms`);
+    await syncWithServer();
+
+    window.loader = setInterval(async function() {
+        // Check if current file has been modified
+        let dir = editor.currentDir;
+        let file = editor.currentFile;
+        // TODO handle removed file cases etc
+        const updatedFile = await files[dir]?.[file].handle.getFile();
+        let newContent = await updatedFile.text();
+        // TODO dirty hack, we replace links on the fly
+        let currentContent = getCurrentContent();
+        if (saveQueue.length === 0) {
+            newContent = newContent.replace(/\[\[(.+?)\|.*?\]\]/g, '[[$1]]');
+            if (norm(currentContent) !== norm(newContent)) {
+                await showFile(dir, file, false);
+            }
+        }
+    }, loaderInterval)
 }
 
 window.addEventListener('beforeunload', function () {
