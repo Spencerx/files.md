@@ -87,6 +87,7 @@ async function loadLocalFiles(rootDirHandle) {
             loadDir(handle, dir, depth)
         ));
     }
+
     await loadDir(rootDirHandle);
 
     // Remove empty dirs
@@ -119,7 +120,7 @@ async function syncWithServer() {
             body: JSON.stringify({
                 // TODO rem
                 files: [],
-                // files: filesToSend,
+                files: filesToSend,
                 timestamps: filesMetadata['timestamps'] || [],
             })
         });
@@ -138,36 +139,9 @@ async function syncWithServer() {
     for (const fileInfo of server.files) {
         const {path, content, lastModified} = fileInfo;
 
-        // TODO What about more than 2 levels nested?
-        let dir, filename;
-        if (path.includes('/')) {
-            const parts = path.split('/');
-            filename = parts.pop();
-            dir = parts.join('/');
-        } else {
-            dir = '';
-            filename = path;
-        }
-
-        // TODO if file was modified locally, we need to re-read it before writing.
-        const dirs = path.split('/');
-        dirs.pop() // remove filename
-        let currentDirHandle = await getRootDirHandle();
-        for (const dirName of dirs) {
-            if (dirName) {
-                currentDirHandle = await currentDirHandle.getDirectoryHandle(dirName, {create: true});
-            }
-        }
-
         // TODO create dirs if not exist?
-        console.log("Syncing " + filename);
-        let fileHandle;
-        try {
-            fileHandle = await currentDirHandle.getFileHandle(filename, {create: true});
-        } catch (error) {
-            console.error(`Error getting file handle for '${dir}/${filename}':`, error);
-            continue;
-        }
+        console.log("Syncing " + path);
+        let fileHandle = await getFileHandle(path);
         let file = await fileHandle.getFile()
         let clientHash = hash(await file.text());
         let serverHash = hash(content);
@@ -190,6 +164,35 @@ async function syncWithServer() {
     filesMetadata['timestamps'] = server.timestamps;
     localStorage.setItem(SYNC_STORAGE_KEY, JSON.stringify(filesMetadata));
     console.log("Sync completed in " + (performance.now() - startTime) + "ms");
+}
+
+async function syncFileWithServer(dir, filename) {
+    let file = getFileHandle(`${dir}/${filename}`);
+    let lastModified = filesMetadata?.files?.[dir]?.[filename]?.lastModified ?? 0;
+    console.log(lastModified, file);
+
+    return;
+    let serverFile = {};
+    try {
+        let response = await fetch('https://habits.files.md/syncFile', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'Authorization': localStorage.getItem('token')},
+            body: JSON.stringify({
+                Path: `${dir}/${filename}`,
+                LastModified: lastModified,
+                Content: '',
+            })
+        });
+        if (!response.ok) {
+            console.log(`Server responded with ${response.status}`);
+            return;
+        }
+
+        serverFile = await response.json();
+    } catch (error) {
+        console.error("Network error occurred:", error.message);
+        return;
+    }
 }
 
 async function collectLocallyModifiedFiles() {
@@ -243,20 +246,72 @@ async function getFileIfChanged(dir, filename) {
     }
 }
 
-async function saveCurrentFile() {
-    const dir = editor.currentDir;
-    const filename = editor.currentFile;
-    const fileData = files[dir][filename];
-    if (fileData && fileData.handle) {
-        let content = getCurrentContent();
-        const writable = await fileData.handle.createWritable();
-        await writable.write(content);
-        await writable.close(); // Buffer is flushed on disk at this moment, it could be interrupted by the event pool, so maintain a flag
+async function getFileHandle(path) {
+    let dir, filename;
+    if (path.includes('/')) {
+        const parts = path.split('/');
+        filename = parts.pop();
+        dir = parts.join('/');
     } else {
-        if (fileData.handle) {
-            alert(`Cannot save ${filename}. No file handle found.`);
+        dir = '';
+        filename = path;
+    }
+
+    const dirs = dir.split('/');
+    let currentDirHandle = await getRootDirHandle();
+    for (const dirName of dirs) {
+        if (dirName) {
+            try {
+                currentDirHandle = await currentDirHandle.getDirectoryHandle(dirName, {create: true});
+            } catch (error) {
+                console.error(`Error getting directory handle for '${dirName}':`, error);
+                return null;
+            }
         }
     }
+
+    let fileHandle;
+    try {
+        fileHandle = await currentDirHandle.getFileHandle(filename, {create: true});
+    } catch (error) {
+        console.error(`Error getting file handle for '${dir}/${filename}':`, error);
+        return null;
+    }
+
+    return fileHandle;
+}
+
+async function saveCurrentFile() {
+    if (!unsavedChanges) return;
+
+    // Wait until not saving
+    while (isSaving) {
+        await new Promise(r => setTimeout(r, 50));
+    }
+
+    isSaving = true;
+    try {
+        const dir = editor.currentDir;
+        const filename = editor.currentFile;
+        const fileData = files[dir][filename];
+        if (fileData && fileData.handle) {
+            let content = getCurrentContent();
+            const writable = await fileData.handle.createWritable();
+            await writable.write(content);
+            // Buffer is flushed on disk at this moment. It could be interrupted
+            // by the event loop, so we use isSaving guard.
+            await writable.close();
+        } else {
+            if (fileData.handle) {
+                alert(`Cannot save ${filename}. No file handle found.`);
+            }
+        }
+    } catch (error) {
+        console.error("Error during save:", error);
+    }
+
+    isSaving = false;
+    unsavedChanges = false;
 }
 
 function hash(str) {
@@ -277,7 +332,7 @@ async function initFiles() {
     console.log(`Files loaded in ${performance.now() - startTime}ms`);
     await syncWithServer();
 
-    window.loader = setInterval(async function() {
+    window.loader = setInterval(async function () {
         // Check if current file has been modified
         let dir = editor.currentDir;
         let file = editor.currentFile;
@@ -300,16 +355,9 @@ window.addEventListener('beforeunload', function () {
     clearInterval(window.saver);
 });
 
-// Worker to process the saving queue
-window.saver = setInterval(async function processSaveQueue() {
-    if (isSaving) return;
-    if (!unsavedChanges) return;
+function processSaveQueue() {
 
-    isSaving = true;
-    try {
-        await saveCurrentFile();
-    } catch (error) {
-        console.error("Error during save:", error);
-    }
-    isSaving = false;
-}, saverInterval);
+}
+
+// Worker to process the saving queue
+window.saver = setInterval(async, saverInterval);
