@@ -207,12 +207,13 @@ func SyncFile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	serverContent, err := ioutil.ReadFile(fullPath)
-	if err != nil {
+	if err != nil && !os.IsNotExist(err) {
 		log.Printf("Error reading one file '%s': %v", fullPath, err)
 		http.Error(w, "Error reading server file", http.StatusBadRequest)
 		return
 	}
 
+	// TODO when file does not exist the content is empty, which is implicit
 	// Return already up-todate status
 	if string(serverContent) == file.Content {
 		logSync(fmt.Sprintf("File '%s' is already up to date", file.Path))
