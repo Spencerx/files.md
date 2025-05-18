@@ -116,9 +116,9 @@ async function syncAllWithServer() {
 
     // Send locally modified files and timestamps of last seen dirs from the server
     let server = {};
-    let filesToSend = await collectLocallyModifiedFiles();
+    let filesToSend = await collectLocallyModifiedTextFiles();
     try {
-        let response = await fetch('https://habits.files.md/sync', {
+        let response = await fetch('https://habits.files.md/syncTexts', {
             method: 'POST',
             headers: {'Content-Type': 'application/json', 'Authorization': localStorage.getItem('token')},
             body: JSON.stringify({
@@ -149,7 +149,7 @@ async function syncAllWithServer() {
         }
 
         console.log("Syncing " + path);
-        await write(path, content)
+        await saveTextFile(path, content)
         setMetadata(path, content, lastModified);
     }
     filesMetadata['timestamps'] = server.timestamps;
@@ -166,7 +166,7 @@ async function syncFileWithServer(dir, filename) {
 
     let serverFile = {};
     try {
-        let response = await fetch('https://habits.files.md/syncFile', {
+        let response = await fetch('https://habits.files.md/syncText', {
             method: 'POST',
             headers: {'Content-Type': 'application/json', 'Authorization': localStorage.getItem('token')},
             body: JSON.stringify({
@@ -194,13 +194,103 @@ async function syncFileWithServer(dir, filename) {
     setMetadata(path, serverFile.content, serverFile.lastModified);
     saveMetadata();
     console.log(serverFile);
-    await write(path, serverFile.content);
+    await saveTextFile(path, serverFile.content);
     console.log('showing file sync one');
     await showFile(dir, filename);
     console.log("File synced with server");
 }
 
-async function collectLocallyModifiedFiles() {
+async function syncMediaFilesFromServer() {
+    console.log(`Starting media sync from img folder...`);
+    const startTime = performance.now();
+
+    const mediaTimestamp = filesMetadata['mediaTimestamp'] || 0;
+    try {
+        const response = await fetch('https://habits.files.md/syncMedias', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('token')
+            },
+            body: JSON.stringify({
+                folder: 'img',
+                timestamp: mediaTimestamp
+            })
+        });
+
+        if (!response.ok) {
+            console.error(`Server responded with ${response.status}`);
+            return;
+        }
+
+        const serverData = await response.json();
+
+        // Process and save media files
+        let filesProcessed = 0;
+        for (const fileInfo of serverData.files) {
+            const { path, lastModified, url } = fileInfo;
+            console.log(`Downloading media file: ${path}`);
+
+            try {
+                // Fetch the binary file
+                const fileResponse = await fetch(url);
+                if (!fileResponse.ok) {
+                    console.error(`Failed to download ${path}: ${fileResponse.status}`);
+                    continue;
+                }
+
+                const blob = await fileResponse.blob();
+                await saveMediaFile(path, blob);
+                // setMetadata(path, null, lastModified);
+                filesProcessed++;
+            } catch (error) {
+                console.error(`Error processing media file ${path}:`, error);
+            }
+        }
+
+        // // Update the media folder timestamp in our metadata
+        // if (serverData.timestamp) {
+        //     filesMetadata['timestamps'][mediaFolder] = serverData.timestamp;
+        //     saveMetadata();
+        // }
+        console.log(`Media sync completed in ${(performance.now() - startTime).toFixed(2)}ms. Downloaded ${filesProcessed} files.`);
+    } catch (error) {
+        console.error("Network error during media sync:", error.message);
+    }
+}
+
+async function saveMediaFile(path, blob) {
+    const fileHandle = await getFileHandle(path);
+    if (fileHandle === null) {
+        console.log(`Malformed name for ${path}, skipping file...`);
+        return;
+    }
+
+    try {
+        const file = await fileHandle.getFile();
+        const fileExists = file.size > 0;
+        if (fileExists) {
+            console.log(`File ${path} already exists and is up to date, skipping...`);
+            return;
+        }
+    } catch (error) {
+        console.log(`File ${path} doesn't exist or can't be read, will create it`);
+    }
+
+    try {
+        const writable = await fileHandle.createWritable();
+        console.log(path, blob);
+        // await writable.write(blob);
+        // await writable.close();
+        console.log(`Successfully wrote media file: ${path}`);
+        // Save media timestamp if mine is bigger?
+    } catch (error) {
+        console.error(`Error writing media file ${path}:`, error);
+        throw error;
+    }
+}
+
+async function collectLocallyModifiedTextFiles() {
     const filesToSend = [];
     const promises = [];
     for (const dir in files) {
@@ -323,7 +413,7 @@ async function isContentEqual(path, content) {
     }
 }
 
-async function write(path, content) {
+async function saveTextFile(path, content) {
     let fileHandle = await getFileHandle(path);
     if (fileHandle === null) {
         // TODO fix once Chromium fixes the bug

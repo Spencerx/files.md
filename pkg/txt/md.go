@@ -36,7 +36,7 @@ var closeTags = map[string]string{
 // <s>strikethrough</s>, <strike>strikethrough</strike>, <del>strikethrough</del>
 // <span class="tg-spoiler">spoiler</span>, <tg-spoiler>spoiler</tg-spoiler>
 // <b>bold <i>italic bold <s>italic bold strikethrough <span class="tg-spoiler">italic bold strikethrough spoiler</span></s> <u>underline italic bold</u></i> bold</b>
-// <a href="http://www.example.com/">inline URL</a>
+// <a href="http://www.example.com/">inline Path</a>
 // <a href="tg://user?id=123456789">inline mention of a user</a>
 // <tg-emoji emoji-id="5368324170671202286">👍</tg-emoji>
 // <code>inline fixed-width code</code>
