@@ -181,8 +181,9 @@ async function syncFileWithServer(dir, filename) {
         }
         let json = await response.json();
         if (["not_modified", "updated_on_server"].includes(json.status)) {
+            saveLastModified(path, json.lastModified);
             console.log(json.status);
-           return;
+            return;
         }
         serverFile = json
     } catch (error) {
@@ -318,6 +319,7 @@ async function isContentEqual(path, content) {
         return true;
     }
 }
+
 async function write(path, content) {
     let fileHandle = await getFileHandle(path);
     if (fileHandle === null) {
@@ -348,6 +350,21 @@ function getMetadata(path) {
         return null;
     }
 }
+
+function saveLastModified(path, lastModified) {
+    const parts = path.split('/');
+    const filename = parts.pop();
+    const dir = parts.join('/');
+
+    // TODO what if metadata doesn't exist yet?Can it be that file is not created
+    filesMetadata['files'] = filesMetadata['files'] ?? {};
+    filesMetadata['files'][dir] = filesMetadata['files'][dir] ?? {};
+    filesMetadata['files'][dir][filename] = {
+        lastModified: lastModified,
+    };
+    saveMetadata();
+}
+
 
 function setMetadata(path, content, lastModified) {
     const parts = path.split('/');
