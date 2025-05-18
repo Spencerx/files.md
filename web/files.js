@@ -290,6 +290,21 @@ async function isContentEqual(path, content) {
     let clientHash = hash(normNewLines(await file.text()));
     let serverHash = hash(normNewLines(content));
     if (clientHash !== serverHash) {
+        // Log string differences in content, not hash
+        const clientContent = normNewLines(await file.text());
+        const serverContent = normNewLines(content);
+        const clientLines = clientContent.split('\n');
+        const serverLines = serverContent.split('\n');
+        const diff = [];
+        for (let i = 0; i < Math.max(clientLines.length, serverLines.length); i++) {
+            const clientLine = clientLines[i] || '';
+            const serverLine = serverLines[i] || '';
+            if (clientLine !== serverLine) {
+                diff.push(`Line ${i + 1}: "${clientLine}" vs "${serverLine}"`);
+            }
+        }
+        console.log("Content differs:", diff.join('\n'));
+
         return false;
     } else {
         return true;
@@ -401,18 +416,13 @@ async function initFiles() {
     // Refresh current file
     window.loader = setInterval(async function () {
         // Check if current file has been modified
-        let dir = editor.currentDir;
-        let file = editor.currentFile;
-        // TODO handle removed file cases etc
-        const updatedFile = await files[dir]?.[file].handle.getFile();
-        let newContent = await updatedFile.text();
-        // TODO dirty hack, we replace links on the fly
-        let currentContent = getCurrentContent();
-        if (!hasUnsavedChanges) {
-            newContent = newContent.replace(/\[\[(.+?)\|.*?\]\]/g, '[[$1]]');
-            if (normNewLines(currentContent) !== normNewLines(newContent)) {
-                await showFile(dir, file, false);
-            }
+        let path = `${editor.currentDir}/${editor.currentFile}`;
+        if (!hasUnsavedChanges || !await isContentEqual(path, getCurrentContent())) {
+            // What is this?
+            // newContent = newContent.replace(/\[\[(.+?)\|.*?\]\]/g, '[[$1]]');
+            // if (normNewLines(currentContent) !== normNewLines(newContent)) {
+                await showFile(editor.currentDir, editor.currentFile, false);
+            // }
         }
     }, loaderInterval)
 }
