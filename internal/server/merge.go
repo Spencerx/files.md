@@ -30,7 +30,7 @@ func Merge(s1, s2 string) string {
 	// Fill the lcsLength table.
 	for i := 1; i <= len(lines1); i++ {
 		for j := 1; j <= len(lines2); j++ {
-			if lines1[i] == lines2[j] {
+			if lines1[i-1] == lines2[j-1] {
 				lcsLength[i][j] = lcsLength[i-1][j-1] + 1
 			} else {
 				lcsLength[i][j] = max(lcsLength[i-1][j], lcsLength[i][j-1])
