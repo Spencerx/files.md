@@ -210,6 +210,7 @@ func SyncText(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		serverModTime = info.ModTime().Unix()
 	}
+	log.Printf("Server timestamp for '%s': %d", fullPath, serverModTime)
 
 	// TODO if no clientFile, severContent = ""
 	serverContent, err := ioutil.ReadFile(fullPath)
@@ -222,7 +223,6 @@ func SyncText(w http.ResponseWriter, r *http.Request) {
 	// TODO when clientFile does not exist the content is empty, which is implicit
 	// Return already up-to-date status
 	if string(serverContent) == clientFile.Content {
-		logSync(fmt.Sprintf("clientFile '%s' is already up to date", clientFile.Path))
 		response := map[string]interface{}{
 			"status":       StatusNotModified,
 			"lastModified": serverModTime,
