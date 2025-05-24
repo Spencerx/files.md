@@ -207,7 +207,7 @@ async function syncFileWithServer(dir, filename) {
         return;
     }
     setMetadata(path, serverFile.content, serverFile.lastModified);
-    console.log(`saved metadata2 for ${path} with timestamp ${json.lastModified}`);
+    console.log(`saved metadata2 for ${path} with timestamp ${serverFile.lastModified}`);
     saveMetadata();
     console.log(serverFile);
     await saveTextFile(path, serverFile.content);
