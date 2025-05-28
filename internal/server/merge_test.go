@@ -377,3 +377,257 @@ Evening reflection
 	r.Contains(merged, "- Good day overall")
 	r.Contains(merged, "- Grateful for sunshine")
 }
+
+func TestMergeEmojisInJournalHeaders_SingleHeader(t *testing.T) {
+	r := require.New(t)
+
+	// Single header with emojis
+	headers := []string{"#### 23 May, Friday 🤸‍♂️🍽💪"}
+	result := mergeEmojisInJournalHeaders(headers)
+	r.Equal([]string{"#### 23 May, Friday 🤸‍♂️🍽💪"}, result)
+
+	// Single header without emojis
+	headers = []string{"#### 23 May, Friday"}
+	result = mergeEmojisInJournalHeaders(headers)
+	r.Equal([]string{"#### 23 May, Friday"}, result)
+}
+
+func TestMergeEmojisInJournalHeaders_MultipleHeadersSameDate(t *testing.T) {
+	r := require.New(t)
+
+	// Multiple headers with same date, different emojis
+	headers := []string{
+		"#### 23 May, Friday 🤸‍♂️",
+		"#### 23 May, Friday 🍽💪",
+		"#### 23 May, Friday 💧",
+	}
+	result := mergeEmojisInJournalHeaders(headers)
+	r.Equal([]string{"#### 23 May, Friday 🤸‍♂️🍽💪💧"}, result)
+}
+
+func TestMergeEmojisInJournalHeaders_OverlappingEmojis(t *testing.T) {
+	r := require.New(t)
+
+	// Headers with overlapping emojis - should deduplicate
+	headers := []string{
+		"#### 23 May, Friday 🤸‍♂️🍽💪",
+		"#### 23 May, Friday 🍽💪💧",
+	}
+	result := mergeEmojisInJournalHeaders(headers)
+	r.Equal([]string{"#### 23 May, Friday 🤸‍♂️🍽💪💧"}, result)
+}
+
+func TestMergeEmojisInJournalHeaders_DifferentDates(t *testing.T) {
+	r := require.New(t)
+
+	// Headers with different dates - should not merge
+	headers := []string{
+		"#### 23 May, Friday 🤸‍♂️",
+		"#### 24 May, Saturday 🍽💪",
+	}
+	result := mergeEmojisInJournalHeaders(headers)
+	r.Equal([]string{
+		"#### 23 May, Friday 🤸‍♂️",
+		"#### 24 May, Saturday 🍽💪",
+	}, result)
+}
+
+func TestMergeEmojisInJournalHeaders_PartialDateMatch(t *testing.T) {
+	r := require.New(t)
+
+	// Headers where one starts with part of another's date - should not merge
+	headers := []string{
+		"#### 23 May, Friday 🤸‍♂️",
+		"#### 23 May, Friday evening 🍽💪",
+	}
+	result := mergeEmojisInJournalHeaders(headers)
+	// Should not merge because "#### 23 May, Friday evening" doesn't start with "#### 23 May, Friday"
+	r.Equal([]string{
+		"#### 23 May, Friday 🤸‍♂️",
+		"#### 23 May, Friday evening 🍽💪",
+	}, result)
+}
+
+func TestMergeEmojisInJournalHeaders_NoEmojis(t *testing.T) {
+	r := require.New(t)
+
+	// Multiple headers with same date but no emojis
+	headers := []string{
+		"#### 23 May, Friday",
+		"#### 23 May, Friday",
+	}
+	result := mergeEmojisInJournalHeaders(headers)
+	r.Equal([]string{"#### 23 May, Friday"}, result)
+}
+
+func TestMergeEmojisInJournalHeaders_MixedEmojiAndNoEmoji(t *testing.T) {
+	r := require.New(t)
+
+	// Mix of headers with and without emojis
+	headers := []string{
+		"#### 23 May, Friday",
+		"#### 23 May, Friday 🤸‍♂️",
+		"#### 23 May, Friday 🍽💪",
+	}
+	result := mergeEmojisInJournalHeaders(headers)
+	r.Equal([]string{"#### 23 May, Friday 🤸‍♂️🍽💪"}, result)
+}
+
+func TestMergeEmojisInJournalHeaders_NonHeaderLines(t *testing.T) {
+	r := require.New(t)
+
+	// Mix of headers and non-headers
+	headers := []string{
+		"#### 23 May, Friday 🤸‍♂️",
+		"This is not a header",
+		"Neither is this",
+		"#### 24 May, Saturday 🍽💪",
+	}
+	result := mergeEmojisInJournalHeaders(headers)
+	r.Equal([]string{
+		"#### 23 May, Friday 🤸‍♂️",
+		"This is not a header",
+		"Neither is this",
+		"#### 24 May, Saturday 🍽💪",
+	}, result)
+}
+
+func TestMergeEmojisInJournalHeaders_ConsecutiveGroupsWithNonHeaders(t *testing.T) {
+	r := require.New(t)
+
+	// Multiple groups separated by non-headers
+	headers := []string{
+		"#### 23 May, Friday 🤸‍♂️",
+		"#### 23 May, Friday 🍽",
+		"Some content here",
+		"#### 24 May, Saturday 💪",
+		"#### 24 May, Saturday 💧",
+		"More content",
+		"#### 25 May, Sunday 🚶‍♂️",
+	}
+	result := mergeEmojisInJournalHeaders(headers)
+	r.Equal([]string{
+		"#### 23 May, Friday 🤸‍♂️🍽",
+		"Some content here",
+		"#### 24 May, Saturday 💪💧",
+		"More content",
+		"#### 25 May, Sunday 🚶‍♂️",
+	}, result)
+}
+
+func TestMergeEmojisInJournalHeaders_ComplexEmojis(t *testing.T) {
+	r := require.New(t)
+
+	// Test with complex emojis (multi-byte, skin tones, etc.)
+	headers := []string{
+		"#### 23 May, Friday 👨‍💻",
+		"#### 23 May, Friday 🏃‍♂️",
+		"#### 23 May, Friday 👍🏽",
+	}
+	result := mergeEmojisInJournalHeaders(headers)
+	r.Equal([]string{"#### 23 May, Friday 👨‍💻🏃‍♂️👍🏽"}, result)
+}
+
+func TestMergeEmojisInJournalHeaders_EmojiOrder(t *testing.T) {
+	r := require.New(t)
+
+	// Test that emoji order is preserved
+	headers := []string{
+		"#### 23 May, Friday 🥇",
+		"#### 23 May, Friday 🥈",
+		"#### 23 May, Friday 🥉",
+	}
+	result := mergeEmojisInJournalHeaders(headers)
+	r.Equal([]string{"#### 23 May, Friday 🥇🥈🥉"}, result)
+}
+
+func TestMergeEmojisInJournalHeaders_EmptyInput(t *testing.T) {
+	r := require.New(t)
+
+	result := mergeEmojisInJournalHeaders([]string{})
+	r.Equal([]string{}, result)
+
+	result = mergeEmojisInJournalHeaders(nil)
+	r.Equal([]string{}, result)
+}
+
+func TestMergeEmojisInJournalHeaders_WhitespaceInDate(t *testing.T) {
+	r := require.New(t)
+
+	// Test headers with extra whitespace
+	headers := []string{
+		"####  23 May, Friday  🤸‍♂️",
+		"####  23 May, Friday  🍽💪",
+	}
+	result := mergeEmojisInJournalHeaders(headers)
+	// Should handle whitespace correctly
+	r.Len(result, 1)
+	r.Contains(result[0], "🤸‍♂️🍽💪")
+}
+
+func TestMergeEmojisInJournalHeaders_BugFix_NonMergeable(t *testing.T) {
+	r := require.New(t)
+
+	// This test specifically targets the bug you found
+	// When headers can't be merged, foundEmojis is accumulated but not used
+	headers := []string{
+		"#### 23 May, Friday 🤸‍♂️",
+		"#### 24 May, Saturday 🍽💪", // Different date
+	}
+	result := mergeEmojisInJournalHeaders(headers)
+
+	// Should return original headers unchanged, not merged
+	r.Equal([]string{
+		"#### 23 May, Friday 🤸‍♂️",
+		"#### 24 May, Saturday 🍽💪",
+	}, result)
+
+	// The bug would have been that foundEmojis was being accumulated
+	// even when the headers couldn't be merged due to different dates
+}
+
+func TestMergeEmojisInJournalHeaders_EdgeCaseEmptyEmoji(t *testing.T) {
+	r := require.New(t)
+
+	// Headers where regex doesn't match anything
+	headers := []string{
+		"#### 23 May, Friday",
+		"#### 23 May, Friday   ", // trailing spaces
+	}
+	result := mergeEmojisInJournalHeaders(headers)
+	r.Equal([]string{"#### 23 May, Friday"}, result)
+}
+
+func TestMergeEmojisInJournalHeaders_SpecialCharacters(t *testing.T) {
+	r := require.New(t)
+
+	// Test with punctuation and special characters
+	headers := []string{
+		"#### 23 May, Friday! 🎉",
+		"#### 23 May, Friday! 🎊",
+	}
+	result := mergeEmojisInJournalHeaders(headers)
+	r.Equal([]string{"#### 23 May, Friday! 🎉🎊"}, result)
+}
+
+func TestMergeEmojisInJournalHeaders_RealWorldScenario(t *testing.T) {
+	r := require.New(t)
+
+	// Realistic journal headers as they might appear
+	headers := []string{
+		"#### 28 May, Wednesday 🌅",  // morning entry
+		"#### 28 May, Wednesday 💼",  // work entry
+		"#### 28 May, Wednesday 🍽️", // meal entry
+		"#### 28 May, Wednesday 🌙",  // evening entry
+		"Some journal content here",
+		"#### 29 May, Thursday ☀️",
+		"#### 29 May, Thursday 🏃‍♂️💪",
+	}
+	result := mergeEmojisInJournalHeaders(headers)
+	expected := []string{
+		"#### 28 May, Wednesday 🌅💼🍽️🌙",
+		"Some journal content here",
+		"#### 29 May, Thursday ☀️🏃‍♂️💪",
+	}
+	r.Equal(expected, result)
+}

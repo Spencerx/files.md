@@ -95,16 +95,15 @@ func mergeEmojisInJournalHeaders(lines []string) []string {
 		foundEmojis := ""
 		possibleEmojis := regexp.MustCompile(`[^\w\s\p{P}]+$`)
 		date := strings.TrimSpace(possibleEmojis.ReplaceAllString(group[0], ""))
-		for _, line := range group {
-			// If at least one line from group doesn't start with the same date, we can't merge them.
-			if !strings.HasPrefix(line, date) {
-				mergedLines = append(mergedLines, group...)
-				break
-			}
-
-			foundEmojis += possibleEmojis.FindString(line)
+		// If at least one line from group doesn't start with the same date, we can't merge them.
+		if !samePrefix(group, date) {
+			mergedLines = append(mergedLines, group...)
+			continue
 		}
 
+		for _, line := range group {
+			foundEmojis += possibleEmojis.FindString(line)
+		}
 		if foundEmojis != "" {
 			foundEmojis = " " + unique(foundEmojis)
 		}
@@ -132,6 +131,15 @@ func groupConsecutiveHeaders(lines []string) [][]string {
 	}
 
 	return groups
+}
+
+func samePrefix(lines []string, prefix string) bool {
+	for _, line := range lines {
+		if !strings.HasPrefix(line, prefix) {
+			return false
+		}
+	}
+	return true
 }
 
 // unique returns a string containing unique unicode graphemes from both input strings.
