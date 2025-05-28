@@ -620,3 +620,314 @@ func TestMergeEmojisInJournalHeaders_RealWorldScenario(t *testing.T) {
 	}
 	r.Equal(expected, result)
 }
+
+func TestGroupConsecutiveHeaders_SingleHeader(t *testing.T) {
+	r := require.New(t)
+
+	lines := []string{"#### 23 May, Friday"}
+	result := groupConsecutiveHeaders(lines)
+	expected := [][]string{{"#### 23 May, Friday"}}
+	r.Equal(expected, result)
+}
+
+func TestGroupConsecutiveHeaders_MultipleConsecutiveHeaders(t *testing.T) {
+	r := require.New(t)
+
+	lines := []string{
+		"#### 23 May, Friday",
+		"#### 23 May, Saturday",
+		"#### 24 May, Sunday",
+	}
+	result := groupConsecutiveHeaders(lines)
+	expected := [][]string{{
+		"#### 23 May, Friday",
+		"#### 23 May, Saturday",
+		"#### 24 May, Sunday",
+	}}
+	r.Equal(expected, result)
+}
+
+func TestGroupConsecutiveHeaders_HeadersWithEmojis(t *testing.T) {
+	r := require.New(t)
+
+	lines := []string{
+		"#### 23 May, Friday 🤸‍♂️",
+		"#### 23 May, Friday 🍽💪",
+		"#### 24 May, Saturday 💧",
+	}
+	result := groupConsecutiveHeaders(lines)
+	expected := [][]string{{
+		"#### 23 May, Friday 🤸‍♂️",
+		"#### 23 May, Friday 🍽💪",
+		"#### 24 May, Saturday 💧",
+	}}
+	r.Equal(expected, result)
+}
+
+func TestGroupConsecutiveHeaders_NonHeaders(t *testing.T) {
+	r := require.New(t)
+
+	lines := []string{
+		"This is not a header",
+		"Neither is this",
+		"Just regular text",
+	}
+	result := groupConsecutiveHeaders(lines)
+	expected := [][]string{
+		{"This is not a header"},
+		{"Neither is this"},
+		{"Just regular text"},
+	}
+	r.Equal(expected, result)
+}
+
+func TestGroupConsecutiveHeaders_MixedHeadersAndNonHeaders(t *testing.T) {
+	r := require.New(t)
+
+	lines := []string{
+		"#### 23 May, Friday",
+		"#### 23 May, Saturday",
+		"Some journal content",
+		"More content",
+		"#### 24 May, Sunday",
+		"Final content",
+	}
+	result := groupConsecutiveHeaders(lines)
+	expected := [][]string{
+		{"#### 23 May, Friday", "#### 23 May, Saturday"},
+		{"Some journal content"},
+		{"More content"},
+		{"#### 24 May, Sunday"},
+		{"Final content"},
+	}
+	r.Equal(expected, result)
+}
+
+func TestGroupConsecutiveHeaders_HeadersWithExtraSpaces(t *testing.T) {
+	r := require.New(t)
+
+	// Headers with extra spaces - should still match
+	lines := []string{
+		"#### 23 May, Friday   ",
+		"####  23 May, Saturday", // Extra space after ####
+		"#### 24 May, Sunday",
+	}
+	result := groupConsecutiveHeaders(lines)
+	// Only the properly formatted ones should be grouped as headers
+	expected := [][]string{
+		{"#### 23 May, Friday   "},
+		{"####  23 May, Saturday"}, // This won't match the regex
+		{"#### 24 May, Sunday"},
+	}
+	r.Equal(expected, result)
+}
+
+func TestGroupConsecutiveHeaders_InvalidHeaderFormats(t *testing.T) {
+	r := require.New(t)
+
+	lines := []string{
+		"### 23 May, Friday",      // Wrong number of #
+		"##### 23 May, Friday",    // Too many #
+		"#### May 23, Friday",     // Wrong date format
+		"#### 23 May Friday",      // Missing comma
+		"#### 23 May,",            // Missing day
+		"#### 23, Friday",         // Missing month
+		"#### twenty May, Friday", // Non-numeric day
+	}
+	result := groupConsecutiveHeaders(lines)
+	// None should match, so each should be in its own group
+	expected := [][]string{
+		{"### 23 May, Friday"},
+		{"##### 23 May, Friday"},
+		{"#### May 23, Friday"},
+		{"#### 23 May Friday"},
+		{"#### 23 May,"},
+		{"#### 23, Friday"},
+		{"#### twenty May, Friday"},
+	}
+	r.Equal(expected, result)
+}
+
+func TestGroupConsecutiveHeaders_ValidHeaderVariations(t *testing.T) {
+	r := require.New(t)
+
+	lines := []string{
+		"#### 1 Jan, Monday",
+		"#### 10 February, Tuesday",
+		"#### 31 December, Wednesday",
+	}
+	result := groupConsecutiveHeaders(lines)
+	expected := [][]string{{
+		"#### 1 Jan, Monday",
+		"#### 10 February, Tuesday",
+		"#### 31 December, Wednesday",
+	}}
+	r.Equal(expected, result)
+}
+
+func TestGroupConsecutiveHeaders_MultipleGroups(t *testing.T) {
+	r := require.New(t)
+
+	lines := []string{
+		"#### 23 May, Friday",
+		"#### 23 May, Saturday",
+		"Some content between groups",
+		"#### 24 May, Sunday",
+		"#### 24 May, Monday",
+		"More content",
+		"#### 25 May, Tuesday",
+	}
+	result := groupConsecutiveHeaders(lines)
+	expected := [][]string{
+		{"#### 23 May, Friday", "#### 23 May, Saturday"},
+		{"Some content between groups"},
+		{"#### 24 May, Sunday", "#### 24 May, Monday"},
+		{"More content"},
+		{"#### 25 May, Tuesday"},
+	}
+	r.Equal(expected, result)
+}
+
+func TestGroupConsecutiveHeaders_SingleNonHeader(t *testing.T) {
+	r := require.New(t)
+
+	lines := []string{"Just some text"}
+	result := groupConsecutiveHeaders(lines)
+	expected := [][]string{{"Just some text"}}
+	r.Equal(expected, result)
+}
+
+func TestGroupConsecutiveHeaders_HeadersAtStartAndEnd(t *testing.T) {
+	r := require.New(t)
+
+	lines := []string{
+		"#### 23 May, Friday",
+		"#### 23 May, Saturday",
+		"Middle content",
+		"#### 24 May, Sunday",
+		"#### 24 May, Monday",
+	}
+	result := groupConsecutiveHeaders(lines)
+	expected := [][]string{
+		{"#### 23 May, Friday", "#### 23 May, Saturday"},
+		{"Middle content"},
+		{"#### 24 May, Sunday", "#### 24 May, Monday"},
+	}
+	r.Equal(expected, result)
+}
+
+func TestGroupConsecutiveHeaders_HeadersWithDifferentContent(t *testing.T) {
+	r := require.New(t)
+
+	// Headers with additional content after the date/day
+	lines := []string{
+		"#### 23 May, Friday - Good day",
+		"#### 23 May, Saturday 🌞 Sunny",
+		"#### 24 May, Sunday (rainy)",
+	}
+	result := groupConsecutiveHeaders(lines)
+	expected := [][]string{{
+		"#### 23 May, Friday - Good day",
+		"#### 23 May, Saturday 🌞 Sunny",
+		"#### 24 May, Sunday (rainy)",
+	}}
+	r.Equal(expected, result)
+}
+
+func TestGroupConsecutiveHeaders_EdgeCaseWhitespace(t *testing.T) {
+	r := require.New(t)
+
+	lines := []string{
+		"", // Empty line
+		"#### 23 May, Friday",
+		"   ", // Line with just spaces
+		"#### 24 May, Saturday",
+		"",
+	}
+	result := groupConsecutiveHeaders(lines)
+	expected := [][]string{
+		{""},
+		{"#### 23 May, Friday"},
+		{"   "},
+		{"#### 24 May, Saturday"},
+		{""},
+	}
+	r.Equal(expected, result)
+}
+
+func TestGroupConsecutiveHeaders_CaseSensitivity(t *testing.T) {
+	r := require.New(t)
+
+	lines := []string{
+		"#### 23 may, friday", // lowercase
+		"#### 23 MAY, FRIDAY", // uppercase
+		"#### 23 May, Friday", // proper case
+	}
+	result := groupConsecutiveHeaders(lines)
+	// Only the properly cased one should match
+	expected := [][]string{
+		{"#### 23 may, friday", "#### 23 MAY, FRIDAY", "#### 23 May, Friday"},
+	}
+	r.Equal(expected, result)
+}
+
+func TestGroupConsecutiveHeaders_RealWorldJournalExample(t *testing.T) {
+	r := require.New(t)
+
+	lines := []string{
+		"#### 28 May, Wednesday",
+		"#### 28 May, Wednesday", // Duplicate header
+		"Morning routine:",
+		"- Coffee ☕",
+		"- Exercise 💪",
+		"",
+		"#### 29 May, Thursday",
+		"#### 29 May, Thursday",
+		"Work day:",
+		"- Team meeting",
+		"- Code review",
+		"",
+		"#### 30 May, Friday",
+		"TGIF! 🎉",
+	}
+	result := groupConsecutiveHeaders(lines)
+	expected := [][]string{
+		{"#### 28 May, Wednesday", "#### 28 May, Wednesday"},
+		{"Morning routine:"},
+		{"- Coffee ☕"},
+		{"- Exercise 💪"},
+		{""},
+		{"#### 29 May, Thursday", "#### 29 May, Thursday"},
+		{"Work day:"},
+		{"- Team meeting"},
+		{"- Code review"},
+		{""},
+		{"#### 30 May, Friday"},
+		{"TGIF! 🎉"},
+	}
+	r.Equal(expected, result)
+}
+
+func TestGroupConsecutiveHeaders_RegexEdgeCases(t *testing.T) {
+	r := require.New(t)
+
+	lines := []string{
+		"#### 0 May, Friday",        // Zero day - should match \d+
+		"#### 99 December, Sunday",  // Large day number
+		"#### 1 A, Monday",          // Single letter month - should match \w+
+		"#### 1 Ab, Tuesday",        // Two letter month
+		"#### 1 January, W",         // Single letter day - should match \w+
+		"#### 1 January, Wednesday", // Full day name
+	}
+	result := groupConsecutiveHeaders(lines)
+	// All should match the regex pattern
+	expected := [][]string{{
+		"#### 0 May, Friday",
+		"#### 99 December, Sunday",
+		"#### 1 A, Monday",
+		"#### 1 Ab, Tuesday",
+		"#### 1 January, W",
+		"#### 1 January, Wednesday",
+	}}
+	r.Equal(expected, result)
+}
