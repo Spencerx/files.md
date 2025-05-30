@@ -3279,7 +3279,7 @@
           var left = openLeft ? leftSide : (ltr ? fromPos : toPos).left;
           var right = openRight ? (ltr ? toPos : fromPos).right : (ltr ? toPos : fromPos).right;
           drawSelectionRect(left, fromPos.top, right - left, fromPos.bottom);
-        } else { // Multiple lines
+        } else { // Multiple visual lines, one logical line
           var topLeft, topRight, botLeft, botRight;
           if (ltr) {
             topLeft = docLTR && openStart && first ? leftSide : fromPos.left;
@@ -3293,14 +3293,15 @@
             // botRight = !docLTR ? rightSide : wrapX(to, dir, "after");
           }
 
-          // Draw first line of selection
+          // Draw first visual line of selection
           let firstLine = cm.lineAtHeight(fromPos.top, "div")
           let firstVisualLine = getVisualLines(cm, firstLine)[0];
           let firstLineRight = wrapXObj(cm, lineObj, firstVisualLine.startChar, dir, "before");
           let firstLineLeft = wrapXObj(cm, lineObj, firstVisualLine.endChar, dir, "after");
           drawSelectionRect(fromPos.left, fromPos.top, (firstLineRight - fromPos.left), fromPos.bottom);
 
-          // Draw in-between lines
+          // Draw in-between visual lines
+          // TODO we can just get all visual lines and draw them all at once?
           let areThereInBetweenLines = fromPos.bottom < toPos.top
           if (areThereInBetweenLines) {
             // Get the logical line range for the middle section
@@ -3312,16 +3313,14 @@
               let lineObj = getLine(cm.doc, lineNo);
               let visualLines = getVisualLines(cm, lineNo);
               visualLines.forEach(visualLine => {
-                // Get coordinates for this visual line segment
-                let segmentStartCoords = charCoords(cm, Pos(lineNo, visualLine.startChar), "div");
-
+                let firstCharCoords = charCoords(cm, Pos(lineNo, visualLine.startChar), "div");
                 let left = wrapXObj(cm, lineObj, visualLine.startChar, dir, "before");
                 let right = wrapXObj(cm, lineObj, visualLine.endChar, dir, "after");
 
-                // Only draw segments that are within our vertical selection range
-                if (segmentStartCoords.bottom > fromPos.bottom && segmentStartCoords.top < toPos.top) {
+                // Only draw visual lines that are within our vertical selection range
+                if (firstCharCoords.bottom > fromPos.bottom && firstCharCoords.top < toPos.top) {
                   let width = left - right;
-                  drawSelectionRect(right, segmentStartCoords.top, width, segmentStartCoords.top + cm.defaultTextHeight());
+                  drawSelectionRect(right, firstCharCoords.top, width, firstCharCoords.bottom);
                 }
               });
             }
@@ -3351,7 +3350,7 @@
     var sFrom = range.from(), sTo = range.to();
     if (sFrom.line === sTo.line) { // Single line selection
       drawForLine(sFrom.line, sFrom.ch, sTo.ch);
-    } else {
+    } else { // Multiple lines selection
       let fromLine = getLine(doc, sFrom.line);
       let toLine = getLine(doc, sTo.line);
       let isCollapsed = visualLine(fromLine) === visualLine(toLine);
