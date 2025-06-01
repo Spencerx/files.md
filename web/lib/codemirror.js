@@ -7336,7 +7336,8 @@
             else {
               // insert a row below
               var columns = eolState.hmdTableColumns;
-              var newline_1 = core_1.repeatStr("  |  ", columns.length - 1);
+              // CHANGED from core_1
+              var newline_1 = "  |  ".repeat(Math.max(columns.length - 1, 0));
               var leading = "\n";
               if (table === 2 /* NORMAL */) {
                 leading += "| ";

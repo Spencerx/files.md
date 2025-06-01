@@ -200,6 +200,7 @@ function TreeView(root, container, options) {
 		});
 
 		span_desc.addEventListener("contextmenu", function (e) {
+			console.log('yes');
 			var cur_el = e.target;
 
 			while (typeof cur_el.tj_node === "undefined" || cur_el.classList.contains("tj_container")) {
