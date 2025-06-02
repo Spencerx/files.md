@@ -285,6 +285,7 @@ async function showFile(dir, filename, saveToHistory = true) {
     editor.getDoc().setValue(content);
     editor.clearHistory();
     editor.markClean();
+    editor.focus();
 
     if (cursorPos !== null) {
         setTimeout(() => {
