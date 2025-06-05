@@ -40,10 +40,10 @@ type syncRequest struct {
 }
 
 type syncResponse struct {
-	Status     string           `json:"status"`     // Status
-	Files      []file           `json:"files"`      // Files with content that need syncing
-	Timestamps map[string]int64 `json:"timestamps"` // Current server timestamps in Unix format
-	Deletions  []string         `json:"deletions"`
+	Status     string            `json:"status"`     // Status
+	Files      []file            `json:"files"`      // Files with content that need syncing
+	Timestamps map[string]int64  `json:"timestamps"` // Current server timestamps in Unix format
+	Renames    map[string]string `json:"renames"`    // What files to rename on client
 }
 
 // SyncTexts sync texts between client and server.
@@ -67,6 +67,14 @@ func SyncTexts(w http.ResponseWriter, r *http.Request) {
 
 	// TODO using rename log first replace old paths in client request to new so other code will work okay
 	// and maybe include it right away for files to send
+	// TODO what if multiply moves, back and forth? Merge them?
+	lastSync := int64(0)
+	for _, ts := range request.Timestamps {
+		if ts > lastSync {
+			lastSync = ts
+		}
+	}
+	renames := ReadLog(request.UserID, lastSync)
 
 	userFS, err := fs.NewUserFS(request.UserID)
 	if err != nil {
@@ -182,7 +190,7 @@ func SyncTexts(w http.ResponseWriter, r *http.Request) {
 		Status:     StatusOK,
 		Files:      files,
 		Timestamps: dirTimestamps,
-		Deletions:  deletions,
+		Renames:    renames,
 	}
 
 	w.Header().Set("Content-Type", "application/json")

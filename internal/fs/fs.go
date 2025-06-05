@@ -25,7 +25,7 @@ import (
 
 var (
 	NewUserFS = newUserFS
-	OnRename  = func(time int64, oldPath, newPath string) {} // callback that can be used to track renames
+	LogRename = func(time int64, oldPath, newPath string) {} // callback that can be used to track renames
 
 	errUnsafePath   = errors.New("unsafe path, possible security issue")
 	errCannotUnhash = errors.New("cannot unhash, maybe the file is missing")
@@ -258,7 +258,7 @@ func (fs FS) Rename(oldDir, oldFilename, newDir, newFilename string) error {
 	if err == nil {
 		absOldPath := path.Join(fs.RootPath, oldDir, oldFilename)
 		absNewPath := path.Join(fs.RootPath, newDir, newFilename)
-		OnRename(ctime, absOldPath, absNewPath)
+		LogRename(ctime, absOldPath, absNewPath)
 	}
 
 	return nil

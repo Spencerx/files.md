@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/kelseyhightower/envconfig"
 )
@@ -31,6 +32,10 @@ func LoadBotConfig() error {
 		return fmt.Errorf("config can't get working directory: %w", err)
 	}
 	BotCfg.WorkingDir = wd
+
+	if !filepath.IsAbs(BotCfg.StorageDir) {
+		BotCfg.StorageDir = filepath.Join(wd, BotCfg.StorageDir)
+	}
 
 	return nil
 }

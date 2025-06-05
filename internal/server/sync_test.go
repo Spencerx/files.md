@@ -271,7 +271,7 @@ func TestSyncAllTexts_EmptyRequest(t *testing.T) {
 	r.NoError(err)
 	r.Equal(StatusOK, response.Status)
 	r.Empty(response.Files)
-	r.Empty(response.Deletions)
+	r.Empty(response.Renames)
 }
 
 func TestSyncAllTexts_CreateNewFilesOnServer(t *testing.T) {
@@ -472,8 +472,8 @@ func TestSyncAllTexts_SendUpdatedFilesToClient(t *testing.T) {
 ////	err = json.Unmarshal(w.Body.Bytes(), &response)
 ////	r.NoError(err)
 ////	r.Equal(StatusOK, response.Status)
-////	r.Contains(response.Deletions, "nonexistent.md")
-////	r.NotContains(response.Deletions, "existing.md")
+////	r.Contains(response.Renames, "nonexistent.md")
+////	r.NotContains(response.Renames, "existing.md")
 ////}
 ////
 ////func TestSyncAllTexts_InvalidMethod(t *testing.T) {
