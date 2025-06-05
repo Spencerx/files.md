@@ -172,11 +172,12 @@ async function syncAllWithServer() {
             // todo try-catch?
 
             const shouldRename = path in server.renames;
-            if (shouldRename) {
-                await rename(server.renames[path], path);
-            } else {
+            // file.move is not currently working in Chrome =(
+            // if (shouldRename) {
+            //     await rename(server.renames[path], path);
+            // } else {
                 await saveTextFile(path, content)
-            }
+            // }
             setMetadata(path, content, lastModified);
             saveMetadata();
         }
@@ -510,8 +511,9 @@ async function rename(oldPath, newPath) {
         return;
     }
 
-    let file = fileHandle.getFile()
-    await file.move(newPath);
+    await fileHandle.move(newPath);
+    // console.log(file);
+    // await file.move(newPath);
     console.log(`File renamed from ${oldPath} to ${newPath}`);
 }
 
