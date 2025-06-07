@@ -63,7 +63,7 @@ function initAutoscroll(editor) {
             // Check immediately on mousedown in case we start at the edge
             setTimeout(() => checkAutoScroll(e), 0);
         }
-    });
+    }, true);
     document.addEventListener("mouseup", function () {
         isSelecting = false;
         lastMousePos = null;
