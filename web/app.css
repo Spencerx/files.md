@@ -260,9 +260,18 @@ a:hover {
     border-radius: 8px;
 }
 
-.CodeMirror .HyperMD-list-line {
+.CodeMirror .HyperMD-list-line-1 {
     padding-left: 35px !important;
 }
+
+.CodeMirror .HyperMD-list-line-2 {
+    padding-left: 65px !important;
+}
+
+.CodeMirror .HyperMD-list-line-3 {
+    padding-left: 95px !important;
+}
+
 
 .cm-formatting-list-ul::before {
     content: '';
