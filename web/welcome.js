@@ -23,7 +23,7 @@ let defaultFiles = {
             "content": "Only essential features. No distractions.\n\nYou don't need a feature-rich tool or a fancy template to be successful at taking notes.\n\nYou can insert your own links by typing `[`.\n\n[Markdown Guide](Markdown Guide.md)\n[Hotkeys](Hotkeys.md)\n[Why links](Links.md)"
         },
         "Links.md": {
-            "content": "Links are important (Tamara/mind)\n" +
+            "content": "Links are important\n" +
                 "\n" +
                 "Relations among ideas are far more important than the ideas themselves.\n" +
                 "Learning is making meaningful connections."
