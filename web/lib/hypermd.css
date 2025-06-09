@@ -871,10 +871,8 @@
 }
 .cm-s-hypermd-light pre.hmd-inactive-line span.cm-hmd-escape-backslash,
 .cm-s-hypermd-light pre.hmd-inactive-line span.cm-formatting-header {
-    /*PATCHED, otherwise padding/margin/line height of the header is affected */
-    display: none;
-    /*font-size: 0 !important;*/
-    /*display: inline;*/
+    font-size: 0 !important;
+    display: inline;
 }
 .cm-s-hypermd-light pre.hmd-inactive-line span.cm-hmd-list-indent {
     border-right: 0;
