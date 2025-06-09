@@ -6,6 +6,7 @@
     --color-inline-code-bg: #d8dae0;
     --color-link: #32302B;
     --color-link-hover: #2a4a6b;
+    --color-url: #706f6b;
     --color-tx-sel: rgba(101, 123, 131, 0.2);
     --color-bg-active: #EFEFEF;
 }
@@ -75,4 +76,9 @@
 /*Otherwise cursor height is not correct*/
 .cm-s-hypermd-light pre.HyperMD-list-line {
     padding-top: 0 !important;
+}
+
+.cm-s-hypermd-light span.cm-url {
+    color: var(--color-url) !important;
+    font-weight: 400;
 }

@@ -239,12 +239,16 @@ a:hover {
 
 .cm-s-hypermd-light span.cm-link {
     color: var(--color-link) !important;
-    font-weight:500;
-    border-bottom:0.04em solid rgba(50,50,50,.25);
+    /*font-weight: 500;*/
+    /*padding: 3px !important;*/
+    border-radius: 5px;
 }
 
 .cm-s-hypermd-light span.cm-link:hover {
     color: var(--color-link-hover) !important;
+    text-underline: none !important;
+    text-decoration: none !important;
+    background: var(--color-bg-active);
 }
 
 #welcome {
