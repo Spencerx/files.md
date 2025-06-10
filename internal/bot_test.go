@@ -316,7 +316,7 @@ func TestSaveFromPhotoWithCaption(t *testing.T) {
 
 	content, err := bot.fs.Read("today", "Caption.md")
 	r.NoError(err)
-	r.Equal("![center|400](img/tg_PHOTO_ID)\nCaption", content)
+	r.Equal("![center|400](media/tg_PHOTO_ID)\nCaption", content)
 }
 
 func TestSaveFromPhotoWithLongCaption(t *testing.T) {
@@ -336,7 +336,7 @@ func TestSaveFromPhotoWithLongCaption(t *testing.T) {
 
 	content, err := bot.fs.Read("today", fmt.Sprintf("A%s....md", strings.Repeat("a", 99)))
 	r.NoError(err)
-	r.Equal(fmt.Sprintf("![center|400](img/tg_PHOTO_ID)\nA%s", strings.Repeat("a", 100)), content)
+	r.Equal(fmt.Sprintf("![center|400](media/tg_PHOTO_ID)\nA%s", strings.Repeat("a", 100)), content)
 }
 
 func TestSaveFromPhotoWithSanitizedCaption(t *testing.T) {
@@ -363,7 +363,7 @@ func TestSaveFromPhotoWithSanitizedCaption(t *testing.T) {
 
 	content, err := bot.fs.Read("today", "Caption{|}.md")
 	r.NoError(err)
-	r.Equal("![center|400](img/tg_PHOTO_ID)\nCaption/", content)
+	r.Equal("![center|400](media/tg_PHOTO_ID)\nCaption/", content)
 }
 
 func TestSaveFromPhotoWithoutCaption(t *testing.T) {
@@ -397,7 +397,7 @@ func TestSaveFromPhotoWithoutCaption(t *testing.T) {
 
 	content, err := bot.fs.Read("today", "Img 11.08.24 09:54.md")
 	r.NoError(err)
-	r.Equal("![center|400](img/tg_PHOTO_ID)", content)
+	r.Equal("![center|400](media/tg_PHOTO_ID)", content)
 }
 
 func TestSaveFromReplyPhotoWithCaption(t *testing.T) {
@@ -432,7 +432,7 @@ func TestSaveFromReplyPhotoWithCaption(t *testing.T) {
 
 	content, err := bot.fs.Read("today", "Existing file.md")
 	r.NoError(err)
-	r.Equal("#### 11 August, Sunday\n![center|400](img/tg_PHOTO_ID)\nCaption\nExisting content", content)
+	r.Equal("#### 11 August, Sunday\n![center|400](media/tg_PHOTO_ID)\nCaption\nExisting content", content)
 }
 
 func TestAddTaskToLater(t *testing.T) {
@@ -3067,7 +3067,7 @@ func TestSaveFromImage_NewFile(t *testing.T) {
 
 	content, err := bot.fs.Read("today", "New Image.md")
 	r.NoError(err)
-	r.Equal("![center|400](img/tg_PHOTO_ID)\nNew Image", content)
+	r.Equal("![center|400](media/tg_PHOTO_ID)\nNew Image", content)
 }
 
 func TestSaveFromImage_LongCaption(t *testing.T) {
@@ -3089,7 +3089,7 @@ func TestSaveFromImage_LongCaption(t *testing.T) {
 	filename := fmt.Sprintf("A%s....md", strings.Repeat("a", 99))
 	content, err := bot.fs.Read("today", filename)
 	r.NoError(err)
-	r.Equal(fmt.Sprintf("![center|400](img/tg_PHOTO_ID)\nA%s", strings.Repeat("a", 100)), content)
+	r.Equal(fmt.Sprintf("![center|400](media/tg_PHOTO_ID)\nA%s", strings.Repeat("a", 100)), content)
 }
 
 func TestSaveFromImage_MultilineCaption(t *testing.T) {
@@ -3111,7 +3111,7 @@ func TestSaveFromImage_MultilineCaption(t *testing.T) {
 	filename := fmt.Sprintf("Abc.md")
 	content, err := bot.fs.Read("today", filename)
 	r.NoError(err)
-	r.Equal("![center|400](img/tg_PHOTO_ID)\nAbc\ndef", content)
+	r.Equal("![center|400](media/tg_PHOTO_ID)\nAbc\ndef", content)
 }
 
 func TestSaveFromImage_ReplyToExistingFile(t *testing.T) {
@@ -3147,7 +3147,7 @@ func TestSaveFromImage_ReplyToExistingFile(t *testing.T) {
 
 	content, err := bot.fs.Read("today", "Existing file.md")
 	r.NoError(err)
-	r.Equal("#### 1 January, Thursday\n![center|400](img/tg_PHOTO_ID)\nImage Caption\nExisting content", content)
+	r.Equal("#### 1 January, Thursday\n![center|400](media/tg_PHOTO_ID)\nImage Caption\nExisting content", content)
 }
 
 func TestSaveFromImage_EmptyCaption(t *testing.T) {
@@ -3180,7 +3180,7 @@ func TestSaveFromImage_EmptyCaption(t *testing.T) {
 
 	content, err := bot.fs.Read("today", "Img 01.01.70 00:00.md")
 	r.NoError(err)
-	r.Equal("![center|400](img/tg_PHOTO_ID)", content)
+	r.Equal("![center|400](media/tg_PHOTO_ID)", content)
 }
 
 func TestCreateOrAdd_NewFile(t *testing.T) {
