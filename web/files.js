@@ -24,8 +24,8 @@ let isSyncingCurrent = false;
 //   ]
 // }
 let files = [];
-let filesMetadata = {files: {}, timestamps: {}, mediaTimestamp: 0};
-const FILES_METADATA_STORAGE_KEY = 'files';
+let serverFiles = {files: {}, timestamps: {}, mediaTimestamp: 0};
+const SERVER_FILES_STORAGE_KEY = 'files';
 const supportedFileTypes = ['md', 'txt', 'png', 'jpg', 'jpeg', 'webp', 'gif',];
 const systemDirs = ["img", "archive", "_read_", "_watch_", "_shop_", "today", "later", "journal", "habits", "triggers", "places"];
 
@@ -111,9 +111,9 @@ async function loadLocalFiles(rootDirHandle) {
     }
 
     // Load metadata
-    const savedMetadata = localStorage.getItem(FILES_METADATA_STORAGE_KEY);
+    const savedMetadata = localStorage.getItem(SERVER_FILES_STORAGE_KEY);
     if (savedMetadata) {
-        filesMetadata = JSON.parse(savedMetadata);
+        serverFiles = JSON.parse(savedMetadata);
     }
 
     return newFiles;
@@ -144,7 +144,7 @@ async function syncTextsWithServer() {
                 userId: getUserId(),
                 modified: modified,
                 deleted: deleted,
-                timestamps: filesMetadata['timestamps'] || [],
+                timestamps: serverFiles['timestamps'] || [],
             })
         });
         if (!response.ok) {
@@ -185,7 +185,7 @@ async function syncTextsWithServer() {
                 console.error(`Error saving file ${path}:`, error);
             }
         }
-        filesMetadata['timestamps'] = server.timestamps;
+        serverFiles['timestamps'] = server.timestamps;
         saveMetadata();
     } catch (error) {
         console.error("Can't sync: ", error.message)
@@ -258,7 +258,7 @@ async function syncMediaFilesFromServer() {
     console.log(`Starting media sync from img folder...`);
     const startTime = performance.now();
 
-    const mediaTimestamp = filesMetadata['mediaTimestamp'] || 0;
+    const mediaTimestamp = serverFiles['mediaTimestamp'] || 0;
     try {
         const response = await fetch('https://api.files.md/syncMedias', {
             method: 'POST',
@@ -331,8 +331,8 @@ async function saveMediaFile(path, blob, lastModified) {
         const fileExists = file.size > 0;
         if (fileExists) {
             // Is it ok that we save metadata here as well?
-            if (filesMetadata['mediaTimestamp'] === undefined || lastModified > filesMetadata['mediaTimestamp']) {
-                filesMetadata['mediaTimestamp'] = lastModified;
+            if (serverFiles['mediaTimestamp'] === undefined || lastModified > serverFiles['mediaTimestamp']) {
+                serverFiles['mediaTimestamp'] = lastModified;
                 saveMetadata();
             }
             console.log(`File ${path} already exists and is up to date, skipping...`);
@@ -348,8 +348,8 @@ async function saveMediaFile(path, blob, lastModified) {
         await writable.close();
         console.log(`Successfully wrote media file: ${path}`);
         // TODO we assume that we got no fails. Instead save filenames hashes, same for text
-        if (lastModified > filesMetadata['mediaTimestamp']) {
-            filesMetadata['mediaTimestamp'] = lastModified;
+        if (lastModified > serverFiles['mediaTimestamp']) {
+            serverFiles['mediaTimestamp'] = lastModified;
             saveMetadata();
         }
 
@@ -401,8 +401,8 @@ async function collectModifiedAndDeletedFiles() {
 
     // Find deleted files that are in files metadata but not in existing files
     let deleted = [];
-    for (const dir in filesMetadata.files) {
-        for (const file in filesMetadata.files[dir]) {
+    for (const dir in serverFiles.files) {
+        for (const file in serverFiles.files[dir]) {
             if (/[<>:"|?*\\/\x00-\x1F\x7F]/.test(file)) {
                 continue;
             }
@@ -450,7 +450,7 @@ async function getFileStatus(dir, filename) {
     }
 
     // TODO why path is stored at all?
-    const path = filesMetadata?.files?.[dir]?.[filename]?.path;
+    const path = serverFiles?.files?.[dir]?.[filename]?.path;
     if (!path) {
         console.log("NEW FILE " + dir + "/" + filename);
         return {
@@ -461,8 +461,8 @@ async function getFileStatus(dir, filename) {
         }
     }
 
-    const serverHash = filesMetadata?.files?.[dir]?.[filename]?.hash;
-    const serverTime = filesMetadata?.files?.[dir]?.[filename]?.lastModified;
+    const serverHash = serverFiles?.files?.[dir]?.[filename]?.hash;
+    const serverTime = serverFiles?.files?.[dir]?.[filename]?.lastModified;
     if (serverHash !== hash(content)) {
         return {
             status: 'modified',
@@ -573,8 +573,6 @@ async function removeFile(path) {
         return;
     }
     await fileHandle.remove()
-    removeMetadataAndMemoryMapping(path);
-    saveMetadata()
     console.log(`File ${path} removed successfully.`);
 }
 
@@ -605,8 +603,8 @@ function getMetadata(path) {
     const filename = parts.pop();
     const dir = parts.join('/');
 
-    if (filesMetadata['files']?.[dir]?.[filename]) {
-        return filesMetadata['files'][dir][filename];
+    if (serverFiles['files']?.[dir]?.[filename]) {
+        return serverFiles['files'][dir][filename];
     } else {
         return null;
     }
@@ -617,9 +615,9 @@ function setMetadata(path, content, lastModified) {
     const filename = parts.pop();
     const dir = parts.join('/');
 
-    filesMetadata['files'] = filesMetadata['files'] ?? {};
-    filesMetadata['files'][dir] = filesMetadata['files'][dir] ?? {};
-    filesMetadata['files'][dir][filename] = {
+    serverFiles['files'] = serverFiles['files'] ?? {};
+    serverFiles['files'][dir] = serverFiles['files'][dir] ?? {};
+    serverFiles['files'][dir][filename] = {
         hash: hash(content),
         lastModified: lastModified,
         path: path
@@ -631,14 +629,14 @@ function removeMetadataAndMemoryMapping(path) {
     const filename = parts.pop();
     const dir = parts.join('/');
 
-    if (filesMetadata.files?.[dir]?.[filename]) {
-        delete filesMetadata.files[dir][filename];
+    if (serverFiles.files?.[dir]?.[filename]) {
+        delete serverFiles.files[dir][filename];
     }
     delete files[dir][filename];
 }
 
 function saveMetadata() {
-    localStorage.setItem(FILES_METADATA_STORAGE_KEY, JSON.stringify(filesMetadata));
+    localStorage.setItem(SERVER_FILES_STORAGE_KEY, JSON.stringify(serverFiles));
 }
 
 function getUserId() {
