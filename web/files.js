@@ -152,7 +152,8 @@ async function syncTextsWithServer() {
             return;
         }
 
-        for (const path in deleted) {
+        // Remove info about server files on client
+        for (const path of deleted) {
             removeInfoAboutServerFile(path);
         }
 
