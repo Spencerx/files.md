@@ -932,3 +932,11 @@ function stopResize() {
     isResizing = false;
     document.body.classList.remove('dragging');
 }
+
+document.addEventListener('keydown', (e) => {
+    if (isModifierKey(e) && e.key === 'a') {
+        e.preventDefault();
+        e.stopPropagation();
+        editor.execCommand('selectAll');
+    }
+}, true);
