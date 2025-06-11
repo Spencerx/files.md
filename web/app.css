@@ -472,3 +472,7 @@ body.dragging * {
 .cm-s-hypermd-light .HyperMD-codeblock::before {
     display: none;
 }
+
+.cm-formatting.cm-formatting-code.cm-inline-code {
+    background: none !important;
+}
