@@ -85,11 +85,11 @@ format:
 wasm:
 	GOOS=js GOARCH=wasm go build -o web/chat/main.wasm web/chat/main.go && cp /usr/local/go/misc/wasm/wasm_exec.js web/chat/
 
-wasm-watch:
-	@echo "👀 Watching for changes in web/chat/*.go..."
-	@fswatch -o web/chat/*.go | while read f; do \
+watch: # watch for changes and rebuild wasm
+	@echo "👀 Watching for changes in ./*.(js|go)..."
+	@fswatch -r internal pkg cmd | while read f; do \
 		echo "Rebuilding WASM..."; \
-		GOOS=js GOARCH=wasm go build -o web/chat/main.wasm web/chat/main.go && \
+		GOOS=js GOARCH=wasm go build -o web/chat/main.wasm cmd/wasm/main.go && \
 		cp /usr/local/go/misc/wasm/wasm_exec.js web/chat/ && \
 		echo "✅ WASM rebuilt at $$(date)"; \
 	done

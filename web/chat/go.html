@@ -1,16 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <script src="wasm_exec.js"></script>
 </head>
 <body>
-    <script type="module">
-        const go = new Go();
-        const wasmFile = await fetch("main.wasm");
-        const wasmModule = await WebAssembly.instantiateStreaming(wasmFile, go.importObject);
-        go.run(wasmModule.instance);
-        console.log(hi());
-    </script>
+<script>
+    async function hi() {
+        return "hello there!";
+    }
+</script>
+<script type="module">
+    const go = new Go();
+    const wasmFile = await fetch("main.wasm");
+    const wasmModule = await WebAssembly.instantiateStreaming(wasmFile, go.importObject);
+    go.run(wasmModule.instance);
+    console.log(reply());
+</script>
+<script src="wasm_exec.js"></script>
 </body>
 </html>
 

@@ -22,8 +22,8 @@ import (
 )
 
 var (
-	updater func(u internal.Update) error
-	chat    *tg.FakeTG
+	reply func(u internal.Update) error
+	chat  *tg.FakeTG
 )
 
 type Update struct {
@@ -35,11 +35,62 @@ type Response struct {
 	Messages []tg.Message
 }
 
-func main() {
-	initBot()
-	NewApp()
+func Reply(_ js.Value, args []js.Value) interface{} {
+	go func() { // Start a new goroutine for the blocking operation
+		result, err := await(js.Global().Call("hi"))
+		if err != nil {
+			fmt.Printf("Error: %v\n", err)
+			return
+		}
+		fmt.Printf("Result: %v\n", result.String())
+	}()
 
-	js.Global().Set("hi", js.FuncOf())
+	return nil
+}
+
+//update := newUpdate(args[0].String(), nil)
+//response := send(update)
+//
+//return response.Messages[0].Text
+//}
+
+func callAsync(fn string, args ...interface{}) (js.Value, error) {
+	promise := js.Global().Call(fn, args...)
+
+	return await(promise)
+}
+
+func await(promise js.Value) (js.Value, error) {
+	done := make(chan struct{})
+	var result js.Value
+	var err error
+
+	successFunc := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		// This callback runs on the event loop, so it should be non-blocking
+		result = args[0]
+		close(done)
+		return nil
+	})
+	defer successFunc.Release()
+
+	errorFunc := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		// This callback runs on the event loop, so it should be non-blocking
+		err = fmt.Errorf("promise rejected: %v", args[0])
+		close(done)
+		return nil
+	})
+	defer errorFunc.Release()
+
+	promise.Call("then", successFunc).Call("catch", errorFunc)
+
+	<-done
+	return result, err
+}
+
+func main() {
+	//initBot()
+
+	js.Global().Set("reply", js.FuncOf(Reply))
 
 	select {}
 
@@ -65,7 +116,7 @@ func initBot() {
 		panic(fmt.Sprintf("Error loading i18n: %s\n", err))
 	}
 
-	updater = func(u internal.Update) error {
+	reply = func(u internal.Update) error {
 		defer func() {
 			err := recover()
 			if err != nil {
@@ -113,11 +164,11 @@ func initBot() {
 	}
 }
 
-func Send(update Update) Response {
+func send(update Update) Response {
 	if update.Command != nil {
-		_ = updater(tg.NewUpdCmd(1, *update.Command))
+		_ = reply(tg.NewUpdCmd(1, *update.Command))
 	} else {
-		_ = updater(tg.NewUpd(1, update.Message))
+		_ = reply(tg.NewUpd(1, update.Message))
 	}
 
 	var r Response
@@ -132,13 +183,13 @@ func Send(update Update) Response {
 	return r
 }
 
-func NewUpdate(message string, cmd *tg.Cmd) Update {
+func newUpdate(message string, cmd *tg.Cmd) Update {
 	return Update{
 		Message: message,
 		Command: cmd,
 	}
 }
 
-func NewCmd(name string, params []string) tg.Cmd {
+func newCmd(name string, params []string) tg.Cmd {
 	return tg.NewCmd(name, params)
 }
