@@ -115,7 +115,7 @@ func readFile(_ afero.Fs, path string) ([]byte, error) {
 
 	select {
 	case result := <-resultChan:
-		sendToJS(result)
+		sendToJS(fmt.Sprintf("%v", result))
 		return []byte(result), nil
 	case err := <-errorChan:
 		return nil, err
@@ -136,7 +136,7 @@ func writeFile(_ afero.Fs, path string, data []byte, perm os.FileMode) error {
 
 	select {
 	case result := <-resultChan:
-		sendToJS(result)
+		sendToJS(fmt.Sprintf("%v", result))
 		return nil
 	case err := <-errorChan:
 		return err
@@ -157,7 +157,7 @@ func exists(_ afero.Fs, path string) (bool, error) {
 
 	select {
 	case result := <-resultChan:
-		sendToJS(result)
+		sendToJS(fmt.Sprintf("%v", result))
 		return result, nil
 	case err := <-errorChan:
 		return false, err

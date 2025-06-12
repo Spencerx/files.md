@@ -44,7 +44,7 @@
         await store.put(directoryHandle, 'savedDirectoryHandle');
     }
 
-    async function getFileHandle(path) {
+    async function getFileHandle(path, create=false) {
         let dir, filename;
         if (path.includes('/')) {
             const parts = path.split('/');
@@ -63,22 +63,12 @@
 
         for (const dirName of dirs) {
             if (dirName) {
-                try {
-                    currentDirHandle = await currentDirHandle.getDirectoryHandle(dirName, {create: true});
-                } catch (error) {
-                    console.error(`Error getting directory handle for '${dirName}':`, error);
-                    return null;
-                }
+                currentDirHandle = await currentDirHandle.getDirectoryHandle(dirName, {create: create});
             }
         }
 
         let fileHandle;
-        try {
-            fileHandle = await currentDirHandle.getFileHandle(filename, {create: true});
-        } catch (error) {
-            console.error(`Error getting file handle for '${dir}/${filename}':`, error);
-            return null;
-        }
+        fileHandle = await currentDirHandle.getFileHandle(filename, {create: create});
 
         return fileHandle;
     }
@@ -95,7 +85,7 @@
         let path = args[0];
         let content = args[1];
 
-        let fileHandle = await getFileHandle(path);
+        let fileHandle = await getFileHandle(path, true);
         const writable = await fileHandle.createWritable();
         await writable.write(content);
         await writable.close();
@@ -108,12 +98,7 @@
         }
 
         try {
-            const root = await getRootDirHandle();
-            if (root === undefined) {
-                return false;
-            }
-
-            await root.getFileHandle(path);
+            await getFileHandle(path);
             return true;
         } catch (error) {
             if (error.name === 'NotFoundError') {
