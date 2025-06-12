@@ -129,8 +129,8 @@ func NewBot(userID int64, tg Chat, fs *fs.FS, db Database, cfg *userconfig.Confi
 	return &Bot{userID, tg, fs, db, cfg}
 }
 
-// Answer to incoming text message, command or inline query
-func (b *Bot) Answer(u Update) error {
+// Reply to incoming text message, command or inline query
+func (b *Bot) Reply(u Update) error {
 	// Handle inline queries
 	if _, ok := u.InlineQueryID(); ok {
 		return b.answerSearch(u)

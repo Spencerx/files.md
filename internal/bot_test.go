@@ -37,7 +37,7 @@ func TestSaveFromTextMsg(t *testing.T) {
 	tgram := tg.NewFakeTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Answer(tg.NewUpd(-1, "New task"))
+	err = bot.Reply(tg.NewUpd(-1, "New task"))
 	r.NoError(err)
 
 	tasks, err := bot.fs.FilesAndDirs("today")
@@ -60,7 +60,7 @@ func TestSaveFromLongTextMsg(t *testing.T) {
 	tgram := tg.NewFakeTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Answer(tg.NewUpd(-1, strings.Repeat("a", 101)))
+	err = bot.Reply(tg.NewUpd(-1, strings.Repeat("a", 101)))
 	r.NoError(err)
 
 	tasks, err := bot.fs.FilesAndDirs("today")
@@ -84,7 +84,7 @@ func TestSaveFromTextMsgWithSanitize(t *testing.T) {
 	tgram := tg.NewFakeTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Answer(tg.NewUpd(-1, "New task/"))
+	err = bot.Reply(tg.NewUpd(-1, "New task/"))
 	r.NoError(err)
 
 	tasks, err := bot.fs.FilesAndDirs("today")
@@ -97,7 +97,7 @@ func TestSaveFromTextMsgWithSanitize(t *testing.T) {
 	r.NoError(err)
 	r.Equal("New task/", content)
 
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("today", nil)))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("today", nil)))
 	r.NoError(err)
 
 	r.Equal("<b>1</b> left"+wideSpacer, tgram.LastEditedText)
@@ -116,7 +116,7 @@ func TestAddMultilineTaskToToday(t *testing.T) {
 	tgram := tg.NewFakeTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Answer(tg.NewUpd(-1, "New task\nContent"))
+	err = bot.Reply(tg.NewUpd(-1, "New task\nContent"))
 	r.NoError(err)
 
 	tasks, err := bot.fs.FilesAndDirs("today")
@@ -140,7 +140,7 @@ func TestAddTaskWithSpecCharsToToday(t *testing.T) {
 	tgram := tg.NewFakeTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Answer(tg.NewUpd(-1, "New task\nUrl! https://g.com (Also_text] ##header\n-item1\n-item2\n1+1=2"))
+	err = bot.Reply(tg.NewUpd(-1, "New task\nUrl! https://g.com (Also_text] ##header\n-item1\n-item2\n1+1=2"))
 	r.NoError(err)
 
 	tasks, err := bot.fs.FilesAndDirs("today")
@@ -168,7 +168,7 @@ func TestAddTaskWithOnlyWhitespace(t *testing.T) {
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
 
-	err = bot.Answer(tg.NewUpd(-1, "   \t\n"))
+	err = bot.Reply(tg.NewUpd(-1, "   \t\n"))
 	r.EqualError(err, "save: extract title: empty msg")
 
 	tasks, err := bot.fs.FilesAndDirs("today")
@@ -187,7 +187,7 @@ func TestAddTaskWithLeadingAndTrailingSpaces(t *testing.T) {
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
 
-	err = bot.Answer(tg.NewUpd(-1, "   Task with spaces   "))
+	err = bot.Reply(tg.NewUpd(-1, "   Task with spaces   "))
 	r.NoError(err)
 
 	tasks, err := bot.fs.FilesAndDirs("today")
@@ -209,7 +209,7 @@ func TestShowEmptyTodayList(t *testing.T) {
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
 
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("today", nil)))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("today", nil)))
 	r.NoError(err)
 	r.Equal("🌴 You don't have any tasks!", tgram.LastSentText)
 }
@@ -227,7 +227,7 @@ func TestSaveFromTextMsgWithUnicodeCharacters(t *testing.T) {
 
 	unicodeText := "测试含有Unicode字符的文本🚀🌟"
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Answer(tg.NewUpd(-1, unicodeText))
+	err = bot.Reply(tg.NewUpd(-1, unicodeText))
 	r.NoError(err)
 
 	tasks, err := bot.fs.FilesAndDirs("today")
@@ -248,7 +248,7 @@ func TestSaveFromEmptyTextMsg(t *testing.T) {
 	tgram := tg.NewFakeTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Answer(tg.NewUpd(-1, ""))
+	err = bot.Reply(tg.NewUpd(-1, ""))
 	r.EqualError(err, "save: extract title: empty msg")
 
 	tasks, err := bot.fs.FilesAndDirs("today")
@@ -280,7 +280,7 @@ func TestSaveFromRegularReply(t *testing.T) {
 
 	upd := tg.NewUpd(-1, "Line")
 	upd.ReplyToMessageID = 255
-	err = bot.Answer(upd)
+	err = bot.Reply(upd)
 	r.NoError(err)
 
 	files, err := bot.fs.FilesAndDirs("today")
@@ -304,7 +304,7 @@ func TestSaveFromPhotoWithCaption(t *testing.T) {
 	upd := tg.NewUpd(-1, "")
 	upd.PhotoID = "PHOTO_ID"
 	upd.PhotoCaption = "Caption"
-	err = bot.Answer(upd)
+	err = bot.Reply(upd)
 	r.NoError(err)
 
 	files, err := bot.fs.FilesAndDirs("today")
@@ -331,7 +331,7 @@ func TestSaveFromPhotoWithLongCaption(t *testing.T) {
 	upd := tg.NewUpd(-1, "")
 	upd.PhotoID = "PHOTO_ID"
 	upd.PhotoCaption = strings.Repeat("a", 101)
-	err = bot.Answer(upd)
+	err = bot.Reply(upd)
 	r.NoError(err)
 
 	content, err := bot.fs.Read("today", fmt.Sprintf("A%s....md", strings.Repeat("a", 99)))
@@ -351,7 +351,7 @@ func TestSaveFromPhotoWithSanitizedCaption(t *testing.T) {
 	upd := tg.NewUpd(-1, "")
 	upd.PhotoID = "PHOTO_ID"
 	upd.PhotoCaption = "Caption/"
-	err = bot.Answer(upd)
+	err = bot.Reply(upd)
 	r.NoError(err)
 
 	files, err := bot.fs.FilesAndDirs("today")
@@ -385,7 +385,7 @@ func TestSaveFromPhotoWithoutCaption(t *testing.T) {
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
 	upd := tg.NewUpd(-1, "")
 	upd.PhotoID = "PHOTO_ID"
-	err = bot.Answer(upd)
+	err = bot.Reply(upd)
 	r.NoError(err)
 
 	files, err := bot.fs.FilesAndDirs("today")
@@ -427,7 +427,7 @@ func TestSaveFromReplyPhotoWithCaption(t *testing.T) {
 	upd.PhotoID = "PHOTO_ID"
 	upd.PhotoCaption = "Caption"
 	upd.ReplyToMessageID = 255
-	err = bot.Answer(upd)
+	err = bot.Reply(upd)
 	r.NoError(err)
 
 	content, err := bot.fs.Read("today", "Existing file.md")
@@ -448,7 +448,7 @@ func TestAddTaskToLater(t *testing.T) {
 	tgram := tg.NewFakeTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"later", "today", "0824149b387"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"later", "today", "0824149b387"})))
 	r.NoError(err)
 
 	todayTasks, err := bot.fs.FilesAndDirs("today")
@@ -473,7 +473,7 @@ func TestCompleteTask(t *testing.T) {
 	tgram := tg.NewFakeTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("c", []string{"today", "0824149b387"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("c", []string{"today", "0824149b387"})))
 	r.NoError(err)
 
 	todayTasks, err := bot.fs.FilesAndDirs("today")
@@ -515,7 +515,7 @@ func TestToday(t *testing.T) {
 	tgram := tg.NewFakeTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("today", nil)))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("today", nil)))
 	r.NoError(err)
 
 	r.Equal("<b>2</b> left"+wideSpacer, tgram.LastSentText)
@@ -555,7 +555,7 @@ func TestLater(t *testing.T) {
 	tgram := tg.NewFakeTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("later", nil)))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("later", nil)))
 	r.NoError(err)
 
 	r.Equal("⏳ Your tasks for <b>later</b>:", tgram.LastSentText)
@@ -589,7 +589,7 @@ func TestTodayQuickMenuFilled(t *testing.T) {
 	_ = cfg.AddQuickCmd("checklists")
 	_ = cfg.AddQuickCmd("postpone")
 	bot, tgram, r := makeBot(t, cfg)
-	err := bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("today", nil)))
+	err := bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("today", nil)))
 	r.NoError(err)
 	r.Equal("<b>1</b> left"+wideSpacer, tgram.LastSentText)
 	r.Equal(tg.NewKeyboard([]tg.Row{
@@ -633,7 +633,7 @@ func TestTodayWithMultilineTasks(t *testing.T) {
 
 	upd := tg.NewUpdCmd(-1, tg.NewCmd("today", nil))
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Answer(upd)
+	err = bot.Reply(upd)
 	r.NoError(err)
 
 	r.Equal("<b>2</b> left"+wideSpacer, tgram.LastSentText)
@@ -657,7 +657,7 @@ func TestFiles(t *testing.T) {
 	tgram := tg.NewFakeTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("files", nil)))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("files", nil)))
 	r.NoError(err)
 
 	r.Equal("📄 Your files:"+wideSpacer, tgram.SentTexts[0])
@@ -686,7 +686,7 @@ func TestChecklists(t *testing.T) {
 	tgram := tg.NewFakeTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("checklists", nil)))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("checklists", nil)))
 	r.NoError(err)
 
 	r.Equal("☑️ Checklists", tgram.LastSentText)
@@ -710,7 +710,7 @@ func TestAddSingleItemToChecklist(t *testing.T) {
 
 	tgram := tg.NewFakeTG()
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("mv_to_chk", []string{"7b72407ca70", "-checklist1-"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv_to_chk", []string{"7b72407ca70", "-checklist1-"})))
 	r.NoError(err)
 
 	files, err := userFS.FilesAndDirs("-checklist1-")
@@ -735,7 +735,7 @@ func TestAddMultipleItemsToChecklist(t *testing.T) {
 
 	tgram := tg.NewFakeTG()
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("mv_to_chk", []string{"7b72407ca70", "-checklist1-"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv_to_chk", []string{"7b72407ca70", "-checklist1-"})))
 	r.NoError(err)
 
 	files, err := userFS.FilesAndDirs("-checklist1-")
@@ -756,7 +756,7 @@ func TestShowChecklist(t *testing.T) {
 
 	tgram := tg.NewFakeTG()
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("checklist", []string{"49d872c025c"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("checklist", []string{"49d872c025c"})))
 	r.NoError(err)
 
 	r.Equal("Checklist1"+wideSpacer, tgram.LastSentText)
@@ -779,7 +779,7 @@ func TestCompleteItemInChecklist(t *testing.T) {
 
 	tgram := tg.NewFakeTG()
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("check_comp", []string{"49d872c025c", "7b72407ca70"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("check_comp", []string{"49d872c025c", "7b72407ca70"})))
 	r.NoError(err)
 
 	r.Equal("Checklist1"+wideSpacer, tgram.LastSentText)
@@ -849,7 +849,7 @@ func makeBot(t *testing.T, cfg *userconfig.Config) (*Bot, *tg.FakeTG, *require.A
 
 func TestSettingsMainPanel(t *testing.T) {
 	bot, tgram, r := makeBot(t, fakeConfig())
-	err := bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("settings", nil)))
+	err := bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("settings", nil)))
 	r.NoError(err)
 	r.Equal("Settings:", tgram.LastSentText)
 	r.Equal(tg.NewKeyboard([]tg.Row{
@@ -1075,7 +1075,7 @@ func RunQuickPanelTc(tc PrefTableTestCase, t *testing.T) {
 
 	bot, tgram, r := makeBot(t, cnf)
 
-	err := bot.Answer(tc.updToAnswer)
+	err := bot.Reply(tc.updToAnswer)
 	r.NoError(err)
 	r.Equal("Configure quick buttons (➕ = add to quick buttons, ➖ = to remove from quick buttons):", tgram.LastSentText)
 	r.Equal(tg.NewKeyboard(tc.buttons), tgram.LastSentKeyboard)
@@ -1087,7 +1087,7 @@ func RunquickpaneltcError(tc PrefTableTestCase, expectedErr string, t *testing.T
 		_ = cnf.AddQuickCmd(cmd)
 	}
 	bot, _, r := makeBot(t, cnf)
-	actualErr := bot.Answer(tc.updToAnswer)
+	actualErr := bot.Reply(tc.updToAnswer)
 	r.EqualError(actualErr, expectedErr)
 }
 
@@ -1254,7 +1254,7 @@ func TestShowMultilineFile(t *testing.T) {
 	tgram := tg.NewFakeTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("task", []string{fs.DirToday, "501ef2410e2"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("task", []string{fs.DirToday, "501ef2410e2"})))
 	r.NoError(err)
 
 	r.Equal("<b>New file</b>\nNew file\nContent", tgram.SentTexts[0])
@@ -1283,7 +1283,7 @@ func TestMoveToExistingFile(t *testing.T) {
 	tgram := tg.NewFakeTG()
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
 	upd := tg.NewUpdCmd(-1, tg.NewCmd("mf", []string{"1c8f819d075", "", "501ef2410e2"}))
-	err = bot.Answer(upd)
+	err = bot.Reply(upd)
 	r.NoError(err)
 
 	content, err := userFS.Read("", "Existing file.md")
@@ -1314,7 +1314,7 @@ func TestMoveToExistingFileExistingRecord(t *testing.T) {
 	tgram := tg.NewFakeTG()
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
 	upd := tg.NewUpdCmd(-1, tg.NewCmd("mf", []string{"1c8f819d075", "", "501ef2410e2"}))
-	err = bot.Answer(upd)
+	err = bot.Reply(upd)
 	r.NoError(err)
 
 	content, err := userFS.Read("", "Existing file.md")
@@ -1343,7 +1343,7 @@ func TestShowMoveTo(t *testing.T) {
 	_ = cfg.AddMoveToCmd(consts.CmdMoveToJournal)
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), cfg)
-	err = bot.Answer(tg.NewUpd(-1, "New task\nContent"))
+	err = bot.Reply(tg.NewUpd(-1, "New task\nContent"))
 	r.NoError(err)
 
 	r.Equal("Task added for <b>today</b>!", tgram.SentTexts[0])
@@ -1373,7 +1373,7 @@ func TestShowScheduleEmpty(t *testing.T) {
 	tgram := tg.NewFakeTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("schedule", nil)))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("schedule", nil)))
 	r.NoError(err)
 
 	r.Equal("You don't have any scheduled tasks! 🌴", tgram.SentTexts[0])
@@ -1399,7 +1399,7 @@ func TestShowSchedule(t *testing.T) {
 	err = cfg.AddToSchedule("filename.md", 0, "")
 	r.NoError(err)
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), cfg)
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("schedule", nil)))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("schedule", nil)))
 	r.NoError(err)
 
 	r.Equal("<b>01 January, Thursday</b>\n- Filename", tgram.SentTexts[0])
@@ -1479,7 +1479,7 @@ func TestAngerInTodayTasks(t *testing.T) {
 	tgram := tg.NewFakeTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("today", nil)))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("today", nil)))
 	r.NoError(err)
 
 	r.Equal("<b>1</b> left"+wideSpacer, tgram.LastSentText)
@@ -1628,7 +1628,7 @@ func TestMoveToJournal(t *testing.T) {
 	tgram := tg.NewFakeTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("mv_to_journal", []string{"345fbd7ab08"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv_to_journal", []string{"345fbd7ab08"})))
 	r.NoError(err)
 
 	files, err := userFS.FilesAndDirs("journal")
@@ -1651,7 +1651,7 @@ func TestAddToJournalFromShortcut(t *testing.T) {
 	tgram := tg.NewFakeTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Answer(tg.NewUpd(-1, "jj record"))
+	err = bot.Reply(tg.NewUpd(-1, "jj record"))
 	r.NoError(err)
 
 	files, err := userFS.FilesAndDirs("journal")
@@ -1670,7 +1670,7 @@ func TestAddToJournalFromShortcutRu(t *testing.T) {
 	tgram := tg.NewFakeTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Answer(tg.NewUpd(-1, "/ж запись"))
+	err = bot.Reply(tg.NewUpd(-1, "/ж запись"))
 	r.NoError(err)
 
 	files, err := userFS.FilesAndDirs("journal")
@@ -1697,7 +1697,7 @@ func TestAddToJournalFromShortcutRuCases(t *testing.T) {
 	tgram := tg.NewFakeTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Answer(tg.NewUpd(-1, "жЖ запись"))
+	err = bot.Reply(tg.NewUpd(-1, "жЖ запись"))
 	r.NoError(err)
 
 	files, err := userFS.FilesAndDirs("journal")
@@ -1708,7 +1708,7 @@ func TestAddToJournalFromShortcutRuCases(t *testing.T) {
 	r.NoError(err)
 	r.Equal("#### 1 January, Thursday\n`00:00` Запись\n", content)
 
-	err = bot.Answer(tg.NewUpd(-1, "Запись2 ЖЖ"))
+	err = bot.Reply(tg.NewUpd(-1, "Запись2 ЖЖ"))
 	r.NoError(err)
 
 	content, err = userFS.Read("journal", files[0].Name)
@@ -1735,7 +1735,7 @@ func TestShowForADay(t *testing.T) {
 	tgram := tg.NewFakeTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("sc_day", []string{"1c8f819d075"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("sc_day", []string{"1c8f819d075"})))
 	r.NoError(err)
 
 	r.Equal(tg.NewKeyboard([]tg.Row{
@@ -1813,7 +1813,7 @@ func TestShowForADayRecurring(t *testing.T) {
 	tgram := tg.NewFakeTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("sc_day_r", []string{"1c8f819d075"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("sc_day_r", []string{"1c8f819d075"})))
 	r.NoError(err)
 
 	r.Equal(tg.NewKeyboard([]tg.Row{
@@ -1879,7 +1879,7 @@ func TestSchedule(t *testing.T) {
 
 	cfg := fakeConfig()
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), cfg)
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("sc", []string{"8a42", "345600", "0 0 * * 1-5"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("sc", []string{"8a42", "345600", "0 0 * * 1-5"})))
 	r.NoError(err)
 
 	tasksForToday, err := userFS.FilesAndDirs("today")
@@ -1913,7 +1913,7 @@ func TestScheduleNoRepeat(t *testing.T) {
 
 	cfg := fakeConfig()
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), cfg)
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("sc", []string{"8a42", "345600", ""})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("sc", []string{"8a42", "345600", ""})))
 	r.NoError(err)
 
 	tasksForToday, err := userFS.FilesAndDirs("today")
@@ -1948,7 +1948,7 @@ func TestInlineRequestTask(t *testing.T) {
 	upd := tg.NewUpd(-1, " today / Task ")
 	upd.IsSentViaBotVal = true
 
-	err = bot.Answer(upd)
+	err = bot.Reply(upd)
 	r.NoError(err)
 
 	r.Equal("<b>Task</b>\n\nTask content", tgram.LastSentText)
@@ -1970,7 +1970,7 @@ func TestInlineRequestFile(t *testing.T) {
 	upd := tg.NewUpd(-1, " File ")
 	upd.IsSentViaBotVal = true
 
-	err = bot.Answer(upd)
+	err = bot.Reply(upd)
 	r.NoError(err)
 
 	r.Equal("<b>File</b>\n\nFile content", tgram.LastSentText)
@@ -1992,7 +1992,7 @@ func TestInlineRequestFileOutsideTheDirectory(t *testing.T) {
 	upd := tg.NewUpd(-1, "../File")
 	upd.IsSentViaBotVal = true
 
-	err = bot.Answer(upd)
+	err = bot.Reply(upd)
 	r.Error(err)
 	r.EqualError(err, "insecure input '../File': invalid request from inline query")
 }
@@ -2013,7 +2013,7 @@ func TestInlineRequestFileOutsideTheDirectoryTwoSlashes(t *testing.T) {
 	upd := tg.NewUpd(-1, "..//File")
 	upd.IsSentViaBotVal = true
 
-	err = bot.Answer(upd)
+	err = bot.Reply(upd)
 	r.Error(err)
 	r.EqualError(err, "insecure input '..//File': invalid request from inline query")
 }
@@ -2034,7 +2034,7 @@ func TestInlineRequestFileListOutsideDirs(t *testing.T) {
 	upd := tg.NewUpd(-1, "../")
 	upd.IsSentViaBotVal = true
 
-	err = bot.Answer(upd)
+	err = bot.Reply(upd)
 	r.Error(err)
 	r.EqualError(err, "insecure input '../': invalid request from inline query")
 }
@@ -2056,7 +2056,7 @@ func TestInlineRequestFileListRootDirs(t *testing.T) {
 	upd := tg.NewUpd(-1, "/..")
 	upd.IsSentViaBotVal = true
 
-	err = bot.Answer(upd)
+	err = bot.Reply(upd)
 	r.Error(err)
 	r.EqualError(err, "insecure input '/..': invalid request from inline query")
 }
@@ -2078,7 +2078,7 @@ func TestInlineRequestFileListRootDirsWithoutSlash(t *testing.T) {
 	upd := tg.NewUpd(-1, "..")
 	upd.IsSentViaBotVal = true
 
-	err = bot.Answer(upd)
+	err = bot.Reply(upd)
 	r.Error(err)
 	r.EqualError(err, "show file: can't find file: can't unhash '..' in '': cannot unhash, maybe the file is missing")
 }
@@ -2241,7 +2241,7 @@ func TestSaveToNewTaskIntegration(t *testing.T) {
 	tgram := tg.NewFakeTG()
 	database := db.NewFakeDB()
 	bot := NewBot(-1, tgram, userFS, database, cfg)
-	err = bot.Answer(tg.NewUpd(-1, "New task"))
+	err = bot.Reply(tg.NewUpd(-1, "New task"))
 	r.NoError(err)
 
 	kb := tg.NewKeyboard([]tg.Row{
@@ -2258,7 +2258,7 @@ func TestSaveToNewTaskIntegration(t *testing.T) {
 	})
 	r.Equal(kb, tgram.LastSentKeyboard)
 
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("today", nil)))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("today", nil)))
 	r.NoError(err)
 
 	content, err := userFS.Read("today", "New task.md")
@@ -2303,7 +2303,7 @@ func TestSaveToExistingFileIntegration(t *testing.T) {
 	tgram := tg.NewFakeTG()
 	database := db.NewFakeDB()
 	bot := NewBot(-1, tgram, userFS, database, cfg)
-	err = bot.Answer(tg.NewUpd(-1, "Text"))
+	err = bot.Reply(tg.NewUpd(-1, "Text"))
 	r.NoError(err)
 
 	kb := tg.NewKeyboard([]tg.Row{
@@ -2320,7 +2320,7 @@ func TestSaveToExistingFileIntegration(t *testing.T) {
 	})
 	r.Equal(kb, tgram.LastSentKeyboard)
 
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("to_file", []string{"232004794e5"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("to_file", []string{"232004794e5"})))
 	r.NoError(err)
 
 	selectFileKB := tg.NewKeyboard([]tg.Row{
@@ -2336,7 +2336,7 @@ func TestSaveToExistingFileIntegration(t *testing.T) {
 	})
 	r.Equal(selectFileKB, tgram.LastEditedKeyboard)
 
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("mf", []string{"7595e", "", "23200"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mf", []string{"7595e", "", "23200"})))
 	r.NoError(err)
 
 	r.Nil(tgram.LastEditedKeyboard)
@@ -2381,7 +2381,7 @@ func TestSaveToNewFileIntegration(t *testing.T) {
 	tgram := tg.NewFakeTG()
 	database := db.NewFakeDB()
 	bot := NewBot(-1, tgram, userFS, database, cfg)
-	err = bot.Answer(tg.NewUpd(-1, "Text"))
+	err = bot.Reply(tg.NewUpd(-1, "Text"))
 	r.NoError(err)
 
 	kb := tg.NewKeyboard([]tg.Row{
@@ -2398,7 +2398,7 @@ func TestSaveToNewFileIntegration(t *testing.T) {
 	})
 	r.Equal(kb, tgram.LastSentKeyboard)
 
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("to_file", []string{"232004794e5"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("to_file", []string{"232004794e5"})))
 	r.NoError(err)
 
 	selectFileKB := tg.NewKeyboard([]tg.Row{
@@ -2413,7 +2413,7 @@ func TestSaveToNewFileIntegration(t *testing.T) {
 	})
 	r.Equal(selectFileKB, tgram.LastEditedKeyboard)
 
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("mf", []string{"23200", "", "23200"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mf", []string{"23200", "", "23200"})))
 	r.NoError(err)
 
 	r.Empty(tgram.LastEditedKeyboard)
@@ -2458,7 +2458,7 @@ func TestSaveToNewDirIntegration(t *testing.T) {
 	tgram := tg.NewFakeTG()
 	database := db.NewFakeDB()
 	bot := NewBot(-1, tgram, userFS, database, cfg)
-	err = bot.Answer(tg.NewUpd(-1, "Text"))
+	err = bot.Reply(tg.NewUpd(-1, "Text"))
 	r.NoError(err)
 
 	kb := tg.NewKeyboard([]tg.Row{
@@ -2475,7 +2475,7 @@ func TestSaveToNewDirIntegration(t *testing.T) {
 	})
 	r.Equal(kb, tgram.LastSentKeyboard)
 
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("to_file", []string{"232004794e5"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("to_file", []string{"232004794e5"})))
 	r.NoError(err)
 
 	selectFileKB := tg.NewKeyboard([]tg.Row{
@@ -2490,14 +2490,14 @@ func TestSaveToNewDirIntegration(t *testing.T) {
 	})
 	r.Equal(selectFileKB, tgram.LastEditedKeyboard)
 
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("new_dir", []string{"232004794e5"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("new_dir", []string{"232004794e5"})))
 	r.NoError(err)
 
 	r.Equal("OK. Send me the name for your new dir", tgram.LastEditedText)
 	r.Nil(tgram.LastEditedKeyboard)
 	r.Equal(tg.NewCmd("mv_to_new_dir", []string{"232004794e5", "%s"}), *database.InputExpectation())
 
-	err = bot.Answer(tg.NewUpd(-1, "My dir"))
+	err = bot.Reply(tg.NewUpd(-1, "My dir"))
 	r.NoError(err)
 
 	r.Equal("🌴 You don't have any tasks!", tgram.LastSentText)
@@ -2542,7 +2542,7 @@ func TestSaveToNewMultilineFileIntegration(t *testing.T) {
 	tgram := tg.NewFakeTG()
 	database := db.NewFakeDB()
 	bot := NewBot(-1, tgram, userFS, database, cfg)
-	err = bot.Answer(tg.NewUpd(-1, "Text\nMultiline"))
+	err = bot.Reply(tg.NewUpd(-1, "Text\nMultiline"))
 	r.NoError(err)
 
 	kb := tg.NewKeyboard([]tg.Row{
@@ -2559,7 +2559,7 @@ func TestSaveToNewMultilineFileIntegration(t *testing.T) {
 	})
 	r.Equal(kb, tgram.LastSentKeyboard)
 
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("to_file", []string{"232004794e5"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("to_file", []string{"232004794e5"})))
 	r.NoError(err)
 
 	selectFileKB := tg.NewKeyboard([]tg.Row{
@@ -2574,7 +2574,7 @@ func TestSaveToNewMultilineFileIntegration(t *testing.T) {
 	})
 	r.Equal(selectFileKB, tgram.LastEditedKeyboard)
 
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("mf", []string{"23200", "", "23200"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mf", []string{"23200", "", "23200"})))
 	r.NoError(err)
 
 	r.Empty(tgram.LastEditedKeyboard)
@@ -2619,7 +2619,7 @@ func TestSaveToNewCustomFileIntegration(t *testing.T) {
 	tgram := tg.NewFakeTG()
 	database := db.NewFakeDB()
 	bot := NewBot(-1, tgram, userFS, database, cfg)
-	err = bot.Answer(tg.NewUpd(-1, "Text"))
+	err = bot.Reply(tg.NewUpd(-1, "Text"))
 	r.NoError(err)
 
 	kb := tg.NewKeyboard([]tg.Row{
@@ -2636,7 +2636,7 @@ func TestSaveToNewCustomFileIntegration(t *testing.T) {
 	})
 	r.Equal(kb, tgram.LastSentKeyboard)
 
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("to_file", []string{"232004794e5"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("to_file", []string{"232004794e5"})))
 	r.NoError(err)
 
 	selectFileKB := tg.NewKeyboard([]tg.Row{
@@ -2651,7 +2651,7 @@ func TestSaveToNewCustomFileIntegration(t *testing.T) {
 	})
 	r.Equal(selectFileKB, tgram.LastEditedKeyboard)
 
-	err = bot.Answer(tg.NewUpd(-1, "new file"))
+	err = bot.Reply(tg.NewUpd(-1, "new file"))
 	r.NoError(err)
 
 	r.Empty(tgram.LastEditedKeyboard.Btns)
@@ -2698,7 +2698,7 @@ func TestSaveToRecentFileIntegration(t *testing.T) {
 	tgram := tg.NewFakeTG()
 	database := db.NewFakeDB()
 	bot := NewBot(-1, tgram, userFS, database, cfg)
-	err = bot.Answer(tg.NewUpd(-1, "New text"))
+	err = bot.Reply(tg.NewUpd(-1, "New text"))
 	r.NoError(err)
 
 	kb := tg.NewKeyboard([]tg.Row{
@@ -2715,7 +2715,7 @@ func TestSaveToRecentFileIntegration(t *testing.T) {
 	})
 	r.Equal(kb, tgram.LastSentKeyboard)
 
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("to_file", []string{"72e564182be"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("to_file", []string{"72e564182be"})))
 	r.NoError(err)
 
 	selectFileKeyboard := tg.NewKeyboard([]tg.Row{
@@ -2730,7 +2730,7 @@ func TestSaveToRecentFileIntegration(t *testing.T) {
 	})
 	r.Equal(selectFileKeyboard, tgram.LastEditedKeyboard)
 
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("mf", []string{"23200", "", "72e56"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mf", []string{"23200", "", "72e56"})))
 	r.NoError(err)
 
 	r.Empty(tgram.LastEditedKeyboard)
@@ -2744,7 +2744,7 @@ func TestSaveToRecentFileIntegration(t *testing.T) {
 	r.True(ok)
 
 	// Adding text again to see if we have a recent file
-	err = bot.Answer(tg.NewUpd(-1, "Text2"))
+	err = bot.Reply(tg.NewUpd(-1, "Text2"))
 	r.NoError(err)
 
 	kb = tg.NewKeyboard([]tg.Row{
@@ -2796,7 +2796,7 @@ func TestSaveToTodayTaskIntegration(t *testing.T) {
 	tgram := tg.NewFakeTG()
 	database := db.NewFakeDB()
 	bot := NewBot(-1, tgram, userFS, database, cfg)
-	err = bot.Answer(tg.NewUpd(-1, "New task"))
+	err = bot.Reply(tg.NewUpd(-1, "New task"))
 	r.NoError(err)
 
 	kb := tg.NewKeyboard([]tg.Row{
@@ -2805,7 +2805,7 @@ func TestSaveToTodayTaskIntegration(t *testing.T) {
 	})
 	r.Equal(kb, tgram.LastSentKeyboard)
 
-	err = bot.Answer(tg.NewUpdCmd(-1, tg.NewCmd("c", []string{"today", "d0776a3e2b9"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("c", []string{"today", "d0776a3e2b9"})))
 	r.NoError(err)
 
 	kb = tg.NewKeyboard([]tg.Row{
@@ -2879,25 +2879,25 @@ func TestCollapseForwardedMessages(t *testing.T) {
 	upd := tg.NewUpd(-1, "First msg")
 	upd.TimeVal = 0
 	upd.HasTimeVal = true
-	err = bot.Answer(upd)
+	err = bot.Reply(upd)
 	r.NoError(err)
 
 	upd = tg.NewUpd(-1, "Second msg")
 	upd.TimeVal = 0
 	upd.HasTimeVal = true
-	err = bot.Answer(upd)
+	err = bot.Reply(upd)
 	r.NoError(err)
 
 	upd = tg.NewUpd(-1, "Third msg")
 	upd.TimeVal = 1
 	upd.HasTimeVal = true
-	err = bot.Answer(upd)
+	err = bot.Reply(upd)
 	r.NoError(err)
 
 	upd = tg.NewUpd(-1, "Fourth msg")
 	upd.TimeVal = 3
 	upd.HasTimeVal = true
-	err = bot.Answer(upd)
+	err = bot.Reply(upd)
 	r.NoError(err)
 
 	files, err := bot.fs.FilesAndDirs("today")
@@ -3481,7 +3481,7 @@ func FuzzSaveFromTextMsg(f *testing.F) {
 		}()
 
 		bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-		err = bot.Answer(tg.NewUpd(-1, input))
+		err = bot.Reply(tg.NewUpd(-1, input))
 		if err != nil {
 			// Check that no entries are created besides our user folder
 			entries, err := afero.ReadDir(memfs, "/")

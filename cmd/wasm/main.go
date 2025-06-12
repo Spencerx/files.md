@@ -2,12 +2,12 @@ package main
 
 import (
 	"context"
-	"embed"
 	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
 	"runtime/debug"
+	"syscall/js"
 
 	"zakirullin/stuffbot/config"
 	"zakirullin/stuffbot/i18n"
@@ -20,13 +20,17 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/lmittmann/tint"
 	"github.com/spf13/afero"
-	"github.com/wailsapp/wails/v2"
-	"github.com/wailsapp/wails/v2/pkg/options"
-	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 )
 
-//go:embed all:frontend/dist
-var assets embed.FS
+func main() {
+	initBot()
+	app := NewApp()
+
+	js.Global().Set("hi", js.FuncOf())
+
+	select {}
+
+}
 
 var (
 	updater func(u internal.Update) error
@@ -40,30 +44,6 @@ type Update struct {
 
 type Response struct {
 	Messages []tg.Message
-}
-
-func main() {
-	initBot()
-	app := NewApp()
-
-	// Create application with options
-	err := wails.Run(&options.App{
-		Title:  "Files.md",
-		Width:  540,
-		Height: 630,
-		AssetServer: &assetserver.Options{
-			Assets: assets,
-		},
-		BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
-		OnStartup:        app.startup,
-		Bind: []interface{}{
-			app,
-		},
-		EnableDefaultContextMenu: true,
-	})
-	if err != nil {
-		println("Error:", err.Error())
-	}
 }
 
 func initBot() {
