@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log/slog"
 	"os"
@@ -22,16 +21,6 @@ import (
 	"github.com/spf13/afero"
 )
 
-func main() {
-	initBot()
-	app := NewApp()
-
-	js.Global().Set("hi", js.FuncOf())
-
-	select {}
-
-}
-
 var (
 	updater func(u internal.Update) error
 	chat    *tg.FakeTG
@@ -44,6 +33,16 @@ type Update struct {
 
 type Response struct {
 	Messages []tg.Message
+}
+
+func main() {
+	initBot()
+	NewApp()
+
+	js.Global().Set("hi", js.FuncOf())
+
+	select {}
+
 }
 
 func initBot() {
@@ -114,21 +113,7 @@ func initBot() {
 	}
 }
 
-type App struct {
-	ctx context.Context
-}
-
-func NewApp() *App {
-	return &App{}
-}
-
-// startup is called when the app starts. The context is saved
-// so we can call the runtime methods
-func (a *App) startup(ctx context.Context) {
-	a.ctx = ctx
-}
-
-func (a *App) Send(update Update) Response {
+func Send(update Update) Response {
 	if update.Command != nil {
 		_ = updater(tg.NewUpdCmd(1, *update.Command))
 	} else {
@@ -147,13 +132,13 @@ func (a *App) Send(update Update) Response {
 	return r
 }
 
-func (a *App) NewUpdate(message string, cmd *tg.Cmd) Update {
+func NewUpdate(message string, cmd *tg.Cmd) Update {
 	return Update{
 		Message: message,
 		Command: cmd,
 	}
 }
 
-func (a *App) NewCmd(name string, params []string) tg.Cmd {
+func NewCmd(name string, params []string) tg.Cmd {
 	return tg.NewCmd(name, params)
 }
