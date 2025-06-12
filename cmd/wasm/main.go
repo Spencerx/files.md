@@ -8,6 +8,11 @@ import (
 	"runtime/debug"
 	"syscall/js"
 
+	"github.com/joho/godotenv"
+	"github.com/lmittmann/tint"
+
+	"github.com/spf13/afero"
+
 	"zakirullin/stuffbot/config"
 	"zakirullin/stuffbot/i18n"
 	"zakirullin/stuffbot/internal"
@@ -15,10 +20,6 @@ import (
 	"zakirullin/stuffbot/internal/fs"
 	"zakirullin/stuffbot/internal/userconfig"
 	"zakirullin/stuffbot/pkg/tg"
-
-	"github.com/joho/godotenv"
-	"github.com/lmittmann/tint"
-	"github.com/spf13/afero"
 )
 
 var (
@@ -35,56 +36,42 @@ type Response struct {
 	Messages []tg.Message
 }
 
+func callAsync(funcName string, callback func(js.Value, error)) {
+	promise := js.Global().Call(funcName)
+
+	var successFunc, errorFunc js.Func
+
+	successFunc = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		defer successFunc.Release()
+		defer errorFunc.Release()
+		callback(args[0], nil)
+		return nil
+	})
+
+	errorFunc = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		defer successFunc.Release() // Clean up both
+		defer errorFunc.Release()
+		callback(js.Undefined(), fmt.Errorf("error: %v", args[0]))
+		return nil
+	})
+
+	promise.Call("then", successFunc).Call("catch", errorFunc)
+}
+
 func Reply(_ js.Value, args []js.Value) interface{} {
-	go func() { // Start a new goroutine for the blocking operation
-		result, err := await(js.Global().Call("hi"))
+	callAsync("hi", func(result js.Value, err error) {
 		if err != nil {
-			fmt.Printf("Error: %v\n", err)
+			sendResponse("Error: %v\n", err)
 			return
 		}
-		fmt.Printf("Result: %v\n", result.String())
-	}()
+		sendResponse(result.String())
+	})
 
 	return nil
 }
 
-//update := newUpdate(args[0].String(), nil)
-//response := send(update)
-//
-//return response.Messages[0].Text
-//}
-
-func callAsync(fn string, args ...interface{}) (js.Value, error) {
-	promise := js.Global().Call(fn, args...)
-
-	return await(promise)
-}
-
-func await(promise js.Value) (js.Value, error) {
-	done := make(chan struct{})
-	var result js.Value
-	var err error
-
-	successFunc := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		// This callback runs on the event loop, so it should be non-blocking
-		result = args[0]
-		close(done)
-		return nil
-	})
-	defer successFunc.Release()
-
-	errorFunc := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		// This callback runs on the event loop, so it should be non-blocking
-		err = fmt.Errorf("promise rejected: %v", args[0])
-		close(done)
-		return nil
-	})
-	defer errorFunc.Release()
-
-	promise.Call("then", successFunc).Call("catch", errorFunc)
-
-	<-done
-	return result, err
+func sendResponse(vals ...any) {
+	js.Global().Call("receiveResponse", vals...)
 }
 
 func main() {
