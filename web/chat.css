@@ -37,6 +37,7 @@ body {
     overflow-y: auto;
     display: flex;
     flex-direction: column;
+    justify-content: flex-end;
     gap: 10px;
     color: black;
 }
@@ -69,7 +70,6 @@ body {
     display: flex;
     position: relative;
     padding: 5px 8px 8px 8px;
-
     border-top: 1px solid #ccc;
     gap: 5px;
     align-items: flex-end;
