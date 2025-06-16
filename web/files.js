@@ -192,7 +192,8 @@ async function syncTextsWithServer() {
             } catch (error) {
                 console.error(`Error saving file ${path}:`, error);
                 // Don't treat malformed filenames as sync error.
-                if (error.name !== 'TypeMismatchError') {
+                console.log(error);
+                if (!error.message.includes('Name is not allowed')) {
                     failedAtLeastOnce = true;
                 }
             }
