@@ -192,7 +192,7 @@ async function syncTextsWithServer() {
                         console.log('RENAME: cant remove file: ', err);
                     }
                 }
-                saveMetadata();
+                saveServerFiles();
             } catch (error) {
                 console.warn(`Error saving file ${path}:`, error);
                 // Don't treat malformed filenames as sync error.
@@ -206,7 +206,7 @@ async function syncTextsWithServer() {
         if (!failedAtLeastOnce) {
             console.log("BATCH sync ok, moving timestamps");
             serverFiles['timestamps'] = server.timestamps;
-            saveMetadata();
+            saveServerFiles();
         } else {
             console.log("BATCH sync error, timestamps aren't moved");
         }
@@ -253,7 +253,7 @@ async function syncLocalFileWithServer(dir, filename) {
         if (json.status === 'updatedOnServer') {
             setMetadata(path, content, json.lastModified);
             console.log(`saved metadata for ${path} with timestamp ${json.lastModified}`);
-            saveMetadata();
+            saveServerFiles();
             return;
         }
         serverFile = json
@@ -263,7 +263,7 @@ async function syncLocalFileWithServer(dir, filename) {
     }
     setMetadata(path, serverFile.content, serverFile.lastModified);
     console.log(`saved metadata2 for ${path} with timestamp ${serverFile.lastModified}`);
-    saveMetadata();
+    saveServerFiles();
     console.log(serverFile);
     await saveTextFile(path, serverFile.content);
     console.log('showing file sync one');
@@ -319,15 +319,10 @@ async function syncMedia() {
                 if (!response.ok) {
                     console.error(`Failed to sync media file ${mediaFilename}:`, response.statusText, response.text(), mediaFilename, base64String);
                 } else {
-                    const contentType = response.headers.get('Content-Type');
-                    // On new file json is returned, binary otherwise (prob we should always return base64?)
-                    if (contentType && contentType.includes('application/json')) {
-                        let json = await response.json();
-                        serverFiles['media'][mediaFilename] = {
-                            lastModified: json.lastModified,
-                        };
-                        saveMetadata();
-                    }
+                    serverFiles['media'][mediaFilename] = {
+                        lastModified: 0, // We don't track binary files modifications.
+                    };
+                    saveServerFiles();
                     console.log(`Successfully synced media file: ${mediaFilename}`);
                 }
             } catch (error) {
@@ -415,7 +410,7 @@ async function saveMediaFile(path, blob, lastModified) {
             serverFiles['media'][file.name] = {
                 lastModified: lastModified,
             }
-            saveMetadata();
+            saveServerFiles();
             console.log(`File ${path} already exists and is up to date, skipping...`);
             return;
         }
@@ -437,7 +432,7 @@ async function saveMediaFile(path, blob, lastModified) {
         serverFiles['media'][filename] = {
             lastModified: lastModified,
         }
-        saveMetadata();
+        saveServerFiles();
 
         // Load file handle into files
         files['media'][filename] = {handle: fileHandle};
@@ -733,7 +728,7 @@ async function moveCurrentFile(toDir) {
         }
         editor.currentDir = toDir;
         setMetadata(newPath, content, 0);
-        saveMetadata();
+        saveServerFiles();
 
         await removeFile(oldPath);
         await buildSidebar();
@@ -782,7 +777,7 @@ function removeInfoAboutServerFile(path) {
     }
 }
 
-function saveMetadata() {
+function saveServerFiles() {
     localStorage.setItem(SERVER_FILES_STORAGE_KEY, JSON.stringify(serverFiles));
 }
 
@@ -844,7 +839,7 @@ async function syncCurrentFile() {
             const content = getCurrentContent();
             await saveTextFile(path, content);
             setMetadata(path, content, 0);
-            saveMetadata();
+            saveServerFiles();
             console.log('Created', `${editor.currentDir}/${editor.currentFile}`);
             await buildSidebar();
         }
