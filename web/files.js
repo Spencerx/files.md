@@ -638,7 +638,8 @@ async function saveTextFile(path, content) {
         throw new Error("Invalid file name");
     }
 
-    if (!exists([path]) || !await isContentEqual(path, content)) {
+    const fileExists= !await exists([path]);
+    if (fileExists || !await isContentEqual(path, content)) {
         console.log("Hashes do not match, writing file...", path);
         // TODO rem
         const writable = await fileHandle.createWritable();
