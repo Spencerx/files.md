@@ -802,6 +802,10 @@ function addFileToMemory(dir, filename, fileData) {
 }
 
 async function moveFile(oldPath, newPath) {
+    if (oldPath === newPath) {
+        return;
+    }
+    
     const oldParts = oldPath.split('/');
     const oldFilename = oldParts.pop();
     const oldDir = oldParts.join('/');
