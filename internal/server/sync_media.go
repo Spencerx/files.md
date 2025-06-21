@@ -13,7 +13,6 @@ import (
 )
 
 var syncMediasRequest struct {
-	Dir           string `json:"dir"`
 	Timestamp     int64  `json:"timestamp"`
 	FilenamesHash string `json:"filenamesHash"`
 }
@@ -38,7 +37,7 @@ func SyncMedias(w http.ResponseWriter, r *http.Request) {
 
 	// TODO ../.. Attacks
 	mediaFolder := filepath.Join(StorageDir, fs.DirMedia)
-	logSync(fmt.Sprintf("Media sync syncMediasRequest for folder: '%s', last sync: %d", syncMediasRequest.Dir, syncMediasRequest.Timestamp))
+	logSync(fmt.Sprintf("Media sync syncMediasRequest for folder: '%s', last sync: %d", fs.DirMedia, syncMediasRequest.Timestamp))
 
 	// TODO migrate to afero
 	if _, err := os.Stat(mediaFolder); os.IsNotExist(err) {

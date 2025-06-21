@@ -161,7 +161,6 @@ async function syncTextsWithServer() {
             method: 'POST',
             headers: {'Content-Type': 'application/json', 'Authorization': localStorage.getItem('token')},
             body: JSON.stringify({
-                userId: getUserId(),
                 modified: modified,
                 deleted: deleted,
                 timestamps: serverFiles['timestamps'] || [],
@@ -272,7 +271,6 @@ async function syncLocalFileWithServer(dir, filename) {
             method: 'POST',
             headers: {'Content-Type': 'application/json', 'Authorization': localStorage.getItem('token')},
             body: JSON.stringify({
-                userId: getUserId(),
                 path: toPath(dir, filename),
                 lastModified: serverTimestamp,
                 content: content,
@@ -346,7 +344,6 @@ async function syncMedia() {
                         'Authorization': localStorage.getItem('token')
                     },
                     body: JSON.stringify({
-                        userId: getUserId(),
                         path: mediaFilename,
                         data: base64String,
                     })
@@ -374,8 +371,6 @@ async function syncMedia() {
                 'Authorization': localStorage.getItem('token')
             },
             body: JSON.stringify({
-                userId: getUserId(),
-                folder: 'media',
                 timestamp: mediaTimestamp
             })
         });
@@ -401,7 +396,6 @@ async function syncMedia() {
                         'Authorization': localStorage.getItem('token')
                     },
                     body: JSON.stringify({
-                        userId: getUserId(),
                         path: path,
                         timestamp: mediaTimestamp
                     })
@@ -879,10 +873,6 @@ function removeInfoAboutServerFile(path) {
 
 function saveServerFiles() {
     localStorage.setItem(SERVER_STORAGE_KEY, JSON.stringify(serverFiles));
-}
-
-function getUserId() {
-    return parseInt(localStorage.getItem('userId'));
 }
 
 // 0) Read content from local fs

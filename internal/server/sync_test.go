@@ -35,7 +35,6 @@ func TestSyncText_CreateNewFileOnServer(t *testing.T) {
 	}()
 
 	clientFile := file{
-		UserID:       -1,
 		Path:         "test.md",
 		Content:      "Hello World",
 		LastModified: 1234567890,
@@ -76,7 +75,6 @@ func TestSyncText_UpdateExistingFile_NoConflict(t *testing.T) {
 	r.NoError(err)
 
 	clientFile := file{
-		UserID:       -1,
 		Path:         "test.md",
 		Content:      "Updated content",
 		LastModified: 1,
@@ -122,7 +120,6 @@ func TestSyncText_NotModified(t *testing.T) {
 	r.NoError(err)
 
 	clientFile := file{
-		UserID:       -1,
 		Path:         "test.md",
 		Content:      "Original content",
 		LastModified: 1,
@@ -168,7 +165,6 @@ func TestSyncText_UpdateExistingFile_Conflict(t *testing.T) {
 	r.NoError(err)
 
 	clientFile := file{
-		UserID:       -1,
 		Path:         "test.md",
 		Content:      "Client content",
 		LastModified: 0,
@@ -214,7 +210,6 @@ func TestSyncText_UpdateExistingFile_JournalConflict(t *testing.T) {
 	r.NoError(err)
 
 	clientFile := file{
-		UserID:       -1,
 		Path:         "test.md",
 		Content:      "#### 25 May, Friday\nServer content",
 		LastModified: 0,
@@ -263,7 +258,6 @@ func TestSyncAllTexts_EmptyRequest(t *testing.T) {
 	}()
 
 	request := syncRequest{
-		UserID:     -1,
 		Timestamps: make(map[string]int64),
 		Modified:   []file{},
 	}
@@ -308,7 +302,6 @@ func TestSyncAllTexts_CreateNewFilesOnServer(t *testing.T) {
 	}()
 
 	request := syncRequest{
-		UserID:     -1,
 		Timestamps: make(map[string]int64),
 		Modified: []file{
 			{
@@ -372,7 +365,6 @@ func TestSyncAllTexts_UpdateExistingFilesOnServer(t *testing.T) {
 	r.NoError(err)
 
 	request := syncRequest{
-		UserID: -1,
 		Timestamps: map[string]int64{
 			"today": 0, // Old timestamp
 		},
@@ -434,7 +426,6 @@ func TestSyncAllTexts_SendUpdatedFilesToClient(t *testing.T) {
 	r.NoError(err)
 
 	request := syncRequest{
-		UserID: 0,
 		Timestamps: map[string]int64{
 			"today": 0,
 		},
