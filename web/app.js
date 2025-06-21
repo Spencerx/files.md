@@ -13,6 +13,36 @@ const sidebarContainer = document.getElementById('sidebar-container');
 const content = document.getElementById('content')
 
 async function init(el) {
+    // Authorize if we have one-time token in URL.
+    const urlParams = new URLSearchParams(window.location.search);
+    const oneTimeToken = urlParams.get('token');
+    if (oneTimeToken) {
+        try {
+            // Exchange one-time token for permanent token
+            const response = await fetch('https://api.files.md/token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    oneTimeToken: oneTimeToken
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                localStorage.setItem('token', data.token);
+                const url = new URL(window.location);
+                url.searchParams.delete('token');
+                window.history.replaceState({}, '', url);
+            } else {
+                console.error('Token exchange failed:', response.status);
+            }
+        } catch (error) {
+            console.error('Error exchanging token:', error);
+        }
+    }
+
     initEditor(el);
 
     const savedDirHandle = await getRootDirHandle();
