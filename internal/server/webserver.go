@@ -3,7 +3,6 @@
 package server
 
 import (
-	"context"
 	_ "embed"
 	"fmt"
 	"log"
@@ -29,13 +28,13 @@ func Serve(apiHost, appHost, certDir, logFilename, token, tokensDir string) {
 	// For regular errors we still use slog.
 	logger := newLogger(logFilename)
 	srv := ssl(logger, certDir, apiHost, appHost)
-	srv.Handler = newRouter(logger, tokensDir)
+	srv.Handler = newRouter(logger)
 
 	// For local environment.
 	if certDir == "" {
 		srv := &http.Server{
 			Addr:    ":8080",
-			Handler: newRouter(logger, tokensDir),
+			Handler: newRouter(logger),
 		}
 
 		logger.Printf("Starting HTTP server on %s", srv.Addr)
@@ -52,7 +51,7 @@ func Serve(apiHost, appHost, certDir, logFilename, token, tokensDir string) {
 	}
 }
 
-func newRouter(logger *log.Logger, tokensDir string) *http.ServeMux {
+func newRouter(logger *log.Logger) *http.ServeMux {
 	r := http.NewServeMux()
 
 	// TODO add hashing or secrets
@@ -75,10 +74,10 @@ func newRouter(logger *log.Logger, tokensDir string) *http.ServeMux {
 
 	// TODO CHECK that user id belongs to oneTimeToken ID, or get userID by oneTimeToken id
 	// TODO for further safety, remove * cors?
-	r.HandleFunc("/syncTexts", panicMiddleware(corsMiddleware(authMiddleware(SyncTexts, tokensDir))))
-	r.HandleFunc("/syncText", panicMiddleware(corsMiddleware(authMiddleware(SyncText, tokensDir))))
-	r.HandleFunc("/syncMedias", panicMiddleware(corsMiddleware(authMiddleware(SyncMedias, tokensDir))))
-	r.HandleFunc("/syncMedia", panicMiddleware(corsMiddleware(authMiddleware(SyncMedia, tokensDir))))
+	r.HandleFunc("/syncTexts", panicMiddleware(corsMiddleware(authMiddleware(SyncTexts))))
+	r.HandleFunc("/syncText", panicMiddleware(corsMiddleware(authMiddleware(SyncText))))
+	r.HandleFunc("/syncMedias", panicMiddleware(corsMiddleware(authMiddleware(SyncMedias))))
+	r.HandleFunc("/syncMedia", panicMiddleware(corsMiddleware(authMiddleware(SyncMedia))))
 	r.HandleFunc("/token", panicMiddleware(corsMiddleware(IssueToken)))
 
 	r.HandleFunc("GET /habits_v2/{userID}", func(w http.ResponseWriter, r *http.Request) {
@@ -218,20 +217,5 @@ func corsMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		next(w, r)
-	}
-}
-
-// TODO CHECK that user id belongs to oneTimeToken ID, or get user id by oneTimeToken
-func authMiddleware(next http.HandlerFunc, tokensDir string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		token := r.Header.Get("Authorization")
-		userID, ok := FindUserID(token)
-		if !ok {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-
-		ctx := context.WithValue(r.Context(), "userID", userID)
-		next(w, r.WithContext(ctx))
 	}
 }

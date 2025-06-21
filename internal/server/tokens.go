@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
@@ -53,7 +54,7 @@ func FindUserID(token string) (int64, bool) {
 		return 0, false
 	}
 
-	data, err := tokens.Read(fs.DirRoot, token)
+	data, err := tokens.Read(fs.DirRoot, saltToken(token))
 	if err != nil {
 		return 0, false
 	}
@@ -101,6 +102,21 @@ func IssueToken(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// TODO CHECK that user id belongs to oneTimeToken ID, or get user id by oneTimeToken
+func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		token := r.Header.Get("Authorization")
+		userID, ok := FindUserID(token)
+		if !ok {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), "userID", userID)
+		next(w, r.WithContext(ctx))
+	}
+}
+
 func issueNewToken(oneTimeToken string) (string, bool) {
 	mu.Lock()
 	data, exists := oneTimeTokens[oneTimeToken]
@@ -117,7 +133,7 @@ func issueNewToken(oneTimeToken string) (string, bool) {
 		slog.Error("Failed to create file system for tokens", "error", err)
 		return "", false
 	}
-	err = tokens.Write(fs.DirRoot, token, strconv.FormatInt(data.userID, 10))
+	err = tokens.Write(fs.DirRoot, saltToken(token), strconv.FormatInt(data.userID, 10))
 	if err != nil {
 		return "", false
 	}
