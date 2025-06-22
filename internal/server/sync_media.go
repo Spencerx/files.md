@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"path/filepath"
 
 	"zakirullin/stuffbot/internal/fs"
 )
@@ -130,8 +129,7 @@ func SyncMedia(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	path := filepath.Join(userFS.RootPath, clientMedia.Path)
-	path, err = userFS.SafePath(path, "")
+	path, err := userFS.SafePath(clientMedia.Path, "")
 	if err != nil {
 		log.Printf("The path is unsafe: %v", err)
 		http.Error(w, "The path is unsafe", http.StatusInternalServerError)
