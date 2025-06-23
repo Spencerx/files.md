@@ -295,11 +295,15 @@ function initEditor(el) {
         }
     });
 
-    editor.getWrapperElement().addEventListener('click', function(e) {
+    editor.getWrapperElement().addEventListener('mousedown', function(e) {
         const code = e.target.closest('.cm-inline-code');
         if (!code) return;
 
-        const text = code.textContent.replace(/`/g, '');
+        const parent = code.parentElement;
+        const hasHiddenBackticks = parent.querySelector('.cm-formatting-code.hmd-hidden-token');
+        if (!hasHiddenBackticks) return;
+
+        const text = code.textContent;
         navigator.clipboard.writeText(text);
 
         const toast = document.createElement('div');
@@ -312,9 +316,7 @@ function initEditor(el) {
         `;
         document.body.appendChild(toast);
         setTimeout(() => document.body.removeChild(toast), 1000);
-
-        e.preventDefault();
-    });
+    }, true);
 }
 
 async function initChat() {
