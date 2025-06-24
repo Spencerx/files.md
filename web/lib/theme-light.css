@@ -72,9 +72,7 @@
 }
 
 .cm-s-hypermd-light span.cm-formatting-list-ol {
-    line-height: 1.8;
-    color: var(--color-tx-faint);
-    vertical-align: baseline;
+    color: var(--color-tx-alt) !important;
 }
 
 .cm-s-hypermd-light .cm-strong {

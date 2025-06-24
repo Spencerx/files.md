@@ -502,7 +502,11 @@
 }
 .cm-s-hypermd-light span.cm-formatting-list {
     margin-left: -30px;
-    font-family: "HyperMD-Bullets";
+
+    /*PATCHED*/
+    font-variant-numeric: tabular-nums;
+    /*font-family: "HyperMD-Bullets";*/
+
     color: #666;
 }
 /*PATCHED*/
