@@ -138,7 +138,7 @@ test('create new in root', async ({ page }) => {
     expect(codeMirrorContent).toBe("# New file\ncontent\n");
 });
 
-test('rename file via meta+a', async ({ page }) => {
+test('file is not renamed on select all and change', async ({ page }) => {
     await page.evaluate(() => {
         window.getRootDirHandle = async function() {
             const root = await navigator.storage.getDirectory();
@@ -178,22 +178,21 @@ test('rename file via meta+a', async ({ page }) => {
     await page.waitForTimeout(500);
     await page.keyboard.press('Meta+a');
     await page.waitForTimeout(100);
-    await page.keyboard.type('Newname');
+    await page.keyboard.type('New text');
     await page.waitForTimeout(1000);
 
     await clickAndExpectContent(page, 'Notes', '# Notes\nSome text');
-    await clickAndExpectContent(page, 'Newname', '# Newname\n');
+    await clickAndExpectContent(page, 'README', '# README\nNew text');
 
     // Rename with existing content
     await page.waitForTimeout(100);
-    await page.keyboard.type('My text');
     await page.evaluate(() => {
         const cm = document.querySelector('.CodeMirror').CodeMirror;
         cm.setCursor(0, cm.getLine(0).length);
     });
     await page.keyboard.type('2')
     await page.waitForTimeout(1000);
-    await clickAndExpectContent(page, 'Newname2', '# Newname2\nMy text');
+    await clickAndExpectContent(page, 'README2', '# README2\nNew text');
 });
 
 test('rename file via header removal', async ({ page }) => {
