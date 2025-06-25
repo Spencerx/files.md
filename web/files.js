@@ -31,7 +31,7 @@ let files = []; // In-memory representation of files.
 let serverFiles = {files: {}, media: {}, timestamps: {}, mediaTimestamp: 0};
 const SERVER_STORAGE_KEY = 'files';
 const SUPPORTED_EXTENSIONS = ['md', 'txt', 'png', 'jpg', 'jpeg', 'webp', 'gif',];
-const SYSTEM_DIRS = ['media', 'img', 'archive', '_read_', '_watch_', '_shop_', 'today', 'later', 'journal', 'habits', 'triggers', 'places'];
+const SYSTEM_DIRS = ['media', 'media', 'archive', '_read_', '_watch_', '_shop_', 'today', 'later', 'journal', 'habits', 'triggers', 'places'];
 const CONFIG_FILENAME = 'config.json';
 
 // Returns files in flattened structure:
