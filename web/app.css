@@ -528,3 +528,7 @@ body.dragging * {
 .cm-s-hypermd-light span.cm-attribute, .cm-s-hypermd-light span.cm-def, .cm-s-hypermd-light span.cm-string {
     color: var(--color-link) !important;
 }
+
+.cmd-pressed .cm-inline-code:hover {
+    cursor: pointer;
+}

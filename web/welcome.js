@@ -94,6 +94,7 @@ const DEFAULT_FILES = {
                 "| `Cmd+I` / `Ctrl+I` | Toggle *italic* formatting |\n" +
                 "| `Cmd+Y` / `Ctrl+Y`| Insert ✅ checkbox at line start |\n" +
                 "| `Cmd` / `Ctrl`+`Click`| Copy text from `inline` element |\n" +
+                "| `Cmd` / `Ctrl`+`Click`| To open a link like https//files.md |\n" +
                 "\n" +
                 "#### Editor Functions\n" +
                 "\n" +
@@ -171,6 +172,7 @@ const HOTKEYS_CONTENT = "#### File Navigation\n" +
     "| `Cmd+I` / `Ctrl+I` | Toggle *italic* formatting |\n" +
     "| `Cmd+Y` / `Ctrl+Y`| Insert ✅ checkbox at line start |\n" +
     "| `Cmd` / `Ctrl`+`Click`| Copy text from `inline` element |\n" +
+    "| `Cmd` / `Ctrl`+`Click`| To open a link like https://files.md |\n" +
     "\n" +
     "#### Editor Functions\n" +
     "\n" +
