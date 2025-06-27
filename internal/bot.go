@@ -2492,6 +2492,11 @@ func (b *Bot) fullMode(_ []string) error {
 		}
 	}
 
+	err = b.fs.CreateDirsIfNotExist()
+	if err != nil {
+		return fmt.Errorf("full mode: can't create dirs: %w", err)
+	}
+
 	return b.ShowToday(nil)
 }
 
