@@ -239,6 +239,7 @@ func (b *Bot) handlers() map[string]func([]string) error {
 		consts.CmdShowMoveToDirOrFile:         b.showMoveToFileOrDir,
 		consts.CmdShowMoveToChecklist:         b.showToChecklist,
 		consts.CmdMoveToExistingDir:           b.moveToDir,
+		consts.CmdMOveToExistingDirFromChat:   b.moveToDir,
 		consts.CmdRequestNewDir:               b.requestNewDirName,
 		consts.CmdMoveToNewDir:                b.moveToNewDir,
 		consts.CmdMoveToExistingFile:          b.moveToExistingFile,
@@ -1535,6 +1536,57 @@ func (b *Bot) moveToDir(params []string) error {
 	return b.ShowToday(nil)
 }
 
+func (b *Bot) moveToDirFromChat(params []string) error {
+	// TODO Remove input expectations if dir is not today
+	toDirHash := params[0]
+	index, err := strconv.Atoi(params[1])
+	if err != nil {
+		return fmt.Errorf("move to dir: can't parse index from params: %w", err)
+	}
+	index = -index
+
+	toDir, err := b.fs.Unhash(fs.DirRoot, toDirHash)
+	if err != nil {
+		return fmt.Errorf("move: can't unhash new dir %s: %w", toDir, err)
+	}
+
+	err = b.moveFromChat(func(content string, timestamp time.Time) error {
+		sanitizedTitle, content, err := b.extractTitleAndContent(content)
+		if err != nil {
+			return fmt.Errorf("save: %w", err)
+		}
+
+		filename := fs.Filename(sanitizedTitle)
+		err = b.createOrAdd(toDir, filename, content)
+		if err != nil {
+			return fmt.Errorf("save: %w", err)
+		}
+
+		notesDir := fs.OnlyNoteDirs([]fs.File{{Name: toDir}})
+		isNotesDir := len(notesDir) == 1
+		if isNotesDir {
+			// We can tolerate this, as this is informative logging
+			_ = journal.AddRecord(b.fs, fmt.Sprintf("📌 %s", fs.Title(filename)), b.cfg.Timezone())
+		}
+
+		return b.fs.Write(toDir, sanitizedTitle, content)
+	}, index)
+
+	if toDir != fs.DirLater {
+		//b.db.SetRecentCommand(consts.CmdMoveToExistingNote)
+		// Move from dir is today, because quick command
+		// appears when file is in today dir
+		//b.db.SetRecentCommandParams([]string{strconv.Itoa(index), toDirHash})
+	}
+
+	b.delAllKeyboards()
+	msg := txt.Emoji(i18n.Emoji("dir"), fmt.Sprintf(i18n.Tr("Moved to <b>%s</b>"), fs.Title(toDir)))
+	// Just an informative messages
+	_, _ = b.tg.Send(b.userID, msg, nil, tg.MarkupHTML)
+
+	return b.ShowToday(nil)
+}
+
 func (b *Bot) requestNewDirName(params []string) error {
 	filenameHash := params[0]
 
@@ -1549,23 +1601,24 @@ func (b *Bot) requestNewDirName(params []string) error {
 }
 
 func (b *Bot) moveToNewDir(params []string) error {
-	filenameHash := params[0]
+	index, err := strconv.Atoi(params[0])
+	if err != nil {
+		return fmt.Errorf("move to new dir from chat: can't parse hash or index from params: %w", err)
+	}
 	dir := strings.ToLower(fs.SanitizeFilename(params[1]))
 
 	exists, err := b.fs.Exists(fs.DirRoot, dir)
 	if err != nil {
-		return fmt.Errorf("move to new dir: %w", err)
+		return fmt.Errorf("move to new dir from caht: %w", err)
 	}
-	if exists {
-		return b.moveToDir([]string{dir, fs.DirRoot, filenameHash})
-	}
-
-	err = b.fs.MakeDir(dir)
-	if err != nil {
-		return fmt.Errorf("move to new dir: %w", err)
+	if !exists {
+		err = b.fs.MakeDir(dir)
+		if err != nil {
+			return fmt.Errorf("move to new dir from chat: %w", err)
+		}
 	}
 
-	return b.moveToDir([]string{dir, fs.DirRoot, filenameHash})
+	return b.moveToDirFromChat([]string{dir, strconv.Itoa(index)})
 }
 
 // TODO support both hashes and indices
@@ -1614,7 +1667,7 @@ func (b *Bot) moveToExistingFile(params []string) error {
 	//// We can tolerate this
 	//_ = b.fs.Del(fromDir, fromFilename)
 
-	err = b.MoveFromChat(func(content string, timestamp time.Time) error {
+	err = b.moveFromChat(func(content string, timestamp time.Time) error {
 		return b.addToFile(fs.DirRoot, existingFilename, content)
 	}, index)
 	if err != nil {
@@ -1758,7 +1811,7 @@ func (b *Bot) moveToNewFile(params []string) error {
 	//if err != nil {
 	//	return fmt.Errorf("move to new file: can't read file '%s': %w", filename, err)
 	//}
-	err = b.MoveFromChat(func(content string, t time.Time) error {
+	err = b.moveFromChat(func(content string, t time.Time) error {
 		content = strings.TrimSpace(content)
 		//if len(content) == 0 {
 		//	content = fs.Title(filename)
@@ -1840,7 +1893,7 @@ func (b *Bot) moveToJournal(params []string) error {
 	//	return fmt.Errorf("move to journal: can't read content of '%s': %w", fromFilename, err)
 	//}
 
-	err := b.MoveFromChat(func(content string, t time.Time) error {
+	err := b.moveFromChat(func(content string, t time.Time) error {
 		// TODO take into account time
 		return journal.AddRecord(b.fs, content, b.cfg.Timezone())
 	}, indices...)

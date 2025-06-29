@@ -77,7 +77,7 @@ func (b *Bot) saveToChat(content string, timezone *time.Location) (int, error) {
 	return recordCount, nil
 }
 
-func (b *Bot) MoveFromChat(callback func(content string, timestamp time.Time) error, indices ...int) error {
+func (b *Bot) moveFromChat(callback func(content string, timestamp time.Time) error, indices ...int) error {
 	key, err := b.fs.SafePath(fs.DirRoot, "")
 	if err != nil {
 		return fmt.Errorf("failed to get safe path: %w", err)

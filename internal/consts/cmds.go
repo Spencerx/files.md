@@ -29,6 +29,7 @@ const (
 	CmdShowMoveToChecklist         = "to_checklist"
 	CmdRename                      = "ren"
 	CmdMoveToExistingDir           = "mv"
+	CmdMOveToExistingDirFromChat   = "mv_ch"
 	CmdRequestNewDir               = "new_dir"
 	CmdMoveToNewDir                = "mv_to_new_dir"
 	CmdMoveToExistingFile          = "mf"
