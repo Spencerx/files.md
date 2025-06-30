@@ -2567,8 +2567,7 @@
     "woman"
   ],
   "🚶": [
-    "person_walking",
-    "move"
+    "person_walking"
   ],
   "🚶‍♂️": [
     "man_walking",
@@ -2654,8 +2653,7 @@
     "accessibility"
   ],
   "🏃": [
-    "person_running",
-    "move"
+    "person_running"
   ],
   "🏃‍♂️": [
     "man_running",
@@ -2822,8 +2820,7 @@
   ],
   "🚣": [
     "person_rowing_boat",
-    "sport",
-    "move"
+    "sport"
   ],
   "🚣‍♂️": [
     "man_rowing_boat",
@@ -2902,8 +2899,7 @@
   ],
   "🚴": [
     "person_biking",
-    "sport",
-    "move"
+    "sport"
   ],
   "🚴‍♂️": [
     "man_biking",
@@ -2923,8 +2919,7 @@
   ],
   "🚵": [
     "person_mountain_biking",
-    "sport",
-    "move"
+    "sport"
   ],
   "🚵‍♂️": [
     "man_mountain_biking",
@@ -5675,7 +5670,6 @@
   ],
   "🛺": [
     "auto_rickshaw",
-    "move",
     "transportation"
   ],
   "🚲": [
@@ -8631,7 +8625,8 @@
   "➡️": [
     "right_arrow",
     "blue-square",
-    "next"
+    "next",
+    "move"
   ],
   "↘️": [
     "down_right_arrow",

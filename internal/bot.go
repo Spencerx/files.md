@@ -625,21 +625,6 @@ func (b *Bot) answerFileRequest(msg string) error {
 			return fmt.Errorf("inline query: can't move from chat: %w", err)
 		}
 
-		//newFilename, err := b.fs.Unhash(fs.DirRoot, newFilenameHash)
-		//if err != nil {
-		//	return fmt.Errorf("inline query: can't unhash filename %s: %w", newFilenameHash, err)
-		//}
-		//
-		//// User selects same file, no need to do anything
-		//if dir == fs.DirRoot && filename == newFilename {
-		//	return b.ShowToday(nil)
-		//}
-
-		//content, err := b.restoreMsg(fs.DirRoot, newFilename)
-		//if err != nil {
-		//	return fmt.Errorf("inline query: can't read file %s: %w", newFilename, err)
-		//}
-
 		// Just an informative message
 		_, _ = b.tg.Send(b.userID, fmt.Sprintf(i18n.Tr("Saved to <b>%s</b>"), fs.Title(filename)), nil, tg.MarkupHTML)
 
@@ -845,7 +830,9 @@ func (b *Bot) showMoveTo(params []string) error {
 		userMoveToBtns = append(userMoveToBtns, *recentBtn)
 	}
 
-	userMoveToBtns = append(userMoveToBtns, tg.NewBtn(i18n.StrGoToToday, tg.NewCmd(consts.CmdShowToday, nil)))
+	cmd := tg.NewCmd(consts.CmdMoveToExistingDir, []string{fs.Hash(fs.DirToday), msgIndexStr})
+	label := txt.Emoji(i18n.Emoji("move"), i18n.Tr("To Today"))
+	userMoveToBtns = append(userMoveToBtns, tg.NewBtn(label, cmd))
 
 	userBtnsByRows := slice.Chunk(userMoveToBtns, btnsPerRow)
 	for _, row := range userBtnsByRows {
