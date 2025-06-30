@@ -1859,7 +1859,8 @@ func (b *Bot) moveToNewFile(params []string) error {
 }
 
 func (b *Bot) moveToNewChecklist(params []string) error {
-	filenameHash := params[0]
+	msgIndexStr := params[0]
+
 	supposedName := params[1]
 	supposedName = fs.SanitizeFilename(supposedName)
 
@@ -1869,16 +1870,11 @@ func (b *Bot) moveToNewChecklist(params []string) error {
 	if err != nil {
 		return fmt.Errorf("move to new checklist: %w", err)
 	}
-	if exists {
-		return b.moveToDir([]string{dir, fs.DirRoot, filenameHash})
+	if !exists {
+		err = b.fs.MakeDir(dir)
 	}
 
-	err = b.fs.MakeDir(dir)
-	if err != nil {
-		return fmt.Errorf("move to new checklist: %w", err)
-	}
-
-	return b.moveToDir([]string{dir, fs.DirToday, filenameHash})
+	return b.moveToDirFromChat([]string{dir, msgIndexStr})
 }
 
 // TODO support both indexes and hashes
