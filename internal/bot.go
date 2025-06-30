@@ -533,7 +533,7 @@ func (b *Bot) addToRepliedFile(replyToMsgID int, newContent string) error {
 	b.delAllKeyboards()
 
 	b.db.SetRecentCommand(consts.CmdMoveToExistingFile)
-	b.db.SetRecentCommandParams([]string{fs.ShortHash(existingFilename), fs.ShortHash(fs.DirToday)})
+	b.db.SetRecentCommandParams([]string{fs.ShortHash(existingFilename)})
 
 	return b.ShowToday(nil)
 }
@@ -620,7 +620,7 @@ func (b *Bot) answerFileRequest(msg string) error {
 			if dir == fs.DirRoot {
 				// We have a file
 				b.db.SetRecentCommand(consts.CmdMoveToExistingFile)
-				b.db.SetRecentCommandParams([]string{fs.ShortHash(filename), fs.ShortHash(fs.DirToday)})
+				b.db.SetRecentCommandParams([]string{fs.ShortHash(filename)})
 			} else {
 				// We have a note (a file placed in a subdirectory)
 				b.db.SetRecentCommand(consts.CmdMoveToExistingNote)
@@ -1164,7 +1164,6 @@ func (b *Bot) showChecklists(_ []string) error {
 	return nil
 }
 
-// TODO support chat.md flow
 func (b *Bot) showPostpone(_ []string) error {
 	files, err := b.fs.FilesAndDirs(fs.DirToday)
 	if err != nil {
@@ -1836,7 +1835,6 @@ func (b *Bot) moveToShop(params []string) error {
 	return b.moveToChecklist([]string{filenameHash, fs.Hash(fs.DirShop)})
 }
 
-// TODO test
 func (b *Bot) moveToNewFile(params []string) error {
 	msgIndex, err := strconv.Atoi(params[0])
 	if err != nil {
@@ -1874,9 +1872,8 @@ func (b *Bot) moveToNewFile(params []string) error {
 		// We can tolerate this
 		//_ = journal.AddRecord(b.fs, fmt.Sprintf("📄 %s", fs.Title(filename)), b.cfg.Timezone())
 
-		// TODO test
 		b.db.SetRecentCommand(consts.CmdMoveToExistingFile)
-		b.db.SetRecentCommandParams([]string{fs.ShortHash(newFilenameFromUserInput), fs.ShortHash(fs.DirToday)})
+		b.db.SetRecentCommandParams([]string{fs.ShortHash(newFilenameFromUserInput)})
 
 		// TODO add if exists
 		return b.fs.Write(fs.DirRoot, newFilenameFromUserInput, content)
