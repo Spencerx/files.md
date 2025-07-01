@@ -54,6 +54,13 @@ async function openChatModal() {
     scrollToBottom();
 }
 
+document.addEventListener('click', (event) => {
+    let isChatModal = chatContainer.classList.contains('modal');
+    if (isChatModal && !chatContainer.contains(event.target)) {
+        closeChatModal();
+    }
+});
+
 function closeChatModal() {
     chatContainer.classList.remove('modal');
     if (!isChat) {
