@@ -470,7 +470,7 @@ function renderSidebar(focusDir = '') {
     // Process root-level files
     if (files['']) {
         for (let file in files['']) {
-            if (file === CONFIG_FILENAME) {
+            if (file === CONFIG_FILENAME || file === CHAT_FILENAME) {
                 continue;
             }
 
@@ -486,6 +486,7 @@ function renderSidebar(focusDir = '') {
             }
         }
     }
+
 
     tree = new TreeView(root, '#sidebar-tree', {
         show_root: false,
