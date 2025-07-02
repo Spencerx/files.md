@@ -61,6 +61,10 @@
         color: var(--color-tx-alt) !important;
     }
 
+    #close-sidebar:hover {
+        color: var(--color-link) !important;
+    }
+
     #open-sidebar {
         background: var(--color-bg-active);
     }
