@@ -1204,5 +1204,6 @@ function hideEditor2() {
 
     setTimeout(() => {
         editor2Container.style.display = 'none';
+        editor.refresh(); // IT seems we have to refresh once size changes.
     }, 300);
 }
