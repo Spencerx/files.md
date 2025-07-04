@@ -39,8 +39,6 @@
     previewContainer.setAttribute('class', 'CodeMirror-hints HyperMD-complete-preview')
 
     return function (cm, options) {
-      editor = cm
-
       let cursor = cm.getCursor(), line = cm.getLine(cursor.line);
       // PATCHED don't mixup with checkboxse
       if (/^\s*-\s\[\s/.test(line)) {
@@ -70,7 +68,7 @@
       /** @type {Array<Record<string,string>>} */
       // var dicts = [defaultDict] // for now we only use links autocompletion
       var dicts = []
-      var myEmojiDict = (editor.getOption('hmdFoldEmoji') || {}).myEmoji
+      var myEmojiDict = (cm.getOption('hmdFoldEmoji') || {}).myEmoji
       if (myEmojiDict) dicts.push(myEmojiDict())
 
       var result = {

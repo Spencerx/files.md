@@ -147,7 +147,6 @@ function initEditor(el) {
     newEditor.setSize(null, '100%');
     newEditor.on('focus', function() {
         currentEditor = newEditor;
-        currentEditor.refresh(); // Cursor & hide tokens conflict if we don't call it
         console.log('Switched to:', newEditor.currentFile);
     });
 

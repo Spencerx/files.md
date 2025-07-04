@@ -207,10 +207,6 @@
                        return;
                     }
 
-                    // PATCHED, we don't want cursor to be placed if we clicked on a link
-                    ev.preventDefault();
-                    ev.stopPropagation();
-
                     if (mat = styles.match(/\s(image|link|url)\s/)) {
                         // Could be a image, link, bare-link, footref, footnote, plain url, plain url w/o angle brackets
                         type = mat[1];
@@ -266,10 +262,16 @@
                             // PATCHED, add non-wiki links support
                             if (isWikiLink) {
                                 url = "[" + text.match(/\[\[([^\]]+)\]\]/)[1] + "]"; //
+                                // PATCHED, we don't want cursor to be placed if we clicked on a link
+                                ev.preventDefault();
+                                ev.stopPropagation();
                                 cm.hmdReadLink(cm.hmdResolveURL(url));
                             } else if (typeof read_link_1 === 'undefined') {
                                 url = "[" + text.match(/\(([^)]+)\)/)[1] + "]"; // PATCHED for non-wiki links
                                 url = url.replace(/\.md]$/, "]");
+                                // PATCHED, we don't want cursor to be placed if we clicked on a link
+                                ev.preventDefault();
+                                ev.stopPropagation();
                                 cm.hmdReadLink(cm.hmdResolveURL(url));
                             } else {
                                 // remove title part (if exists)
