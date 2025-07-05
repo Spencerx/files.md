@@ -1118,6 +1118,7 @@ function showEditor2() {
     editor2Container.offsetHeight; // Force reflow
     editor2Container.classList.add('show');
 
+    editor.refresh();
     editor2.focus();
 }
 
