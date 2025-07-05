@@ -264,7 +264,7 @@ func SyncText(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serverLastModified, err := userFS.Ctime(fs.DirRoot, path)
+	serverLastModified, err := userFS.Mtime(fs.DirRoot, path)
 	if err != nil {
 		if !errors.Is(err, os.ErrNotExist) {
 			slog.Error("Sync error: syncText: error getting ctime for clientFile '%s': %v", path, err)
