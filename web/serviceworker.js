@@ -1,6 +1,8 @@
 const urlsToCache = [
     '/',
     '/favicon.ico',
+    '/icon.png',
+    '/icon_small.png',
     '/manifest.json',
     '/app.css',
     '/lib/normalize.css',
@@ -80,8 +82,6 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-    console.log('intercepting fetch:', event.request.url);
-
     event.respondWith(
         caches.match(event.request)
             .then(response => {
