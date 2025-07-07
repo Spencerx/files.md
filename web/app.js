@@ -432,7 +432,7 @@ function initEditor(el) {
 async function initWasm() {
     console.log('INIT CHAT');
     const go = new Go();
-    const wasmFile = await fetch('chat.wasm');
+    const wasmFile = await fetch(`chat.wasm${window.COMMIT_HASH}`);
     const wasmModule = await WebAssembly.instantiateStreaming(wasmFile, go.importObject);
     go.run(wasmModule.instance);
     let cmd = {
