@@ -188,7 +188,7 @@ async function syncTextsWithServer() {
             if (path === `${editor.currentDir}/${editor.currentFile}` || path === editor.currentFile
                 || path === `${editor2.currentDir}/${editor2.currentFile}` || path === editor2.currentFile
             ) {
-                console.log('Skip current ' + path);
+                console.log('Skip current received from server' + path);
                 continue;
             }
 
@@ -489,9 +489,9 @@ async function collectModifiedAndDeletedFiles() {
         if (dir === 'media') continue; // Skip image directory
 
         for (const filename in files[dir]) {
-            if (path === `${editor.currentDir}/${editor.currentFile}` || path === editor.currentFile
-                || path === `${editor2.currentDir}/${editor2.currentFile}` || path === editor2.currentFile
-            ) {
+            // TODO write tests for that?
+            if ((dir === editor.currentDir && filename === editor.currentFile)
+            || (dir === editor2.currentDir && filename === editor2.currentFile)) {
                 console.log('Skip sending current file');
                 continue;
             }
