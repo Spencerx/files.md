@@ -935,16 +935,19 @@ async function openFile(path, saveToHistory = true, el = 'editor-textarea') {
     closeChatModal();
 
     const start = performance.now();
-    filename = filename.normalize('NFC');
-    const fileData = files[dir][filename];
+    // Why we do normalize here as well?
+    path = path.normalize('NFC');
+    const fileData = getMemFile(path);
+    console.log(fileData);
 
     // Check if we're loading the same file and save cursor position
     let cursorPos = null;
-    if (currentEditor.currentDir === dir && currentEditor.currentFile === filename) {
+    if (currentEditor.path === path) {
         console.log('saving cursor');
         cursorPos = editor.getCursor();
     }
 
+   let filename = toFilename(path);
     const header = filename.replace(/\.md$/, '').replace(/^\w/, (c) => c.toUpperCase());
     let content = '';
     if (fileData.handle !== undefined) {
@@ -956,12 +959,12 @@ async function openFile(path, saveToHistory = true, el = 'editor-textarea') {
         content = fileData.content;
     }
 
-    currentEditor.currentDir = dir;
-    currentEditor.currentFile = filename;
+    // currentEditor.currentDir = dir;
+    // currentEditor.currentFile = filename;
     currentEditor.path = path;
     // TODO disable when syncing?
     if (saveToHistory) {
-        const state = {dir: dir, file: filename};
+        const state = {path: path};
         history.pushState(state, '');
     }
 
@@ -1304,6 +1307,12 @@ function walk(obj, callback, path = '/') {
     }
 }
 
+function toFilename(path) {
+    const { filename } = toDirAndFilename(path);
+
+    return filename;
+}
+
 function toDirAndFilename(path) {
     let parts = path.split('/');
     parts = parts.filter(p => p !== '');
@@ -1325,12 +1334,15 @@ function getMemFile(path) {
     if (files === undefined) {
         return null;
     }
+    if (path === '/') {
+        return files;
+    }
 
     let dirs = path.split('/');
     dirs = dirs.filter(d => d !== '');
     const filename = dirs.pop();
 
-    let currentDir = files['/'];
+    let currentDir = files;
     for (const dir of dirs) {
         if (!currentDir[dir]) {
             return null;

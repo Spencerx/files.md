@@ -619,7 +619,7 @@ function renderSidebar(focusDir = '') {
 
         let fileNode = new TreeNode(filename.replace(/\.md$/, '').replace(/\.txt$/, ''), {expanded: false});
         fileNode.on('click', async function (n, node) {
-            await openFile(dirPath, filename);
+            await openFile(path);
         });
 
         const parentNode = dirNodes[dirPath] || root;
