@@ -140,13 +140,6 @@ async function loadLocalFiles(rootDirHandle) {
         throw error;
     }
 
-    // Remove empty dirs
-    // for (const dir in newFiles) {
-    //     if (Object.keys(newFiles[dir]).length === 0) {
-    //         delete newFiles[dir];
-    //     }
-    // }
-
     // Load server files
     const savedServerFiles = localStorage.getItem(SERVER_STORAGE_KEY);
     if (savedServerFiles) {
@@ -158,7 +151,7 @@ async function loadLocalFiles(rootDirHandle) {
     return newFiles;
 }
 
-// TODO add support for config.json
+// config.json is currently only synced from server, no local changes are propogated.
 async function syncTextsWithServer() {
     if (files === undefined || Object.keys(files).length === 0) {
         return;
@@ -245,10 +238,10 @@ async function syncTextsWithServer() {
             serverFiles['timestamps'] = server.timestamps;
             saveServerFiles();
         } else {
-            console.log('BATCH sync error, timestamps aren\'t moved');
+            console.log("BATCH sync error, timestamps aren't moved");
         }
     } catch (error) {
-        console.error('Can\'t sync: ', error.message)
+        console.error("Can't sync:", error.message)
     }
 
     console.log('Sync completed in ' + (performance.now() - startTime) + 'ms');
@@ -400,7 +393,7 @@ async function syncMedia() {
             console.log(`Downloading media file: ${filename}`);
 
             try {
-                // Fetch the binary file
+                // Fetch binary file
                 const response = await fetch(`${API_HOST}/syncMedia`, {
                     method: 'POST',
                     headers: {
@@ -568,12 +561,12 @@ async function collectModifiedAndDeletedFiles() {
     //         }
     //     }
     // }
-    console.log('WALKING', serverFiles.files);
     walk(serverFiles.files, (path, isFile) => {
         if (!isFile) {
             return;
         }
 
+        // Chromium doesn't support those chars on any OS
         if (/[<>:'|?*\\/\x00-\x1F\x7F]/.test(toFilename(path))) {
             return;
         }
@@ -583,7 +576,6 @@ async function collectModifiedAndDeletedFiles() {
             return;
         }
 
-        console.log('EXISTING files', existingFiles);
         if (existingFiles[path] === undefined) {
             console.log('DELETED ' + path);
             deleted.push(path);
@@ -1615,33 +1607,6 @@ function findSiblingPath(path) {
     });
 
     return nextPath;
-
-    // // Collect all files except system files
-    // for (let dir in files) {
-    //     for (let file in files[dir]) {
-    //         if (file === CONFIG_PATH || file === CHAT_PATH) {
-    //             continue;
-    //         }
-    //         allFiles.push({dir, filename: file});
-    //     }
-    // }
-    //
-    // if (allFiles.length <= 1) {
-    //     return null; // No other files available
-    // }
-    //
-    // // Find current file index
-    // const currentIndex = allFiles.findIndex(f =>
-    //     f.dir === currentDir && f.filename === currentFilename
-    // );
-    //
-    // if (currentIndex === -1) {
-    //     return allFiles[0]; // Fallback to first file
-    // }
-    //
-    // // Return next file, or first file if we're at the end
-    // const nextIndex = (currentIndex + 1) % allFiles.length;
-    // return allFiles[nextIndex];
 }
 
 window.addEventListener('beforeunload', function () {

@@ -140,6 +140,8 @@ function renderSidebar(focusDir = '') {
         existingDirs.forEach((dir, index) => {
             const dirNode = dirNodes['/' + dir];
             if (dirNode && dirNode.parent === root) {
+                console.log(dirNode.toString());
+                // Add in the end
                 root.removeChild(dirNode);
                 if (index === existingDirs.length - 1) {
                     dirNode.isGroupEnd = true;
@@ -149,12 +151,15 @@ function renderSidebar(focusDir = '') {
         });
     }
 
+    // Move all other nodes down
     const groupedDirs = new Set(['_read_', '_watch_', '_shop_', 'journal', 'habits', 'insights', 'archive', 'today', 'later']);
     for (const dir in dirNodes) {
-        if (dir === '/' || dir === 'media' || groupedDirs.has(dir)) continue;
+        console.log('TRYING ot move', dir);
+        if (dir === '/' ||  groupedDirs.has(toFilename(dir))) continue;
 
         const dirNode = dirNodes[dir];
         if (dirNode && dirNode.parent === root) {
+            console.log('MOVING ', dir);
             root.removeChild(dirNode);
             root.addChild(dirNode);
         }
@@ -199,6 +204,7 @@ function renderSidebar(focusDir = '') {
     }
 
     sortTreeNode(root);
+
 
     tree = new TreeView(root, '#sidebar-tree', {
         show_root: false,

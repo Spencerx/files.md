@@ -416,8 +416,8 @@ function saltToken(token, salt = '') {
 
 async function clickAndExpectContent(page, filePath, expectedContent) {
     const parts = filePath.split('/');
-    const dirs = parts.slice(0, -1);
-    const file = parts[parts.length - 1];
+    const file = parts.pop();
+    const dirs = parts;
 
     for (const dir of dirs) {
         const isSelected = await page.locator(`#sidebar-tree .tj_description:text-is('${dir}')`).evaluate(el => el.classList.contains('expanded'));
