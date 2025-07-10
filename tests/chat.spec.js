@@ -22,6 +22,7 @@ test('send message to chat', async ({ page }) => {
     });
 
     await page.waitForSelector('#chat');
+    await page.waitForTimeout(300);
 
     await page.keyboard.type('My message');
     await page.keyboard.press('Enter');
