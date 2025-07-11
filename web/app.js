@@ -47,7 +47,6 @@ async function init(el) {
     const savedDirHandle = await getRootDirHandle();
     const hasSavedDir = savedDirHandle instanceof FileSystemDirectoryHandle;
     if (!hasSavedDir) {
-        document.getElementById('open-folder').style.display = 'inline';
         document.getElementById('new-file').style.display = 'none';
         document.getElementById('new-folder').style.display = 'none';
         document.getElementById('open-chat').style.display = 'none';
@@ -59,13 +58,15 @@ async function init(el) {
         return;
     } else {
         isWelcome = false;
-        document.getElementById('open-folder').style.display = 'none';
+        // document.getElementById('open-folder').style.display = 'none';
+        document.getElementById('open-folder').style.display = 'inline';
         document.getElementById('new-file').style.display = 'inline';
         document.getElementById('new-folder').style.display = 'inline';
         document.getElementById('open-chat').style.display = 'inline';
         document.getElementById('open-chat-modal').style.display = 'inline';
     }
 
+    // Only works in chrome
     const permission = await savedDirHandle.queryPermission({mode: 'readwrite'});
     console.log('PERMISSION', permission);
     if (permission !== 'granted') {

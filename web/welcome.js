@@ -5,7 +5,7 @@ async function getOPFSDirHandle() {
         entries.push(entry);
     }
 
-    // if (entries.length === 0) {
+    if (entries.length === 0) {
         async function createFiles(obj, dirHandle) {
             for (const [name, data] of Object.entries(obj)) {
                 if (data.isFile) {
@@ -20,9 +20,90 @@ async function getOPFSDirHandle() {
             }
         }
         await createFiles(DEFAULT_FILES, root);
-    // }
+    }
 
     return root;
+}
+
+async function migrateFromOPFSToLocal() {
+    try {
+        // Get OPFS root
+        const opfsRoot = await navigator.storage.getDirectory();
+
+        // Ask user to select local directory
+        const localRoot = await window.showDirectoryPicker();
+
+        console.log('Starting migration from OPFS to Local FS...');
+
+        // Read current OPFS structure
+        const opfsFiles = {};
+        await buildFileStructure(opfsRoot, opfsFiles);
+
+        // Copy files to local directory
+        let copiedCount = 0;
+        await walk(opfsFiles, async (path, obj, isFile) => {
+            if (isFile) {
+                try {
+                    // Read from OPFS
+                    const file = await obj.handle.getFile();
+                    const content = await file.text();
+
+                    // Write to local FS
+                    await createFileInLocal(localRoot, path, content);
+                    copiedCount++;
+                    console.log(`✓ Copied: ${path}`);
+                } catch (error) {
+                    console.error(`✗ Failed to copy ${path}:`, error);
+                }
+            } else {
+                // Create directory in local FS
+                await createDirectoryInLocal(localRoot, path);
+            }
+        });
+
+        console.log(`Migration completed! Copied ${copiedCount} files.`);
+        return { success: true, copiedCount };
+
+    } catch (error) {
+        console.error('Migration failed:', error);
+        return { success: false, error };
+    }
+}
+
+async function createFileInLocal(rootHandle, filePath, content) {
+    const pathParts = filePath.split('/').filter(p => p);
+    const fileName = pathParts.pop();
+
+    // Navigate to directory (create if needed)
+    let currentHandle = rootHandle;
+    for (const dirName of pathParts) {
+        currentHandle = await currentHandle.getDirectoryHandle(dirName, { create: true });
+    }
+
+    // Create file
+    const fileHandle = await currentHandle.getFileHandle(fileName, { create: true });
+    const writable = await fileHandle.createWritable();
+    await writable.write(content);
+    await writable.close();
+}
+
+async function createDirectoryInLocal(rootHandle, dirPath) {
+    const pathParts = dirPath.split('/').filter(p => p);
+
+    let currentHandle = rootHandle;
+    for (const dirName of pathParts) {
+        currentHandle = await currentHandle.getDirectoryHandle(dirName, { create: true });
+    }
+}
+
+// Usage
+async function startMigration() {
+    const result = await migrateFromOPFSToLocal();
+    if (result.success) {
+        alert(`Migration successful! Copied ${result.copiedCount} files.`);
+    } else {
+        alert(`Migration failed: ${result.error.message}`);
+    }
 }
 
 const DEFAULT_FILES = {
@@ -146,3 +227,4 @@ const DEFAULT_FILES = {
         isFile: true,
     }
 }
+

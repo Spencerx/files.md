@@ -458,10 +458,10 @@ button svg circle {
     margin-top: 0;
 }
 
-#open-folder {
-    display: none;
-    padding: 8px;
-}
+/*#open-folder {*/
+/*    display: none;*/
+/*    padding: 8px;*/
+/*}*/
 
 #sidebar-container {
     position: relative;

@@ -64,6 +64,11 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M 25 7 H 11 a 4 4 0 0 0 -4 4 v 10 a 4 4 0 0 0 4 4 h 7 l 6 4 v -4 h 1 a 4 4 0 0 0 4 -4 V 11 a 4 4 0 0 0 -4 -4 z"/>
                 </svg>
             </button>
+            <button id="open-folder" title="Select local folder" onClick="openDir()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 32 32">
+                    <path stroke-linecap="round" stroke-width="2" d="M28 11v13a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h6c3 0 3 3 5 3h9.003C27.108 9 28 9.895 28 11z"/>
+                </svg>
+            </button>
 <!--            TODO add icon for saving, would swith opfs to local-->
             <!--        <button id="move-file" title="Move file" onclick="openMoveModal()">-->
             <!--            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 32 32">-->
@@ -78,9 +83,9 @@
             <!--                <path stroke="#535358" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.5 16.5l-5 5M13.5 16.5l5 5"/>-->
             <!--            </svg>-->
             <!--        </button>-->
-            <button id="open-folder" title="Select local folder" onClick="openDir()" style="padding: 5px">
-                Open or create folder
-            </button>
+<!--            <button id="open-folder" title="Select local folder" onClick="openDir()" style="padding: 5px">-->
+<!--                Open or create folder-->
+<!--            </button>-->
             <button id="close-sidebar" onclick="toggleSidebar()">×</button>
         </div>
         <div id="sidebar-tree">
