@@ -44,30 +44,34 @@ async function init(el) {
         }
     }
 
-    const savedDirHandle = await getRootDirHandle();
-    const hasSavedDir = savedDirHandle instanceof FileSystemDirectoryHandle;
-    if (!hasSavedDir) {
-        document.getElementById('new-file').style.display = 'none';
-        document.getElementById('new-folder').style.display = 'none';
-        document.getElementById('open-chat').style.display = 'none';
-        document.getElementById('open-chat-modal').style.display = 'none';
-        files = DEFAULT_FILES;
-        isWelcome = true;
-        renderSidebar();
-        await openFile('/Welcome.md');
-        return;
+    const savedDirHandle = await getSavedRootDirHandle();
+    const hasSavedLocalDir = savedDirHandle instanceof FileSystemDirectoryHandle;
+    if (!hasSavedLocalDir) {
+        document.getElementById('open-folder').style.display = 'inline';
+        isWelcome = false;
+        // document.getElementById('new-file').style.display = 'none';
+        // document.getElementById('new-folder').style.display = 'none';
+        // document.getElementById('open-chat').style.display = 'none';
+        // document.getElementById('open-chat-modal').style.display = 'none';
+        // files = DEFAULT_FILES;
+        // isWelcome = true;
+        // renderSidebar();
+        // await openFile('/Welcome.md');
+        // return;
+
     } else {
         isWelcome = false;
-        // document.getElementById('open-folder').style.display = 'none';
-        document.getElementById('open-folder').style.display = 'inline';
+        document.getElementById('open-folder').style.display = 'none';
         document.getElementById('new-file').style.display = 'inline';
         document.getElementById('new-folder').style.display = 'inline';
         document.getElementById('open-chat').style.display = 'inline';
         document.getElementById('open-chat-modal').style.display = 'inline';
     }
 
+    let rootDirHandle = await getRootDirHandle();
+
     // Only works in chrome
-    const permission = await savedDirHandle.queryPermission({mode: 'readwrite'});
+    const permission = await rootDirHandle.queryPermission({mode: 'readwrite'});
     console.log('PERMISSION', permission);
     if (permission !== 'granted') {
         document.getElementById('open-folder').style.display = 'inline';
@@ -78,7 +82,8 @@ async function init(el) {
         isWelcome = true;
     }
 
-    const rootDirHandle = await getRootDirHandle();
+    // Why second time?
+    rootDirHandle = await getRootDirHandle();
 
     let perf = performance.now();
     files = await loadLocalFiles(rootDirHandle);
@@ -936,29 +941,24 @@ async function saveDirectoryHandle(directoryHandle) {
     await store.put(directoryHandle, 'savedDirectoryHandle');
 }
 
-async function getRootDirHandle() {
-    try {
-        const db = await initDB();
+async function getSavedRootDirHandle() {
+    const db = await initDB();
+    return new Promise((resolve, reject) => {
         const transaction = db.transaction('handles', 'readonly');
         const store = transaction.objectStore('handles');
         const request = store.get('savedDirectoryHandle');
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+}
 
-        const result = await new Promise((resolve, reject) => {
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error);
-        });
-
-        if (result) {
-            console.log('Using saved directory handle');
-            return result;
-        } else {
-            console.log('No saved handle found, fallback to OPFS');
-            return await getOPFSDirHandle();
-        }
-    } catch (error) {
-        console.log('Error accessing saved handle, fallback to OPFS:', error);
+async function getRootDirHandle() {
+    const savedDirHandle = await getSavedRootDirHandle();
+    if (savedDirHandle === undefined) {
         return await getOPFSDirHandle();
     }
+
+    return savedDirHandle;
 }
 
 // document.addEventListener('mousedown', (event) => {
