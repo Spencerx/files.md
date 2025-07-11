@@ -171,7 +171,17 @@ async function syncTextsWithServer() {
 
     // Send locally modified files and timestamps of last seen dirs from the server
     // TODO check if we fully synced at least once (timestamps exists)
-    const {modified, deleted} = await collectModifiedAndDeletedFiles();
+
+    let modified = [];
+    let deleted = [];
+    // TODO is it possible that the server has zero files? I think at least '.' is sent
+    let hasFullySyncedFilesAtLeastOnce = serverFiles['timestamps'] !== undefined && Object.keys(serverFiles['timestamps']).length > 0;;
+    if (hasFullySyncedFilesAtLeastOnce) {
+        console.log('SYNCED AT LEAST ONCE, collecting local files', serverFiles['timestamps']);
+        ({modified, deleted} = await collectModifiedAndDeletedFiles());
+    } else {
+        console.log('NEVER SYNCED BEFORE');
+    }
     const server = await post('syncTexts', {
         modified: modified,
         deleted: deleted,
@@ -368,7 +378,7 @@ async function syncMedia() {
                 if (!response.ok) {
                     console.error(`Failed to sync media file ${mediaFilename}:`, response.statusText);
                 } else {
-                    serverFiles['media/'][mediaFilename] = {
+                    serverFiles['media'][mediaFilename] = {
                         lastModified: 0, // We don't track binary files modifications.
                     };
                     saveServerFiles();
@@ -452,7 +462,7 @@ async function saveMediaFile(path, blob, lastModified) {
             if (serverFiles['mediaTimestamp'] === undefined || lastModified > serverFiles['mediaTimestamp']) {
                 serverFiles['mediaTimestamp'] = lastModified;
             }
-            serverFiles['media/'][file.name] = {
+            serverFiles['media'][file.name] = {
                 lastModified: lastModified,
             }
             saveServerFiles();
@@ -474,7 +484,7 @@ async function saveMediaFile(path, blob, lastModified) {
         if (lastModified > serverFiles['mediaTimestamp']) {
             serverFiles['mediaTimestamp'] = lastModified;
         }
-        serverFiles['media/'][filename] = {
+        serverFiles['media'][filename] = {
             lastModified: lastModified,
         }
         saveServerFiles();
@@ -607,7 +617,7 @@ async function collectNewMediaFiles() {
 
     const newMediaFiles = [];
     for (const filename in files['media/']) {
-        if (serverFiles['media/'] === undefined || !(filename in serverFiles['media/'])) {
+        if (serverFiles['media'] === undefined || !(filename in serverFiles['media'])) {
             newMediaFiles.push(filename);
         }
     }
@@ -619,7 +629,6 @@ async function collectNewMediaFiles() {
 
 async function getFileStatus(path) {
     let content;
-    console.log('Checking status for' , path);
     try {
         const memFile = getMemFile(path);
         if (!memFile?.handle) {
