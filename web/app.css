@@ -173,7 +173,7 @@ a:hover {
 #search, #move {
     position: fixed;
     width: 500px;
-    padding: 16px;
+    padding: 5px;
     box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
     border-radius: 8px;
     background: var(--col-bg);
