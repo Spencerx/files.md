@@ -210,8 +210,8 @@ function initEditor(el) {
         path += '.md';
 
         if (getMemFile(path) !== null) {
-            console.log('OPEN', getMemFile(path), path);
             openFile(path, true, 'editor2-textarea')
+            return;
         }
 
         // Try to find filename is any folder

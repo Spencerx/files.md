@@ -1057,6 +1057,7 @@ function saveServerFiles() {
 
 // TODO save old file
 async function openFile(path, saveToHistory = true, el = 'editor-textarea') {
+    console.log('OPENEING', path);
     // Why we do normalize here as well?
     path = path.normalize('NFC');
     const memFile = getMemFile(path);
