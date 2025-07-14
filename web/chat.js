@@ -251,8 +251,8 @@ async function logWasm(val) {
     console.log(val);
 }
 
-async function receive(paths) {
-    console.log('Receiving:', paths);
+async function receive(modifiedPaths) {
+    console.log('Receiving:', modifiedPaths);
     let isChatModal = document.getElementById('chat-container').classList.contains('modal');
     if (!isChatModal && currentEditor.path !== CHAT_PATH) {
         return;
@@ -280,7 +280,7 @@ async function receive(paths) {
     }
     chatIsClean = true;
 
-    for (const path of paths) {
+    for (const path of modifiedPaths) {
         const memFile = getMemFile(path);
         if (memFile !== null) {
             continue;
@@ -291,9 +291,11 @@ async function receive(paths) {
             path: path,
             lastModified: 0,
             handle: await getFileHandle(path, false),
-        })
+        });
     }
-    renderSidebar();
+    if (modifiedPaths.length !== 0) {
+        renderSidebar('', modifiedPaths);
+    }
 }
 
 function renderMessages() {

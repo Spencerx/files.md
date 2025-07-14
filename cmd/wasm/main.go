@@ -117,6 +117,7 @@ func sendToJS(vals ...any) {
 	for _, path := range writtenFiles {
 		paths = append(paths, "/"+path)
 	}
+	writtenFiles = nil
 	js.Global().Call("receive", paths)
 }
 

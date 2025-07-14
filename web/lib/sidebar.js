@@ -7,7 +7,7 @@
 
 let tree;
 
-function renderSidebar(focusDir = '') {
+function renderSidebar(focusDir = '', modifiedPaths) {
     let expandedDirs = new Set();
     let selectedNodes = new Set();
 
@@ -100,6 +100,14 @@ function renderSidebar(focusDir = '') {
             if (expandedDirs.has(dir)) dirNode.setExpanded(true);
             if (selectedNodes.has(dir)) dirNode.setSelected(true);
         }
+
+        if (modifiedPaths !== undefined) {
+            console.log('PATHS', toRootDirName(modifiedPaths[0]), dir);
+        }
+        if (modifiedPaths !== undefined && modifiedPaths.some(modPath => toRootDirName(modPath) === dir)) {
+            console.log('SHOULD blink', dir);
+            dirNode.shouldBlink = true;
+        }
     });
 
     // Second pass: add all files
@@ -125,6 +133,10 @@ function renderSidebar(focusDir = '') {
 
         const parentNode = dirNodes[dirPath] || root;
         parentNode.addChild(fileNode);
+
+        if (modifiedPaths !== undefined && modifiedPaths.includes(path)) {
+            fileNode.shouldBlink = true;
+        }
     });
 
     const groupedDirs = new Set(['_read_', '_watch_', '_shop_', 'journal', 'habits', 'insights', 'archive', 'today', 'later']);
@@ -812,6 +824,11 @@ function TreeView(root, container, options) {
         if (needsGroupHeader && shouldShowGroupHeaders()) {
             var fragment = document.createDocumentFragment();
             fragment.appendChild(createGroupHeader(groupHeaderText, groupHeaderClass));
+        }
+
+        if (node.shouldBlink) {
+            span_desc.classList.add('sidebar-blink');
+            setTimeout(() => span_desc.classList.remove('sidebar-blink'), 1500);
         }
 
         if (node.isGroupEnd) {
