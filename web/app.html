@@ -112,6 +112,18 @@
     </div>
     <div id="editor2-container" style="display: none">
         <textarea id="editor2-textarea" style="display: none"></textarea>
+        <button id="go-backward" class="nav-button" onclick="goBack()" title="Go Back (⌘[)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" viewBox="0 0 32 32">
+                <path  stroke-linecap="round" stroke-width="3" d="M6 16h21"/>
+                <path  stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 8l-8 8 8 8"/>
+            </svg>
+        </button>
+        <button id="go-forward" class="nav-button" onclick="goForward()" title="Go Forward (⌘])">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" viewBox="0 0 32 32">
+                <path  stroke-linecap="round" stroke-width="3" d="M5 16h21"/>
+                <path  stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 8l8 8-8 8"/>
+            </svg>
+        </button>
         <button id="close-editor2" onclick="hideEditor2()">×</button>
     </div>
     <div id="chat-container" style="display: none">
@@ -121,7 +133,7 @@
         <button id="fullscreen-chat" onclick="openChat()" title="Toggle fullscreen" style="display: none">⛶</button>
     </div>
 
-    <button class="hidden" id="open-chat-modal" style="display: none" title="Open Chat" onclick="toggleChat()">
+    <button class="hidden" id="open-chat-modal" style="display: none" title="Open Chat (⌘↵)" onclick="toggleChat()">
         <svg style="display: none" xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="none" viewBox="0 0 34 32">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M 25 7 H 11 a 4 4 0 0 0 -4 4 v 10 a 4 4 0 0 0 4 4 h 7 l 6 4 v -4 h 1 a 4 4 0 0 0 4 -4 V 11 a 4 4 0 0 0 -4 -4 z"/>
         </svg>

@@ -63,12 +63,14 @@
         stroke: #F5F5F5 !important;
     }
 
-    #close-sidebar, #close-editor2 {
+    #close-sidebar, #close-editor2, #go-forward svg, #go-backward svg {
         color: var(--col-tx-alt) !important;
+        stroke: var(--col-tx-alt) !important;
     }
 
-    #close-sidebar:hover, #close-editor2:hover {
+    #close-sidebar:hover, #close-editor2:hover, #go-forward:hover svg, #go-backward:hover svg {
         color: var(--col-link) !important;
+        stroke: var(--col-link) !important;
     }
 
     #open-sidebar {

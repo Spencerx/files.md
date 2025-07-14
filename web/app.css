@@ -613,6 +613,10 @@ body.dragging * {
     border: none;
 }
 
+#go-backward, #go-backward {
+    stroke: var(--col-link);
+}
+
 #sidebar:hover #close-sidebar {
     opacity: 1;
 }
@@ -677,4 +681,31 @@ body.dragging * {
 .cm-s-hypermd-light div.HyperMD-codeblock-end-bg {
     border-bottom-left-radius: 10px !important;
     border-bottom-right-radius: 10px !important;
+}
+
+.nav-button {
+    position: absolute;
+    top: 5px;
+    background: none;
+    border: none;
+    width: 33px;
+    height: 33px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+
+.nav-button:disabled {
+    cursor: not-allowed;
+}
+
+#go-forward {
+    right: 26px;
+}
+
+#go-backward {
+    right: 48px;
 }

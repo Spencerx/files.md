@@ -1133,3 +1133,11 @@ function isChrome() {
         return false;
     }
 }
+
+function goBack() {
+    history.back();
+}
+
+function goForward() {
+    history.forward();
+}
