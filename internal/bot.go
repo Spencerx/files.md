@@ -385,7 +385,7 @@ func (b *Bot) saveFromTextMsg(u Update) error {
 		err := b.createOrAdd(fs.DirRoot, fs.ChatFilename, msg)
 
 		msgID, _ := u.MsgID()
-		if err != nil {
+		if err == nil {
 			_ = b.tg.SendReaction(b.userID, msgID, "👌")
 		}
 
