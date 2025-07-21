@@ -335,7 +335,7 @@ var __assign = (this && this.__assign) || Object.assign || function(t) {
                     // make indentation (and potential list bullet) monospaced
                     if (/^>\s+$/.test(current) && stream.peek() != ">") {
                         // PATCHED, bad indentation for word-wrapped lines
-                        // stream.pos = stream.start + 1; // rewind!
+                        stream.pos = stream.start + 1; // rewind!
                         current = ">";
                         state.hmdOverride = function (stream, state) {
                             stream.match(listInQuoteRE);

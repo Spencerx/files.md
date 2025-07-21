@@ -293,10 +293,9 @@
     /*text-indent: 0;*/
     /*margin-left: 4px;*/
 }
+
 /*PATCHED*/
 .cm-s-hypermd-light pre.HyperMD-quote-1 {
-    text-indent: -10px;
-    padding-inline-start: 24px;
     /*padding-left: 22px;*/
 }
 .cm-s-hypermd-light pre.HyperMD-quote-1:before {

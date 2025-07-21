@@ -743,5 +743,15 @@ body.dragging * {
     padding-left: 4em !important;
 }
 
-.sidebar-inbox {
+.cm-hmd-indent-in-quote {
+    position: absolute;
+    width: 0;
+    /*overflow: hidden;*/
+}
+
+
+.cm-s-hypermd-light pre.HyperMD-quote-1 {
+
+    text-indent: -10px !important;
+    padding-inline-start: 24px !important;
 }
