@@ -205,13 +205,13 @@ function initChat() {
     chatInput.addEventListener('keydown', async function (e) {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            await send();
+            await sendToWasm();
             autoResize();
         }
     });
 }
 
-async function send() {
+async function sendToWasm() {
     const text = chatInput.value.trim();
     if (!text) return;
     console.log('Wasm: sending', text);
@@ -252,7 +252,7 @@ async function logWasm(val) {
 }
 
 async function receive(modifiedPaths) {
-    console.log('Receiving:', modifiedPaths);
+    console.log('Wasm: receiving:', modifiedPaths);
     let isChatModal = document.getElementById('chat-container').classList.contains('modal');
     if (!isChatModal && currentEditor.path !== INBOX_PATH) {
         return;
