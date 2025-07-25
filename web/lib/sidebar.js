@@ -145,17 +145,7 @@ function renderSidebar(focusDir = '', modifiedPaths) {
         }
     });
 
-    // if (files[toFilename(TODAY_PATH)] !== undefined) {
-    //     let node = new TreeNode('Today list', {expanded: false, dir: false});
-    //     node.path = path;
-    //     node.on('click', async function (n, node) {
-    //         await openFile(TODAY_PATH);
-    //     });
-    //     node.isGroupEnd = true;
-    //     root.addChild(node);
-    // }
-
-// Step 1: Tasks group
+    // Step 1: Tasks group
     if (dirNodes['/today']) {
         const todayNode = dirNodes['/today'];
         if (todayNode && todayNode.parent === root) {
@@ -173,7 +163,7 @@ function renderSidebar(focusDir = '', modifiedPaths) {
     }
 
     if (files[toFilename(TODAY_PATH)] !== undefined) {
-        let node = new TreeNode('Today list', {expanded: false, dir: false});
+        let node = new TreeNode('today list', {expanded: false, dir: false});
         node.path = TODAY_PATH;
         node.on('click', async function (n, node) {
             await openFile(TODAY_PATH);
@@ -182,7 +172,7 @@ function renderSidebar(focusDir = '', modifiedPaths) {
         root.addChild(node);
     }
 
-// Step 2: Personal group
+    // Step 2: Personal group
     if (dirNodes['/journal']) {
         const journalNode = dirNodes['/journal'];
         journalNode.isGroupEnd = true;
@@ -225,7 +215,7 @@ function renderSidebar(focusDir = '', modifiedPaths) {
 
     // Move all other nodes down
     for (const dir in dirNodes) {
-        if (dir === '/' ||  groupedDirs.has(toFilename(dir))) continue;
+        if (dir === '/' || groupedDirs.has(toFilename(dir))) continue;
 
         const dirNode = dirNodes[dir];
         if (dirNode && dirNode.parent === root) {
@@ -299,7 +289,7 @@ function renderSidebar(focusDir = '', modifiedPaths) {
                 if (aName === 'inbox') return 1;
                 if (bName === 'inbox') return 1;
 
-                if (aName === 'Today list') return -1;
+                if (aName === 'today list') return -1;
 
                 // Then sort by directory vs file
                 if (aIsDir && !bIsDir) return -1;
@@ -312,6 +302,7 @@ function renderSidebar(focusDir = '', modifiedPaths) {
             children.forEach(child => sortTreeNode(child));
         }
     }
+
     // sortTreeNode(root);
 
     tree = new TreeView(root, '#tree', {
@@ -682,7 +673,6 @@ function TreeView(root, container, options) {
     }
 
 
-
     function createDropIndicator() {
         const indicator = document.createElement('div');
         indicator.className = 'tj_drop_indicator';
@@ -798,7 +788,7 @@ function TreeView(root, container, options) {
     }
 
     function setupContainerDropZone() {
-        container.addEventListener('dragover', function(e) {
+        container.addEventListener('dragover', function (e) {
             e.preventDefault();
             if (dropIndicator && !e.target.closest('.tj_description')) {
                 dropIndicator.remove();
@@ -807,7 +797,7 @@ function TreeView(root, container, options) {
             e.dataTransfer.dropEffect = 'move';
         });
 
-        container.addEventListener('drop', function(e) {
+        container.addEventListener('drop', function (e) {
             e.preventDefault();
             if (dropIndicator) {
                 dropIndicator.remove();
@@ -825,7 +815,7 @@ function TreeView(root, container, options) {
         files.forEach(file => {
             if (file.type === 'text/plain' || file.name.endsWith('.md')) {
                 const reader = new FileReader();
-                reader.onload = function(event) {
+                reader.onload = function (event) {
                     const content = event.target.result;
                     const fileName = file.name.replace(/\.[^/.]+$/, "");
 
@@ -892,7 +882,7 @@ function TreeView(root, container, options) {
                 } else if (['today', 'later'].includes(nodeStr)) {
                     groupHeaderText = "Tasks";
                     groupHeaderClass = "tasks";
-                } else if (nodeStr === 'Today list') {
+                } else if (nodeStr === 'today list') {
                     groupHeaderText = "Tasks";
                     groupHeaderClass = "tasks";
                 } else if (['journal', 'habits', 'insights'].includes(nodeStr)) {
@@ -920,6 +910,7 @@ function TreeView(root, container, options) {
             node.shouldBlink = false;
         }
 
+        console.log(node.toString(), node);
         if (node.isGroupEnd) {
             span_desc.classList.add("group-end");
         }
@@ -938,11 +929,12 @@ function TreeView(root, container, options) {
             span_desc.classList.add("selected");
         }
 
-        if (node.isExpanded()) {
+        // TODO dirty hack
+        if (node.isExpanded() && node.toString() !== 'today list') {
             span_desc.classList.add("expanded");
         }
 
-        span_desc.addEventListener("dragstart", function(e) {
+        span_desc.addEventListener("dragstart", function (e) {
             if (!node.isLeaf()) return;
 
             draggedNode = node;
@@ -954,7 +946,7 @@ function TreeView(root, container, options) {
             e.dataTransfer.setDragImage(span_desc, -10, span_desc.offsetHeight / 2);
         });
 
-        span_desc.addEventListener("dragend", function(e) {
+        span_desc.addEventListener("dragend", function (e) {
             span_desc.classList.remove("tj_dragging");
             if (dropIndicator) {
                 dropIndicator.remove();
@@ -964,7 +956,7 @@ function TreeView(root, container, options) {
             draggedElement = null;
         });
 
-        span_desc.addEventListener("dragover", function(e) {
+        span_desc.addEventListener("dragover", function (e) {
             e.preventDefault();
             if (!draggedNode || draggedNode === node) return;
 
@@ -993,11 +985,11 @@ function TreeView(root, container, options) {
             dropIndicator.classList.add("active");
         });
 
-        span_desc.addEventListener("dragleave", function(e) {
+        span_desc.addEventListener("dragleave", function (e) {
             span_desc.classList.remove("tj_drop_target");
         });
 
-        span_desc.addEventListener("drop", function(e) {
+        span_desc.addEventListener("drop", function (e) {
             e.preventDefault();
             e.stopPropagation();
 
@@ -1109,6 +1101,8 @@ function TreeView(root, container, options) {
                 ret += '<span class="tj_mod_icon">' + icon + '</span>';
             } else if ((icon = TreeUtil.getProperty(options, "leaf_icon", "")) != "") {
                 ret += '<span class="tj_icon">' + icon + '</span>';
+            } else if (node.toString() === 'today list') {
+                ret += '<span class="tj_mod_icon">' + TreeConfig.tasks_icon + '</span>';
             } else {
                 ret += '<span class="tj_icon">' + TreeConfig.leaf_icon + '</span>';
             }
@@ -1253,19 +1247,19 @@ const TreeUtil = {
     }
 };
 
-window.handleNodeMove = async function(sourceDir, sourceFile, targetDir) {
+window.handleNodeMove = async function (sourceDir, sourceFile, targetDir) {
     console.log(`Moving ${sourceDir}/${sourceFile} to ${targetDir}/`);
 
     console.log(`${sourceDir}/${sourceFile}`);
     if (currentEditor.path === `${sourceDir}/${sourceFile}`) {
-       await moveCurrentFile(targetDir);
+        await moveCurrentFile(targetDir);
     } else {
         await moveFile(`${sourceDir}/${sourceFile}`, `${targetDir}/${sourceFile}`);
     }
 };
 
 // WHEN?
-window.handleDroppedFile = async function(fileName, content) {
+window.handleDroppedFile = async function (fileName, content) {
     console.log(`Creating new file: ${fileName}`, content);
 
     if (typeof createFileFromContent === 'function') {
