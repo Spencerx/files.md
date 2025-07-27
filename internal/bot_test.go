@@ -3265,10 +3265,10 @@ func TestSaveToRecentFile(t *testing.T) {
 		tg.NewRow(
 			tg.NewBtn("📄 To File", tg.NewCmd("to_file", []string{"0"})),
 			tg.NewBtn("💚 To Journal", tg.NewCmd("mv_to_journal", []string{"0"})),
-			tg.NewBtn("⭐️ Text", tg.NewCmd("mf", []string{"23200", "0"})),
+			tg.NewBtn("✅ To Today", tg.NewCmd("add_item", []string{"92199fc4b0c", "0"})),
 		),
 		tg.NewRow(
-			tg.NewBtn("✅ To Today", tg.NewCmd("add_item", []string{"92199fc4b0c", "0"})),
+			tg.NewBtn("⭐️ Text", tg.NewCmd("mf", []string{"23200", "0"})),
 			tg.NewBtn("👌", tg.NewCmd("today", []string{})),
 		),
 	})

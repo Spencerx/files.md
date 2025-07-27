@@ -837,15 +837,15 @@ func (b *Bot) showMoveTo(params []string) error {
 		return b.ShowToday(nil)
 	}
 
+	toTodayCmd := tg.NewCmd(consts.CmdMoveToChecklist, []string{fs.Hash(fs.TodayFilename), msgIndexStr})
+	toTodayLabel := txt.Emoji(i18n.Emoji("tasks"), i18n.Tr("To Today"))
+	userMoveToBtns = append(userMoveToBtns, tg.NewBtn(toTodayLabel, toTodayCmd))
+
 	// Add recent command if any
 	recentBtn := b.recentCmdBtn(msgIndex)
 	if recentBtn != nil {
 		userMoveToBtns = append(userMoveToBtns, *recentBtn)
 	}
-
-	toTodayCmd := tg.NewCmd(consts.CmdMoveToChecklist, []string{fs.Hash(fs.TodayFilename), msgIndexStr})
-	toTodayLabel := txt.Emoji(i18n.Emoji("tasks"), i18n.Tr("To Today"))
-	userMoveToBtns = append(userMoveToBtns, tg.NewBtn(toTodayLabel, toTodayCmd))
 
 	showTodayCmd := tg.NewCmd(consts.CmdShowToday, []string{})
 	showTodayLabel := "👌"
