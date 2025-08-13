@@ -189,7 +189,7 @@ func RemoveCompletedChecklistItems(
 				slog.Error("schedule worker: can't write done file", "err", err)
 			}
 
-			tasks, _ := txt.ChecklistItems(doneMD)
+			tasks, _ := txt.ChecklistItems(removedMD)
 			for _, task := range tasks {
 				_ = journal.AddRecord(userFS, fmt.Sprintf("✅ %s", task), userconf.Timezone())
 			}
