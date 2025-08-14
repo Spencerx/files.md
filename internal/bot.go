@@ -999,7 +999,7 @@ func (b *Bot) ShowToday(_ []string) error {
 				}
 			}
 
-			if len([]rune(title)) >= maxTitleLengthForMobile {
+			if len([]rune(title)) >= maxTitleLengthForMobile || txt.HasImage(task) {
 				cmd := tg.NewCmd(consts.CmdShowLongItem, []string{fs.Hash(fs.TodayFilename), fs.Hash(task)})
 				btn := tg.NewBtn(txt.Emoji(i18n.Emoji("eyes"), title), cmd)
 				kb.AddRow(btn)
@@ -1041,7 +1041,7 @@ func (b *Bot) ShowToday(_ []string) error {
 			}
 		}
 
-		if len([]rune(title)) >= maxTitleLengthForMobile {
+		if len([]rune(title)) >= maxTitleLengthForMobile || txt.HasImage(block) {
 			cmd := tg.NewCmd(consts.CmdShowLongItemFromInbox, []string{strconv.Itoa(msgIndex)})
 			btn := tg.NewBtn(txt.Emoji(i18n.Emoji("eyes"), title), cmd)
 			kb.AddRow(btn)
