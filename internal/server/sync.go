@@ -8,7 +8,6 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -259,18 +258,19 @@ func SyncText(w http.ResponseWriter, r *http.Request) {
 	// 1) Save client-modified file to the server
 	// 2) In case of conflict (server has a newer modification), merge the clientFile and include them in the response
 
-	// Paths that are coming from client start with /, make them relative
-	path := strings.TrimPrefix(clientFile.Path, "/")
+	// Paths that are coming from client start with /, make them relative.
+	path := clientFile.Path
+	relativePath := strings.TrimPrefix(path, "/")
 
 	// TODO if no clientFile, severContent = ""
-	serverContent, err := userFS.Read(fs.DirRoot, path)
+	serverContent, err := userFS.Read(fs.DirRoot, relativePath)
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		slog.Error("Sync error: syncText: error reading clientFile", "path", path, "error", err)
 		http.Error(w, "Error reading server clientFile", http.StatusBadRequest)
 		return
 	}
 
-	serverLastModified, err := userFS.Mtime(fs.DirRoot, path)
+	serverLastModified, err := userFS.Mtime(fs.DirRoot, relativePath)
 	if err != nil {
 		if !errors.Is(err, os.ErrNotExist) {
 			slog.Error("Sync error: syncText: error getting ctime for clientFile '%s': %v", path, err)
@@ -291,7 +291,6 @@ func SyncText(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Log client times
 	logSync(fmt.Sprintf("Client file '%s': last client modified: %d, last client synced: %d", path, clientFile.ClientLastModified, clientFile.ClientLastSynced), r)
 
 	status := StatusOK
@@ -323,7 +322,7 @@ func SyncText(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if shouldUpdateOnServer {
-		err = userFS.Write(fs.DirRoot, path, content)
+		err = userFS.Write(fs.DirRoot, relativePath, content)
 		if err != nil {
 			slog.Error("Sync error: syncText: error writing clientFile '%s': %v", path, err)
 			logSync(fmt.Sprintf("Error writing clientFile '%s': %v", path, err), r)
@@ -331,12 +330,12 @@ func SyncText(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if path == filepath.Join("/", fs.TodayFilename) || path == filepath.Join("/", fs.InboxFilename) {
+		if relativePath == fs.TodayFilename || relativePath == fs.InboxFilename {
 			OnTodayUpdate(userID(r))
 		}
 	}
 
-	serverLastModified, err = userFS.Mtime(fs.DirRoot, path)
+	serverLastModified, err = userFS.Mtime(fs.DirRoot, relativePath)
 	// TODO what if 0?
 	logSync(fmt.Sprintf("Final server timestamp for '%s': %d", path, serverLastModified), r)
 
@@ -353,7 +352,7 @@ func SyncText(w http.ResponseWriter, r *http.Request) {
 	response := file{
 		Status:       status,
 		Content:      content,
-		Path:         clientFile.Path,
+		Path:         path,
 		LastModified: serverLastModified,
 	}
 
