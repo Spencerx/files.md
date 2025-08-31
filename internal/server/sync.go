@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -16,13 +17,13 @@ import (
 )
 
 const (
-	// TODO remove my stroage
-	StorageDir            = "/app/mystorage"
 	StatusOK              = "ok"
 	StatusNotModified     = "notModified"
 	StatusUpdatedOnServer = "updatedOnServer"
 	StatusMerged          = "merged"
 )
+
+var OnTodayUpdate = func(userID int64) {}
 
 type file struct {
 	Status             string `json:"status"`
@@ -296,6 +297,7 @@ func SyncText(w http.ResponseWriter, r *http.Request) {
 	status := StatusOK
 	var content string
 	fileWasModifiedOnServer := false
+	shouldUpdateOnServer := true
 	if errors.Is(err, os.ErrNotExist) {
 		logSync(fmt.Sprintf("Creating one clientFile: '%s'", path), r)
 		content = clientFile.Content
@@ -305,6 +307,7 @@ func SyncText(w http.ResponseWriter, r *http.Request) {
 		if fileWasModifiedOnServer && wasNotModifiedOnClient {
 			logSync(fmt.Sprintf("Modified only on server, sending server copy to client: '%s'", path), r)
 			content = serverContent
+			shouldUpdateOnServer = false
 		} else if fileWasModifiedOnServer { // Modified on both server and client
 			logSync(fmt.Sprintf("File '%s' was modified on server at %d, but on client at %d", path, serverLastModified, clientFile.ClientLastModified), r)
 			logSync(fmt.Sprintf("Merging and writing one clientFile: '%s'", path), r)
@@ -319,13 +322,18 @@ func SyncText(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Write the content to the server at path
-	err = userFS.Write(fs.DirRoot, path, content)
-	if err != nil {
-		slog.Error("Sync error: syncText: error writing clientFile '%s': %v", path, err)
-		logSync(fmt.Sprintf("Error writing clientFile '%s': %v", path, err), r)
-		http.Error(w, "Error writing clientFile", http.StatusInternalServerError)
-		return
+	if shouldUpdateOnServer {
+		err = userFS.Write(fs.DirRoot, path, content)
+		if err != nil {
+			slog.Error("Sync error: syncText: error writing clientFile '%s': %v", path, err)
+			logSync(fmt.Sprintf("Error writing clientFile '%s': %v", path, err), r)
+			http.Error(w, "Error writing clientFile", http.StatusInternalServerError)
+			return
+		}
+
+		if path == filepath.Join("/", fs.TodayFilename) || path == filepath.Join("/", fs.InboxFilename) {
+			OnTodayUpdate(userID(r))
+		}
 	}
 
 	serverLastModified, err = userFS.Mtime(fs.DirRoot, path)

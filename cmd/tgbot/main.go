@@ -51,6 +51,8 @@ func main() {
 	// Save all renames and deletes to an append-only log.
 	fs.LogRename = server.LogRename
 	fs.LogDelete = server.LogDelete
+	// If today or inbox was changed in web app, we need to send the updated items to the bot.
+	server.OnTodayUpdate = func(userID int64) { updateToday(telegram, userID) }
 
 	// Due tasks scheduler
 	ticker := time.NewTicker(5 * time.Second)
@@ -156,31 +158,52 @@ func processUserUpdates(userID int64, updates <-chan tgbotapi.Update, telegram *
 	for update := range updates {
 		upd := tg.NewTGUpd(update)
 
-		storagePath := config.BotCfg.StorageDir
-		storagePath, err := filepath.Abs(storagePath)
-		userPath := path.Join(storagePath, txt.I64(userID))
-		userFS, err := fs.NewFS(userPath, afero.NewOsFs())
+		bot, err := newBot(telegram, userID)
 		if err != nil {
-			slog.Error("Bot error: can't create fs", "err", err)
-			return
-		}
-		err = userFS.CreateDirsIfNotExist()
-		if err != nil {
-			slog.Error("Bot error: can't create user dirs", "err", err)
+			slog.Error("Bot error: can't create bot", "err", err)
 			return
 		}
 
-		confFilename := config.BotCfg.ConfigFilename
-		userconf := userconfig.NewConfig(userFS, userID, confFilename)
-		err = userconf.CreateDefaultIfNotExists()
-		if err != nil {
-			slog.Error("Bot error: can't create default user config", "err", err)
-			return
-		}
-
-		bot := internal.NewBot(userID, telegram, userFS, db.NewDB(userID), userconf)
 		if err := bot.Reply(upd); err != nil {
 			slog.Error("Bot error", "err", err)
 		}
+	}
+}
+
+func newBot(telegram *tg.TG, userID int64) (*internal.Bot, error) {
+	storagePath := config.BotCfg.StorageDir
+	storagePath, err := filepath.Abs(storagePath)
+	userPath := path.Join(storagePath, txt.I64(userID))
+	userFS, err := fs.NewFS(userPath, afero.NewOsFs())
+	if err != nil {
+		return nil, fmt.Errorf("can't create fs: %w", err)
+	}
+	err = userFS.CreateDirsIfNotExist()
+	if err != nil {
+		return nil, fmt.Errorf("can't create user dirs: %w", err)
+	}
+
+	confFilename := config.BotCfg.ConfigFilename
+	userconf := userconfig.NewConfig(userFS, userID, confFilename)
+	err = userconf.CreateDefaultIfNotExists()
+	if err != nil {
+		return nil, fmt.Errorf("can't create default user config: %w", err)
+	}
+
+	bot := internal.NewBot(userID, telegram, userFS, db.NewDB(userID), userconf)
+
+	return bot, nil
+}
+
+func updateToday(telegram *tg.TG, userID int64) {
+	bot, err := newBot(telegram, userID)
+	if err != nil {
+		slog.Error("Bot error: can't create bot", "err", err)
+		return
+	}
+
+	err = bot.ShowToday(nil)
+	if err != nil {
+		slog.Error("Bot error: can't update today", "userID", userID, "err", err)
 	}
 }
