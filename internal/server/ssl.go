@@ -1,7 +1,6 @@
 package server
 
 import (
-	"crypto/tls"
 	"log"
 	"net/http"
 	"time"
@@ -9,7 +8,7 @@ import (
 	"golang.org/x/crypto/acme/autocert"
 )
 
-func ssl(logger *log.Logger, certDir string, hosts ...string) *http.Server {
+func certServer(logger *log.Logger, certDir string, hosts ...string) autocert.Manager {
 	autocertManager := autocert.Manager{
 		Prompt:     autocert.AcceptTOS,
 		HostPolicy: autocert.HostWhitelist(hosts...),
@@ -24,9 +23,9 @@ func ssl(logger *log.Logger, certDir string, hosts ...string) *http.Server {
 		srv := &http.Server{
 			Addr:         ":80",
 			Handler:      autocertManager.HTTPHandler(nil),
-			IdleTimeout:  2 * time.Minute,
-			ReadTimeout:  30 * time.Second,
-			WriteTimeout: 2 * time.Minute, // Otherwise we get net::ERR_HTTP2_PROTOCOL_ERROR (RST_STREAM) errors on slow clients (I personally experienced it in South America)
+			IdleTimeout:  time.Minute,
+			ReadTimeout:  5 * time.Second,
+			WriteTimeout: 10 * time.Second,
 			ErrorLog:     logger,
 		}
 
@@ -36,20 +35,5 @@ func ssl(logger *log.Logger, certDir string, hosts ...string) *http.Server {
 		}
 	}()
 
-	// Configure the TLS config to use the autocertManager.GetCertificate function.
-	tlsConfig := &tls.Config{
-		GetCertificate:   autocertManager.GetCertificate,
-		CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
-	}
-
-	srv := &http.Server{
-		Addr:         ":443",
-		TLSConfig:    tlsConfig,
-		IdleTimeout:  time.Minute,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		ErrorLog:     logger,
-	}
-
-	return srv
+	return autocertManager
 }

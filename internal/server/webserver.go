@@ -3,6 +3,7 @@
 package server
 
 import (
+	"crypto/tls"
 	_ "embed"
 	"fmt"
 	"io"
@@ -33,7 +34,22 @@ func Serve(apiHost, appHost, certDir, logFilename, token, tokensDir string) {
 	// Logger is used for ssl/connection errors.
 	// For regular errors we still use slog.
 	serverLogger := newLogger(logFilename)
-	srv := ssl(serverLogger, certDir, apiHost, appHost)
+	// This will also launch :80 http server that would pass ACME challenges or redirects to :443.
+	autocert := certServer(serverLogger, certDir, apiHost, appHost)
+
+	tlsConfig := &tls.Config{
+		GetCertificate:   autocert.GetCertificate,
+		CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
+	}
+
+	srv := &http.Server{
+		Addr:         ":443",
+		TLSConfig:    tlsConfig,
+		IdleTimeout:  2 * time.Minute,
+		ReadTimeout:  30 * time.Second, // Otherwise we get net::ERR_HTTP2_PROTOCOL_ERROR (RST_STREAM) errors on slow clients (I personally experienced it in South America on syncMedia upload)
+		WriteTimeout: 2 * time.Minute,
+		ErrorLog:     serverLogger,
+	}
 	srv.Handler = newRouter(serverLogger)
 
 	// For local environment.
