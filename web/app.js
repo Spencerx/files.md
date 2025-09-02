@@ -968,14 +968,6 @@ async function getRootDirHandle() {
     return savedDirHandle;
 }
 
-// document.addEventListener('mousedown', (event) => {
-//     const goToFile = document.getElementById('search');
-//     if (goToFile.style.display === 'block' &&
-//         !goToFile.contains(event.target)) {
-//         closeSearchModal();
-//     }
-// });
-
 // Reload files once the app gains focus.
 window.addEventListener('focus', async () => {
     // We don't want to do heavy stuff when chat is open.
@@ -1056,7 +1048,6 @@ function doResize(e) {
 
     const constrainedWidth = Math.min(Math.max(width, minWidth), maxWidth);
     sidebar.style.setProperty('width', constrainedWidth + 'px', 'important');
-    // sidebar.style.width = constrainedWidth + 'px';
 }
 
 function stopResize() {

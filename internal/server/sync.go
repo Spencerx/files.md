@@ -83,7 +83,7 @@ func SyncTexts(w http.ResponseWriter, r *http.Request) {
 			slog.Error("Sync error: syncTexts: error deleting file", "path", path, "error", err)
 			continue
 		}
-		logSync(fmt.Sprintf("Sync texts: deleting file: '%s'", path), r)
+		logSync(fmt.Sprintf("❌ Sync texts: deleting file: '%s'", path), r)
 		logDelete(fmt.Sprintf("Deleting file: '%s'", path), r)
 	}
 
@@ -125,22 +125,23 @@ func SyncTexts(w http.ResponseWriter, r *http.Request) {
 			// TODO file locks?
 			fileWasModifiedOnServer := serverModifiedTime > clientFile.LastModified
 			if fileWasModifiedOnServer {
+				// Change on both client and server.
 				serverContent, err := userFS.Read(fs.DirRoot, relativePath)
 				if err != nil {
 					slog.Error("Sync error: syncTexts: error reading modified on server file '%s': %v", path, err)
 					continue
 				}
-				logSync(fmt.Sprintf("Sync texts: Merging and writing: '%s'", path), r)
+				logSync(fmt.Sprintf("🔀 Sync texts: Merging and writing: '%s'", path), r)
 				clientContent = Merge(serverContent, clientFile.Content)
 			} else {
-				// Changed on client, unchanged on server
-				logSync(fmt.Sprintf("Sync texts: Writing only: '%s'", path), r)
+				// Changed on client, unchanged on server.
+				logSync(fmt.Sprintf("💻 Sync texts: Writing only: '%s'", path), r)
 				clientContent = clientFile.Content
 			}
 		}
 
 		// We don't accept config from client, because for now it is only modified on server.
-		// Plus we need to mess with JSON mergingg :)
+		// Plus we need to mess with JSON merging :)
 		if clientFile.Path == config.BotCfg.ConfigFilename {
 			continue
 		}
@@ -309,19 +310,19 @@ func SyncText(w http.ResponseWriter, r *http.Request) {
 		wasNotModifiedOnClient := clientFile.ClientLastSynced != 0 && clientFile.ClientLastModified == clientFile.ClientLastSynced
 		fileWasModifiedOnServer = serverLastModified > clientFile.LastModified
 		if fileWasModifiedOnServer && wasNotModifiedOnClient {
-			logSync(fmt.Sprintf("Modified only on server, sending server copy to client: '%s'", path), r)
+			logSync(fmt.Sprintf("📡 Modified only on server, sending server copy to client: '%s'", path), r)
 			content = serverContent
 			shouldUpdateOnServer = false
 		} else if fileWasModifiedOnServer { // Modified on both server and client
 			logSync(fmt.Sprintf("File '%s' was modified on server at %d, but on client at %d", path, serverLastModified, clientFile.ClientLastModified), r)
-			logSync(fmt.Sprintf("Merging and writing one clientFile: '%s'", path), r)
+			logSync(fmt.Sprintf("🔀 Merging and writing one clientFile: '%s'", path), r)
 			content = Merge(serverContent, clientFile.Content)
 			status = StatusMerged
 		} else {
 			// TODO for resilience add merge here, because we had case when server saved latest TS but no conent.
 			// Also, if for some reason timestamps would change on server migration and such.
 			// Server clientFile hasn't changed since client's last sync
-			logSync(fmt.Sprintf("Modified only on client, writing to server: '%s'", path), r)
+			logSync(fmt.Sprintf("💻 Modified only on client, writing to server: '%s'", path), r)
 			content = clientFile.Content
 		}
 	}
