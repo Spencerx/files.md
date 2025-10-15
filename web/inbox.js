@@ -255,6 +255,7 @@ async function receive(modifiedPaths) {
         renderSidebar('', modifiedPaths);
     }
 }
+
 function scrollToBottom() {
     setTimeout(function () {
         inbox.scrollTop = inbox.scrollHeight;
@@ -368,8 +369,8 @@ function todayJournalFilename() {
         'January', 'February', 'March', 'April', 'May', 'June',
         'July', 'August', 'September', 'October', 'November', 'December'
     ];
-    const monthIndex = parseInt(now.toLocaleDateString('en-US', { month: 'numeric', })) - 1;
-    const year = parseInt(now.toLocaleDateString('en-US', { year: 'numeric'}));
+    const monthIndex = parseInt(now.toLocaleDateString('en-US', {month: 'numeric',})) - 1;
+    const year = parseInt(now.toLocaleDateString('en-US', {year: 'numeric'}));
     const month = (monthIndex + 1).toString().padStart(2, '0');
     return `${year}.${month} ${monthNames[monthIndex]}.md`;
 }
@@ -384,10 +385,10 @@ function todayHeader(timezone) {
         'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
     ];
 
-    const day = parseInt(now.toLocaleDateString('en-US', { day: 'numeric', timeZone: timezone }));
-    const monthIndex = parseInt(now.toLocaleDateString('en-US', { month: 'numeric', timeZone: timezone })) - 1;
-    const year = parseInt(now.toLocaleDateString('en-US', { year: 'numeric', timeZone: timezone }));
-    const dayIndex = new Date(now.toLocaleDateString('en-US', { timeZone: timezone })).getDay();
+    const day = parseInt(now.toLocaleDateString('en-US', {day: 'numeric', timeZone: timezone}));
+    const monthIndex = parseInt(now.toLocaleDateString('en-US', {month: 'numeric', timeZone: timezone})) - 1;
+    const year = parseInt(now.toLocaleDateString('en-US', {year: 'numeric', timeZone: timezone}));
+    const dayIndex = new Date(now.toLocaleDateString('en-US', {timeZone: timezone})).getDay();
 
     return `#### ${day} ${monthNames[monthIndex]}, ${dayNames[dayIndex]}`;
 }
@@ -403,9 +404,7 @@ async function moveFromInbox(text, callback) {
     await callback(text);
 
     let messages = await parseMessagesFromInbox();
-    console.log(messages);
     const filteredMessages = messages.filter(msg => msg.text !== text);
-    console.log(filteredMessages);
     await saveMessagesToInbox(filteredMessages);
 }
 
@@ -610,9 +609,12 @@ function attachEventListeners() {
                 messagesToRemove = [btn.closest('.message')];
             }
 
-            for (const msg of msgs) {
-                await moveFromInbox(msg, addToJournal);
-            }
+            (async () => {
+                for (const msg of msgs) {
+                    await moveFromInbox(msg, addToJournal);
+                }
+                await renderMessages();
+            })();
 
             // TODO only remove if previous is successful
             messagesToRemove.forEach(message => {
@@ -640,9 +642,14 @@ function attachEventListeners() {
                 messagesToRemove = [btn.closest('.message')];
             }
 
-            for (const msg of msgs) {
-                await moveFromInbox(msg, async msg => {await addChecklistItem(btn.dataset.checklist, msg)});
-            }
+
+            (async () => {
+                for (const msg of msgs) {
+                    await moveFromInbox(msg, async msg => {
+                        await addChecklistItem(btn.dataset.checklist, msg)
+                    });
+                }
+            })();
 
             messagesToRemove.forEach(message => {
                 message.classList.add('removing');
@@ -650,6 +657,9 @@ function attachEventListeners() {
                     message.remove();
                 }, 300);
             });
+            setTimeout(() => {
+                renderMessages();
+            }, 500);
             chatInput.focus();
             renderSidebar();
         });
@@ -669,14 +679,19 @@ function attachEventListeners() {
                 messagesToRemove = [btn.closest('.message')];
             }
 
-            for (const msg of msgs) {
-                const [header, body] = extractHeaderAndBody(msg, MAX_TITLE_LENGTH);
-                const path = joinPath('/', btn.dataset.dir, header) + '.md';
+            (async () => {
                 for (const msg of msgs) {
-                    console.log(path, body);
-                    await moveFromInbox(msg, async () => {await write(path, body)});
+                    const [header, body] = extractHeaderAndBody(msg, MAX_TITLE_LENGTH);
+                    const path = joinPath('/', btn.dataset.dir, header) + '.md';
+                    for (const msg of msgs) {
+                        console.log(path, body);
+                        await moveFromInbox(msg, async () => {
+                            await write(path, body)
+                        });
+                    }
                 }
-            }
+                await renderMessages();
+            })();
 
             messagesToRemove.forEach(message => {
                 message.classList.add('removing');
@@ -703,9 +718,14 @@ function attachEventListeners() {
                 messagesToRemove = [btn.closest('.message')];
             }
 
-            for (const msg of msgs) {
-                await moveFromInbox(msg, async msg => {await addChecklistItem(btn.dataset.filename, msg)});
-            }
+            (async () => {
+                for (const msg of msgs) {
+                    await moveFromInbox(msg, async msg => {
+                        await addChecklistItem(btn.dataset.filename, msg)
+                    });
+                }
+                await renderMessages();
+            })();
 
             messagesToRemove.forEach(message => {
                 message.classList.add('removing');
@@ -713,6 +733,7 @@ function attachEventListeners() {
                     message.remove();
                 }, 300);
             });
+
             chatInput.focus();
             renderSidebar();
         });
