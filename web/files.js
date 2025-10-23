@@ -1205,6 +1205,7 @@ async function syncCurrentEditor(syncWithServer = true) {
 
         // Changes only from local system
         try {
+            isMessingWithCurrentEditor = false;
             await openFile(path);
         } catch (error) {
             console.error('Error opening file:', error);
