@@ -606,11 +606,11 @@ async function collectModifiedAndDeletedFiles() {
     });
 
     // If there are too many deleted files, prob something is wrong, throw an alert
-    if (deleted.length > 10) {
-        let dirHandle = getSavedRootDirHandle();
-        alert(`Saved dir handle: ${dirHandle}.`);
-        console.log(dirHandle);
-        alert(`Trying to delete more than 10 deleted files during sync (${deleted.length}). I won't proceed, please resolve the issue manually. Probably "files" is empty in local stroage for some reason, but there are actual files on the disk.`);
+    if (deleted.length > 20) {
+        // let dirHandle = getSavedRootDirHandle();
+        // alert(`Saved dir handle: ${dirHandle}.`);
+        // console.log(dirHandle);
+        alert(`Trying to delete more than 20 deleted files during sync (${deleted.length}). I won't proceed, please resolve the issue manually. Probably "files" is empty in local stroage for some reason, but there are actual files on the disk.`);
         // Show first 10 files
         alert('First 10 files: \n' + deleted.slice(0, 10).join('\n'));
         localStorage.removeItem("server");
