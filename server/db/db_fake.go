@@ -1,7 +1,7 @@
 package db
 
 import (
-	"zakirullin/stuffbot/pkg/tg"
+	"github.com/zakirullin/files.md/pkg/tg"
 )
 
 // FakeDB is a fake database, used for testing

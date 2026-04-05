@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"zakirullin/stuffbot/server/db"
-	"zakirullin/stuffbot/server/fs"
-	"zakirullin/stuffbot/server/sched"
+	"github.com/zakirullin/files.md/server/db"
+	"github.com/zakirullin/files.md/server/fs"
+	"github.com/zakirullin/files.md/server/sched"
 )
 
 var now = time.Now

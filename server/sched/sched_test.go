@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"zakirullin/stuffbot/pkg/txt"
+	"github.com/zakirullin/files.md/pkg/txt"
 
 	"github.com/stretchr/testify/require"
 )

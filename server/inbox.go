@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"zakirullin/stuffbot/server/fs"
-	"zakirullin/stuffbot/pkg/txt"
+	"github.com/zakirullin/files.md/server/fs"
+	"github.com/zakirullin/files.md/pkg/txt"
 )
 
 var (

@@ -14,16 +14,16 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/spf13/afero"
 
-	"zakirullin/stuffbot/config"
-	"zakirullin/stuffbot/i18n"
-	"zakirullin/stuffbot/server"
-	"zakirullin/stuffbot/server/db"
-	"zakirullin/stuffbot/server/fs"
-	"zakirullin/stuffbot/server/sched/worker"
-	"zakirullin/stuffbot/server/server"
-	"zakirullin/stuffbot/server/userconfig"
-	"zakirullin/stuffbot/pkg/tg"
-	"zakirullin/stuffbot/pkg/txt"
+	"github.com/zakirullin/files.md/config"
+	"github.com/zakirullin/files.md/i18n"
+	"github.com/zakirullin/files.md/server"
+	"github.com/zakirullin/files.md/server/db"
+	"github.com/zakirullin/files.md/server/fs"
+	"github.com/zakirullin/files.md/server/sched/worker"
+	"github.com/zakirullin/files.md/server/server"
+	"github.com/zakirullin/files.md/server/userconfig"
+	"github.com/zakirullin/files.md/pkg/tg"
+	"github.com/zakirullin/files.md/pkg/txt"
 )
 
 func main() {

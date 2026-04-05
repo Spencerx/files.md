@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"zakirullin/stuffbot/server/fs"
+	"github.com/zakirullin/files.md/server/fs"
 )
 
 const (

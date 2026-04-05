@@ -7,9 +7,9 @@ import (
 	"html/template"
 	"time"
 
-	"zakirullin/stuffbot/config"
-	"zakirullin/stuffbot/server/fs"
-	"zakirullin/stuffbot/server/userconfig"
+	"github.com/zakirullin/files.md/config"
+	"github.com/zakirullin/files.md/server/fs"
+	"github.com/zakirullin/files.md/server/userconfig"
 )
 
 //go:embed templates/habits.html

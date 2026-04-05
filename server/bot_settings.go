@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"strconv"
 
-	"zakirullin/stuffbot/config"
-	"zakirullin/stuffbot/i18n"
-	"zakirullin/stuffbot/server/consts"
-	"zakirullin/stuffbot/server/userconfig"
-	"zakirullin/stuffbot/pkg/tg"
-	"zakirullin/stuffbot/pkg/txt"
+	"github.com/zakirullin/files.md/config"
+	"github.com/zakirullin/files.md/i18n"
+	"github.com/zakirullin/files.md/server/consts"
+	"github.com/zakirullin/files.md/server/userconfig"
+	"github.com/zakirullin/files.md/pkg/tg"
+	"github.com/zakirullin/files.md/pkg/txt"
 )
 
 const (

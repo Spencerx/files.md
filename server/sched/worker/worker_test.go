@@ -8,10 +8,10 @@ import (
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 
-	"zakirullin/stuffbot/server/fs"
-	"zakirullin/stuffbot/server/userconfig"
-	"zakirullin/stuffbot/pkg/tg"
-	"zakirullin/stuffbot/pkg/txt"
+	"github.com/zakirullin/files.md/server/fs"
+	"github.com/zakirullin/files.md/server/userconfig"
+	"github.com/zakirullin/files.md/pkg/tg"
+	"github.com/zakirullin/files.md/pkg/txt"
 )
 
 func init() {

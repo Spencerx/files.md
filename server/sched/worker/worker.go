@@ -11,13 +11,13 @@ import (
 	"github.com/spf13/afero"
 	"golang.org/x/exp/slog"
 
-	"zakirullin/stuffbot/server"
-	"zakirullin/stuffbot/server/db"
-	"zakirullin/stuffbot/server/fs"
-	"zakirullin/stuffbot/server/journal"
-	"zakirullin/stuffbot/server/sched"
-	"zakirullin/stuffbot/server/userconfig"
-	"zakirullin/stuffbot/pkg/txt"
+	"github.com/zakirullin/files.md/server"
+	"github.com/zakirullin/files.md/server/db"
+	"github.com/zakirullin/files.md/server/fs"
+	"github.com/zakirullin/files.md/server/journal"
+	"github.com/zakirullin/files.md/server/sched"
+	"github.com/zakirullin/files.md/server/userconfig"
+	"github.com/zakirullin/files.md/pkg/txt"
 )
 
 const (

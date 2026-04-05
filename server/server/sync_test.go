@@ -12,8 +12,8 @@ import (
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 
-	"zakirullin/stuffbot/config"
-	"zakirullin/stuffbot/server/fs"
+	"github.com/zakirullin/files.md/config"
+	"github.com/zakirullin/files.md/server/fs"
 )
 
 func init() {

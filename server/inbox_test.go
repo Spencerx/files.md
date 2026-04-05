@@ -9,9 +9,9 @@ import (
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 
-	"zakirullin/stuffbot/server/db"
-	"zakirullin/stuffbot/server/fs"
-	"zakirullin/stuffbot/pkg/tg"
+	"github.com/zakirullin/files.md/server/db"
+	"github.com/zakirullin/files.md/server/fs"
+	"github.com/zakirullin/files.md/pkg/tg"
 )
 
 func TestReadMessagesEmpty(t *testing.T) {

@@ -16,11 +16,11 @@ import (
 	"strings"
 	"time"
 
-	"zakirullin/stuffbot/config"
-	"zakirullin/stuffbot/server/fs"
-	"zakirullin/stuffbot/server/habits"
-	"zakirullin/stuffbot/server/journal"
-	"zakirullin/stuffbot/server/userconfig"
+	"github.com/zakirullin/files.md/config"
+	"github.com/zakirullin/files.md/server/fs"
+	"github.com/zakirullin/files.md/server/habits"
+	"github.com/zakirullin/files.md/server/journal"
+	"github.com/zakirullin/files.md/server/userconfig"
 )
 
 // Serve TODO release graceful shutdown etc

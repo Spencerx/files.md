@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 
-	"zakirullin/stuffbot/server/fs"
+	"github.com/zakirullin/files.md/server/fs"
 )
 
 //go:embed testdata/month_habits.md

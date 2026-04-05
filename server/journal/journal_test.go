@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"zakirullin/stuffbot/server/fs"
+	"github.com/zakirullin/files.md/server/fs"
 
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"

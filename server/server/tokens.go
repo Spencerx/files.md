@@ -17,8 +17,8 @@ import (
 
 	"github.com/spf13/afero"
 
-	"zakirullin/stuffbot/config"
-	"zakirullin/stuffbot/server/fs"
+	"github.com/zakirullin/files.md/config"
+	"github.com/zakirullin/files.md/server/fs"
 )
 
 const (

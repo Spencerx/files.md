@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	"zakirullin/stuffbot/config"
+	"github.com/zakirullin/files.md/config"
 )
 
 const (

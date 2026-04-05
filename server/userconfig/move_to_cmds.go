@@ -3,9 +3,9 @@ package userconfig
 import (
 	"fmt"
 
-	"zakirullin/stuffbot/i18n"
-	"zakirullin/stuffbot/server/consts"
-	"zakirullin/stuffbot/pkg/tg"
+	"github.com/zakirullin/files.md/i18n"
+	"github.com/zakirullin/files.md/server/consts"
+	"github.com/zakirullin/files.md/pkg/tg"
 )
 
 var AvailableMoveToBtns = []tg.Btn{

@@ -7,8 +7,8 @@ import (
 
 	"github.com/robfig/cron/v3"
 
-	"zakirullin/stuffbot/server/fs"
-	"zakirullin/stuffbot/server/userconfig"
+	"github.com/zakirullin/files.md/server/fs"
+	"github.com/zakirullin/files.md/server/userconfig"
 )
 
 var Now = func() time.Time {

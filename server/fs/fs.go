@@ -21,8 +21,8 @@ import (
 	"github.com/spf13/afero"
 	"golang.org/x/exp/slices"
 
-	"zakirullin/stuffbot/config"
-	"zakirullin/stuffbot/pkg/txt"
+	"github.com/zakirullin/files.md/config"
+	"github.com/zakirullin/files.md/pkg/txt"
 )
 
 var (

@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"sync"
 
-	"zakirullin/stuffbot/pkg/tg"
+	"github.com/zakirullin/files.md/pkg/tg"
 )
 
 // In-memory database
