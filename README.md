@@ -20,7 +20,7 @@ Maybe. But this time:
 - No need to install anything, all you need is a browser
 - Works offline
 - Local first, you own all your files
-- Fully Open Source - no telemetry whatsoever
+- Fully open source, you can tweak it however you want
 - Radically simple code. Web app is just a few `.js` files
 - Portable, no build systems, just open `web/index.html` 
 - Out of the box synchronization
