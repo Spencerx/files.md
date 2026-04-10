@@ -1091,11 +1091,10 @@ async function syncCurrentEditor(syncWithServer = true) {
         return;
     }
 
-    // Skip sync if we're in in-memory mode.
-    /// TODO detect welcome mode separately
+    // Skip sync if we don't have a saved dir
     const savedDirHandle = await getRootDirHandle();
     const hasSavedDir = savedDirHandle instanceof FileSystemDirectoryHandle;
-    if (!hasSavedDir) {
+    if (!hasSavedDir && !isMemFS) {
         return;
     }
 
