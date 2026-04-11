@@ -69,6 +69,27 @@ To do that, just send whatever is distracting you to the bot. Then choose how yo
 It works like a regular chat, so it's easier to use because there's less resistance.  
 We're used to sending messages to friends, now we're going to send stuff to the bot.
 
+## Scripts
+All scripts are in `cmd/` and can be run on your knowledge base directory:
+```bash
+
+# Parse Whoop CSV export and print 10-day journal summary
+go run /abs/path/to/files.md/cmd/whoop/whoop.go ./path-to-whoop-export
+
+# Convert [[wikilinks]] to standard markdown links [Name](/path.md)
+go run /abs/path/to/files.md/cmd/tomdlinks/tomdlinks.go --dry-run .
+go run /abs/path/to/files.md/cmd/tomdlinks/tomdlinks.go .
+
+# Insert backlinks into notes (adds links back to referencing files)
+go run /abs/path/to/files.md/cmd/backlink/backlink.go --dry-run
+go run /abs/path/to/files.md/cmd/backlink/backlink.go
+
+# Shift timestamps in journal files by N hours (useful after timezone change)
+go run /abs/path/to/files.md/cmd/shifttime/shifttime.go
+
+```
+
+
 ## Run your own Bot
 1) Install [Go](https://go.dev/doc/install)
 2) Register new telegram bot via [@BotFather](https://t.me/BotFather)
@@ -83,25 +104,6 @@ Bot's artifacts can be seen in `./storage/<USER_ID>` folder
 ## Init Server
 ```bash
 $ make init_server host=<YOUR_SSH_HOST> salt=<YOUR_SECRET_SALT>
-```
-
-## Scripts
-All scripts are in `cmd/` and can be run on your knowledge base directory:
-```bash
-# f = path to files.md repo
-
-# Convert [[wikilinks]] to standard markdown links [Name](/path.md)
-go run /abs/path/to/files.md/cmd/tomdlinks/tomdlinks.go --dry-run .
-go run /abs/path/to/files.md/cmd/tomdlinks/tomdlinks.go .
-
-# Insert backlinks into notes (adds links back to referencing files)
-go run /abs/path/to/files.md/cmd/backlink/backlink.go
-
-# Shift timestamps in journal files by N hours (useful after timezone change)
-go run /abs/path/to/files.md/cmd/shifttime/shifttime.go
-
-# Parse Whoop CSV export and print 10-day journal summary
-go run /abs/path/to/files.md/cmd/whoop/whoop.go ./path-to-whoop-export
 ```
 
 ## Repository structure

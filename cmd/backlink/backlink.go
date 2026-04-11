@@ -7,6 +7,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -19,6 +20,13 @@ import (
 )
 
 func main() {
+	dryRun := false
+	for _, arg := range os.Args[1:] {
+		if arg == "--dry-run" {
+			dryRun = true
+		}
+	}
+
 	// [dir][note] => links referring to our note (backlinks)
 	backlinks := make(map[string]map[string][]string)
 
@@ -116,6 +124,11 @@ func main() {
 				}
 
 				if slices.Contains(existingLinks, link) {
+					continue
+				}
+
+				if dryRun {
+					fmt.Printf("would add '%s' to '%s/%s'\n", link, dir, note)
 					continue
 				}
 
