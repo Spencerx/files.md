@@ -76,7 +76,7 @@ One file per habit. The filename is the habit name.
 Auto-generated yearly habit tracking summaries.
 
 ### Media (media/*)
-Images referenced in notes via standard Markdown: `![alt](media/photo.jpg)`
+Images referenced in notes via standard Markdown: `![](media/photo.jpg)`
 
 ## Conventions
 - One level of directory nesting only

@@ -73,17 +73,17 @@ Later you can open [app.files.md](https://app.files.md) and make some connection
 ## Files structure
 You don't have to think about the structure, it is predefined.  
 
-- Notes: `/brain/Note.md` (`/<category>/*.md`)
-- Projects: `/My project.md` (`/*.md`) - project, important or index notes
-- Tasks: `/Today.md`, `/Later.md` - checklist-based task lists
-- Checklists: `/Read.md`, `/Watch.md`, `/Shop.md` - built-in checklists
-- Journal: `/journal/2024.08 August.md` (`/journal/<YYYY>.<MM> <Month>.md`)
-- Habits: `/habits/Morning workout.md` (`/habits/*.md`)
-- Insights: `/insights/2024 Habits.md` (`/insights/<YYYY> Habits.md`)
-- Media: `/media/*` - images (png, jpg, webp, gif)
-- Archive: `/archive/*`, `/archive/Done.md` - completed items
-- Inbox: `/Inbox.md` - incoming messages, append-only chat log
-- Config: `/config.json` - per-user settings
+- Notes: `brain/Note.md` (`<category>/*.md`)
+- Projects: `My project.md` (`*.md`) - project, important or index notes
+- Tasks: `Today.md`, `Later.md` - checklist-based task lists
+- Checklists: `Read.md`, `Watch.md`, `Shop.md` - built-in checklists
+- Journal: `journal/2024.08 August.md` (`journal/<YYYY>.<MM> <Month>.md`)
+- Habits: `habits/Morning workout.md` (`habits/*.md`)
+- Insights: `insights/2024 Habits.md` (`insights/<YYYY> Habits.md`)
+- Media: `media/*` - images (png, jpg, webp, gif)
+- Archive: `archive/*`, `archive/Done.md` - completed items
+- Inbox: `Inbox.md` - incoming messages, append-only chat log
+- Config: `config.json` - per-user settings
 
 Scheme is also available at [files.md/llms.txt](files.md/llms.txt).
 
@@ -97,7 +97,7 @@ It works like a regular chat, so it's easier to use because there's less resista
 We're used to sending messages to friends, now we're going to send stuff to the bot.
 
 ## Useful scripts for your files
-All scripts are in `cmd/` and can be run **inside your files directory**. Install [Go](https://go.dev/doc/install) first.
+All scripts are in `cmd` and can be run **inside your files directory**. Install [Go](https://go.dev/doc/install) first.
 
 Parse `Whoop` CSV export and print a 10-day journal summary. Put your whoop csv files into a `whoop/` folder:
 ```
@@ -251,20 +251,22 @@ We don't need to transfer fslog (renames), if we're certain that all clients rea
 6) Shutdown an old server
 
 ## Repository structure
-- `/web` - web app (PWA), `index.html` is an entrypoint
-- `/web/lib` - frontend libs
-- `/cmd/server` - entrypoint for server 
-- `/cmd/*/` - useful scripts for `.md` files 
-- `/server/bot.go` - bot
-- `/server/sync/` - sync API server code
-- `/vendor` - backend libs
-- `/tests` - E2E tests, test both the web app and the server
+- `web` - web app (PWA), `index.html` is an entrypoint
+- `web/lib` - frontend libs
+- `cmd/server` - entrypoint for server 
+- `cmd/*/` - useful scripts for `.md` files 
+- `server/bot.go` - bot
+- `server/sync/` - sync API server code
+- `vendor` - backend libs
+- `tests` - E2E tests, test both the web app and the server
 
 ## How to contribute
 - **Junior developers should be able to understand the code**
 - **Ideally, every PR should remove or simplify code, not add it**
+- All dependencies are our code and responsibility. So, avoid dependencies if possible 
+- **The less code we have, the more flexible we are**
+- Code should be self-sufficient, so `vendor` and `web/lib` folders are included in the repository
 - **Do we really need this feature? Will it help us to do the real job, or does it just give dopamine?**
-- Code should be self-contained, so `/vendor` and `/web/lib` folders are included in the repository
 
 Refer to [this guide](https://github.com/zakirullin/cognitive-load) for more comprehensive rules.
 
@@ -278,9 +280,8 @@ Refer to [this guide](https://github.com/zakirullin/cognitive-load) for more com
 - We prefer real implementations or at least fakes over mocks and stubs
 - Imports should only be renamed to avoid a name collision with other imports
 - **With portability in mind, everything is stored in plain `.md` files**
-- Avoid dependencies if possible
 
-## Frontend guildlines
-- Use PATCHED keyword if you modify assets in-place
+## Frontend guidelines
+- Use `PATCHED` keyword if you modify libs in-place
 - **It would be fantastic if, one day, we replaced `CodeMirror` with our own tiny implementation** 
-- Avoid dependencies if possible
+- No build systems, **in 10 years we will open `/web/index.html` and it should just work**
