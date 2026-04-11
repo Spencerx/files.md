@@ -16,10 +16,6 @@ All files are plain Markdown (.md) or plain text (.txt), stored locally.
 ├── config.json           # User settings
 ├── *.md                  # Root-level files (projects, standalone notes)
 │
-├── today/                # Task files for today
-│   └── *.md
-├── later/                # Task files for later
-│   └── *.md
 ├── archive/              # Completed/archived items
 │   └── Done.md           # Log of completed tasks
 │

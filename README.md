@@ -106,7 +106,6 @@ $ make init_server host=<YOUR_SSH_HOST> salt=<YOUR_SECRET_SALT>
 We differentiate the following types of files (with `/` denoting your root folder):
 - Inbox: `/Inbox.md` — incoming messages, append-only chat log
 - Tasks: `/Today.md`, `/Later.md` — checklist-based task lists
-- Task files: `/today/Pay the bills.md`, `/later/Someday.md` (`/today/*.md`, `/later/*.md`)
 - Notes: `/brain/Brain is the most complex object.md` (`/<custom_dir>/*.md`)
 - Files: `/My project.md` (`/*.md`)
 - Checklists: `/Read.md`, `/Watch.md`, `/Shop.md` — built-in checklists
