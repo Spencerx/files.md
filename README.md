@@ -126,6 +126,19 @@ You don't have to think about the structure, it is predefined.
 
 Scheme is also available at [files.md/llms.txt](https://files.md/llms.txt).
 
+## Help AI agents understand files structure
+Execute the following command inside your files folder.
+
+For Claude Code:
+```bash
+curl -fsSL https://files.md/llms.txt -o CLAUDE.md
+````
+
+For other agents:
+```bash
+curl -fsSL https://files.md/llms.txt -o AGENTS.md
+```
+
 ## Telegram Bot 🤖
 <img src="https://github.com/zakirullin/files.md/raw/main/web/bot.png" alt="Telegram Bot screenshot" title="Telegram Bot"/>
 
