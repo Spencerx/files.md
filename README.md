@@ -102,7 +102,6 @@ Telegram bot: @FilesMDBot (other messengers will follow).
 
 ## Putting knowledge into practice
 
-
 ## Journaling 💚
 
 ## Tasks ✅

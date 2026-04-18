@@ -33,6 +33,10 @@ All files are plain Markdown (.md) stored locally.
 
 ## File Types
 
+### Notes (/<category>/*.md)
+One idea per file. The filename is the title. Files can link to each other using standard Markdown: `[title](file.md).
+Relations among ideas are far more important than the ideas themselves.
+
 ### Inbox (Inbox.md)
 Append-only chat log. New messages are appended with timestamps under daily headers.
 ```
@@ -47,15 +51,6 @@ Checklist format. Each task is a checklist item.
 - [ ] Pay the bills
 - [ ] Buy groceries
 - [x] Send email
-```
-
-### Notes (/<category>/*.md)
-One idea per file. The filename is the title. Files can link to each other using `[Other Note]` syntax.
-```
-Relations among ideas are far more important than the ideas themselves.
-
-[Another Note]
-[Some Other Idea]
 ```
 
 ### Checklists (Read.md, Watch.md, Shop.md)
