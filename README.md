@@ -149,22 +149,22 @@ We're used to sending messages to friends, now we're going to send stuff to the 
 
 ## Hotkeys
 
-| Hotkey | Action |
-| -------- |-------- |
-| `Cmd+K` / `Ctrl+K` | Open file search modal |
-| `Cmd+N` / `Ctrl+N` | New file |
-| `Cmd+M` / `Ctrl+M` | Move file |
-| `Cmd+D` / `Ctrl+D` | Delete file |
-| `Cmd+Enter` / `Ctrl+Enter` | Toggle chat mode |
-| `Cmd+[` / `Ctrl+[` | Go to previous file |
-| `Cmd+]` / `Ctrl+]` | Go to next file |
-| `Cmd+\` / `Ctrl+\` | Toggle sidebar |
-| `Cmd+B` / `Ctrl+B` | Toggle **bold** |
-| `Cmd+I` / `Ctrl+I` | Toggle *italic* |
-| `Cmd+Y` / `Ctrl+Y` | Insert checkbox |
-| `Cmd/Ctrl` + `Click` | Copy inline text / open link |
-| `Ctrl+Cmd+Space` | Insert emoji (macOS) |
-| `[` | Trigger file link autocomplete |  
+| Hotkey                     | Action                         |
+|----------------------------|--------------------------------|
+| `Cmd+P` / `Ctrl+P`         | Open file search modal         |
+| `Cmd+N` / `Ctrl+N`         | New file                       |
+| `Cmd+M` / `Ctrl+M`         | Move file                      |
+| `Cmd+D` / `Ctrl+D`         | Delete file                    |
+| `Cmd+Enter` / `Ctrl+Enter` | Open chat mode                 |
+| `Cmd+[` / `Ctrl+[`         | Go to previous file            |
+| `Cmd+]` / `Ctrl+]`         | Go to next file                |
+| `Cmd+\` / `Ctrl+\`         | Toggle sidebar                 |
+| `Cmd+B` / `Ctrl+B`         | Toggle **bold**                |
+| `Cmd+I` / `Ctrl+I`         | Toggle *italic*                |
+| `Cmd+Y` / `Ctrl+Y`         | Insert checkbox                |
+| `Cmd/Ctrl` + `Click`       | Copy inline text / open link   |
+| `Ctrl+Cmd+Space`           | Insert emoji (macOS)           |
+| `[`                        | Trigger file link autocomplete |  
 
 ## Useful scripts for your files
 All scripts are in `cmd` and can be run **inside your files directory**. Install [Go](https://go.dev/doc/install) first.

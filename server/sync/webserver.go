@@ -26,11 +26,6 @@ import (
 // Serve TODO release graceful shutdown etc
 // All directories paths are absolute.
 func Serve(apiHost, appHost, certDir, logFilename string) {
-	err := os.Setenv("GODEBUG", "http2debug=2")
-	if err != nil {
-		panic(err)
-	}
-
 	// Logger is used for ssl/connection errors.
 	// For regular errors we still use slog.
 	serverLogger := newLogger(logFilename)

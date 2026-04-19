@@ -257,11 +257,11 @@ const DEFAULT_FILES = {
         "content":
             "| Hotkey | Action |\n" +
             "| -------- |-------- |\n" +
-            "| `Cmd+K` / `Ctrl+K` | Open file search modal |\n" +
+            "| `Cmd+P` / `Ctrl+P` | Open file search modal |\n" +
             "| `Cmd+N` / `Ctrl+N` | New file |\n" +
             "| `Cmd+M` / `Ctrl+M` | Move file |\n" +
             "| `Cmd+D` / `Ctrl+D` | Delete file |\n" +
-            "| `Cmd+Enter` / `Ctrl+Enter` | Toggle chat mode |\n" +
+            "| `Cmd+Enter` / `Ctrl+Enter` | Open chat mode |\n" +
             "| `Cmd+[` / `Ctrl+[`  | Go to previous file   |\n" +
             "| `Cmd+]` / `Ctrl+]`  | Go to next file  |\n" +
             "| `Cmd+\\` / `Ctrl+\\`  | Toggle sidebar |\n" +
