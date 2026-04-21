@@ -18,10 +18,10 @@
     position: fixed;
     bottom: 20px;
     right: 20px;
-    width: 685px !important;
+    width: 500px !important;
     max-height: 500px !important;
     height: auto !important;
-    min-height: 210px;
+    min-height: 310px;
     border: 1px solid var(--col-border);
     padding-top: 35px;
     border-radius: 15px;
