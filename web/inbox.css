@@ -35,12 +35,53 @@
 
 .message {
     background: var(--col-bg-alt);
-    padding: 4px 8px;
+    padding: 4px 8px 4px 36px;
     border-bottom: 1px solid var(--col-border);
     position: relative;
     animation: slideIn 0.3s ease-out;
     cursor: pointer;
     transition: background-color 0.2s;
+}
+
+.complete-btn {
+    position: absolute;
+    left: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--col-tx-alt);
+    opacity: 0.35;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: opacity 0.15s, background 0.15s, color 0.15s;
+}
+
+.complete-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+.complete-btn:hover {
+    opacity: 1;
+    color: var(--col-link);
+    background: var(--col-bg);
+}
+
+.message.completed .message-content {
+    text-decoration: line-through;
+    opacity: 0.5;
+}
+
+.message.completed .complete-btn {
+    opacity: 1;
+    color: var(--col-link);
 }
 
 .message:first-child {

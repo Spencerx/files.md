@@ -186,7 +186,7 @@ async function saveMessagesToInbox(messages) {
     // Group messages by date
     const messagesByDate = {};
     messages.forEach(msg => {
-        const date = msg.date || new Date().toDateString();
+        const date = msg.date || todayHeader().replace('#### ', '');
         if (!messagesByDate[date]) {
             messagesByDate[date] = [];
         }
@@ -576,6 +576,13 @@ function attachEventListeners() {
     //     });
     // });
 
+    inbox.querySelectorAll('.complete-btn').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            btn.closest('.message').classList.toggle('completed');
+        });
+    });
+
     inbox.querySelectorAll('.to-file-btn').forEach(btn => {
         btn.addEventListener('click', function (e) {
             e.stopPropagation();
@@ -786,8 +793,13 @@ async function renderMessages() {
     // add own class every other message
     inbox.innerHTML = messages.map((message, i) => `
         <div class="message ${i % 2 === 1 ? 'own' : ''}" data-text="${escapeHtml(message.text)}">
-            <div class="message-content" 
-                 contenteditable="true" 
+            <button class="complete-btn" title="Mark as done">
+                <svg width="22" height="22" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6.5 17l6 6 13-13"/>
+                </svg>
+            </button>
+            <div class="message-content"
+                 contenteditable="true"
                  data-text="${escapeHtml(message.text)}"
                  spellcheck="false">${escapeHtml(message.text)}</div>
             <div class="message-hover-zone"></div>
