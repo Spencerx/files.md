@@ -16,12 +16,40 @@ var (
 	Now       = time.Now
 	mu        sync.Mutex
 	userLocks map[string]*sync.Mutex
+
+	inboxMarkerPrefix = regexp.MustCompile(`^- \[[ xX]\] `)
+	inboxHeaderRegex  = regexp.MustCompile(`^#### `)
 )
 
-func (b *Bot) saveToInbox(content string, timezone *time.Location) (int, error) {
+// inboxBlockHash returns a stable identifier for an inbox block. The optional
+// `- [ ]` / `- [x] ` task-marker prefix is stripped before hashing so the hash
+// is the same regardless of completion state (a completed entry keeps the
+// identity of the open entry it was toggled from).
+func inboxBlockHash(block string) string {
+	return fs.Hash(inboxMarkerPrefix.ReplaceAllString(block, ""))
+}
+
+// findInboxBlockByHash returns (blockIndex, block, true) for the first
+// non-header block whose hash matches msgHash. Returns (-1, "", false) if no
+// match is found.
+func findInboxBlockByHash(content, msgHash string) (int, string, bool) {
+	blocks := readBlocks(content)
+	for i, block := range blocks {
+		if inboxHeaderRegex.MatchString(block) {
+			continue
+		}
+		if inboxBlockHash(block) == msgHash {
+			return i, block, true
+		}
+	}
+	return -1, "", false
+}
+
+// saveToInbox writes a new entry to Inbox.md and returns its stable hash.
+func (b *Bot) saveToInbox(content string, timezone *time.Location) (string, error) {
 	exists, err := b.fs.Exists(fs.DirUserRoot, fs.InboxFilename)
 	if err != nil {
-		return 0, fmt.Errorf("saveToChat: %w", err)
+		return "", fmt.Errorf("saveToChat: %w", err)
 	}
 
 	content = strings.TrimSpace(content)
@@ -30,21 +58,12 @@ func (b *Bot) saveToInbox(content string, timezone *time.Location) (int, error) 
 	if exists {
 		md, err = b.fs.Read(fs.DirUserRoot, fs.InboxFilename)
 		if err != nil {
-			return 0, fmt.Errorf("saveToChat: %w", err)
+			return "", fmt.Errorf("saveToChat: %w", err)
 		}
 		md = txt.NormNewLines(md)
 		md = strings.TrimSpace(md)
 		if len(md) != 0 {
 			md += "\n"
-		}
-	}
-
-	blocks := readBlocks(md)
-	headerRegex := regexp.MustCompile(`^#### `)
-	recordCount := 0
-	for _, block := range blocks {
-		if !headerRegex.MatchString(block) {
-			recordCount++
 		}
 	}
 
@@ -57,34 +76,25 @@ func (b *Bot) saveToInbox(content string, timezone *time.Location) (int, error) 
 	// TODO should we use timezone here?
 	timestamp := now().In(timezone).Format("`15:04`")
 
-	// Handle images similar to journal
-	//if txt.HasImage(content) {
-	//	// If there's an image - place timestamp under the image
-	//	re := regexp.MustCompile(txt.ImgPattern)
-	//	imgLink := re.FindString(content)
-	//	content = strings.TrimSpace(strings.Replace(content, imgLink, "", 1))
-	//	content = fmt.Sprintf("%s\n%s %s\n", imgLink, timestamp, strings.TrimSpace(content))
-	//} else {
-	content = fmt.Sprintf("- [ ] %s %s\n", timestamp, content)
-	//}
-
-	md += content
+	newEntry := fmt.Sprintf("- [ ] %s %s", timestamp, content)
+	md += newEntry + "\n"
 
 	if err := b.fs.Write(fs.DirUserRoot, fs.InboxFilename, md); err != nil {
-		return 0, fmt.Errorf("saveToChat: %w", err)
+		return "", fmt.Errorf("saveToChat: %w", err)
 	}
 
-	return recordCount, nil
+	return inboxBlockHash(newEntry), nil
 }
 
-// moveFromInbox passes messages at given indices to a specified callback function.
+// moveFromInbox passes the messages identified by msgHashes to the callback.
 // On callback success, it removes those messages from the chat file.
-// msgIndices are 0-based and refer to the messages only blocks (not headers).
-// On collapse=false callback would be called on every message.
+// A msgHash is the stable hash returned by inboxBlockHash; it survives the
+// `[ ]` ↔ `[x]` completion toggle.
+// On collapse=false the callback is called once per message.
 func (b *Bot) moveFromInbox(
 	callback func(content string, timestamp time.Time) error,
 	collapse bool,
-	msgIndices ...int,
+	msgHashes ...string,
 ) error {
 	key, err := b.fs.SafePath(fs.DirUserRoot, "")
 	if err != nil {
@@ -102,26 +112,31 @@ func (b *Bot) moveFromInbox(
 
 	blocks := readBlocks(content)
 
-	var msgIndicesToBlockIndices []int
-	headerRegex := regexp.MustCompile(`^#### `)
+	// Build hash -> block-index for every non-header block. Validate that all
+	// requested hashes resolve to real blocks.
+	hashToBlockIndex := make(map[string]int)
+	hasAnyMsg := false
 	for i, block := range blocks {
-		if !headerRegex.MatchString(block) {
-			msgIndicesToBlockIndices = append(msgIndicesToBlockIndices, i)
+		if inboxHeaderRegex.MatchString(block) {
+			continue
 		}
+		hasAnyMsg = true
+		hashToBlockIndex[inboxBlockHash(block)] = i
 	}
-	if len(msgIndicesToBlockIndices) == 0 {
+	if !hasAnyMsg {
 		return fmt.Errorf("no messages found")
 	}
-	for _, index := range msgIndices {
-		if index < 0 || index >= len(msgIndicesToBlockIndices) {
-			return fmt.Errorf("msgIndex %d out of bounds: use 0-%d", index, len(msgIndicesToBlockIndices)-1)
+	resolvedBlockIndices := make([]int, 0, len(msgHashes))
+	for _, h := range msgHashes {
+		idx, ok := hashToBlockIndex[h]
+		if !ok {
+			return fmt.Errorf("msgHash %q not found in inbox", h)
 		}
+		resolvedBlockIndices = append(resolvedBlockIndices, idx)
 	}
 
-	// Sort msgIndices in ascending order for processing
-	sortedMsgIndices := make([]int, len(msgIndices))
-	copy(sortedMsgIndices, msgIndices)
-	sort.Ints(sortedMsgIndices)
+	// Process in ascending block-index order so removal later is deterministic.
+	sort.Ints(resolvedBlockIndices)
 
 	// Collect specified messages from inbox.
 	var msgs []struct {
@@ -129,14 +144,13 @@ func (b *Bot) moveFromInbox(
 		timestamp time.Time
 		index     int
 	}
-	for _, msgIndex := range sortedMsgIndices {
-		blockIndex := msgIndicesToBlockIndices[msgIndex]
+	for _, blockIndex := range resolvedBlockIndices {
 		block := blocks[blockIndex]
 
 		// Find closest header above target msg for date context
 		var headerDate string
 		for i := blockIndex - 1; i >= 0; i-- {
-			if headerRegex.MatchString(blocks[i]) {
+			if inboxHeaderRegex.MatchString(blocks[i]) {
 				headerDate = blocks[i]
 				break
 			}
@@ -148,7 +162,7 @@ func (b *Bot) moveFromInbox(
 		timestampRegex := regexp.MustCompile(`^(?:- \[[ xX]\] )?` + "`" + `(\d{2}:\d{2})` + "`" + ` `)
 		timeMatch := timestampRegex.FindStringSubmatch(block)
 		if len(timeMatch) < 2 {
-			return fmt.Errorf("failed to parse msg timestamp for msgIndex %d", msgIndex)
+			return fmt.Errorf("failed to parse msg timestamp for block %d", blockIndex)
 		}
 
 		timeStr := timeMatch[1]
@@ -159,14 +173,14 @@ func (b *Bot) moveFromInbox(
 		dateRegex := regexp.MustCompile(`^#### (\d{1,2}) ([A-Za-z]+), [A-Za-z]+`)
 		dateMatches := dateRegex.FindStringSubmatch(headerDate)
 		if len(dateMatches) < 3 {
-			return fmt.Errorf("failed to parse header date for msgIndex %d", msgIndex)
+			return fmt.Errorf("failed to parse header date for block %d", blockIndex)
 		}
 
 		// Build full timestamp
 		dateTimeStr := fmt.Sprintf("%s %s %s", dateMatches[1], dateMatches[2], timeStr)
 		timestamp, err := time.Parse("2 January 15:04", dateTimeStr)
 		if err != nil {
-			return fmt.Errorf("failed to parse timestamp for msgIndex %d: %w", msgIndex, err)
+			return fmt.Errorf("failed to parse timestamp for block %d: %w", blockIndex, err)
 		}
 
 		msgs = append(msgs, struct {

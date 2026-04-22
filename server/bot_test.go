@@ -27,6 +27,30 @@ func init() {
 	}
 }
 
+// inboxMsgHash returns the hash of the nth non-header block in Inbox.md, or
+// a placeholder string if the inbox doesn't yet exist or has fewer entries.
+// Tests use this to resolve the stable inbox-entry identifier the bot now
+// carries in its callback params (previously a positional int index).
+func inboxMsgHash(t *testing.T, userFS *fs.FS, nth int) string {
+	t.Helper()
+	content, err := userFS.Read(fs.DirUserRoot, fs.InboxFilename)
+	if err != nil {
+		return "nohash"
+	}
+	blocks := readBlocks(content)
+	i := 0
+	for _, block := range blocks {
+		if strings.HasPrefix(block, "#### ") {
+			continue
+		}
+		if i == nth {
+			return inboxBlockHash(block)
+		}
+		i++
+	}
+	return "nohash"
+}
+
 func TestSaveFromTextMsg(t *testing.T) {
 	r := require.New(t)
 
@@ -79,7 +103,7 @@ func TestSaveFromLongTextMsg(t *testing.T) {
 	err = bot.Reply(tg.NewUpd(-1, strings.Repeat("a", 34)))
 	r.NoError(err)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", "0"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", inboxMsgHash(t, userFS, 0)})))
 	r.NoError(err)
 
 	tasks, err := bot.fs.FilesAndDirs("today")
@@ -116,7 +140,7 @@ func TestSaveFromLongTextMsg(t *testing.T) {
 //		err = bot.Reply(tg.NewUpd(-1, "New task/"))
 //		r.NoError(err)
 //
-//		err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", "0"})))
+//		err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", inboxMsgHash(t, userFS, 0)})))
 //		r.NoError(err)
 //
 //		tasks, err := bot.fs.FilesAndDirs("today")
@@ -132,7 +156,7 @@ func TestSaveFromLongTextMsg(t *testing.T) {
 //		err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("today", nil)))
 //		r.NoError(err)
 //
-//		err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("add_item", []string{"db0a776589b", "0"})))
+//		err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("add_item", []string{"db0a776589b", inboxMsgHash(t, userFS, 0)})))
 //		r.NoError(err)
 //
 //		r.Equal("<b>1</b> left"+wideSpacer, tgram.LastSentText)
@@ -161,7 +185,7 @@ func TestAddMultilineTaskToToday(t *testing.T) {
 	err = bot.Reply(tg.NewUpd(-1, "New task\nContent"))
 	r.NoError(err)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", "0"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", inboxMsgHash(t, userFS, 0)})))
 	r.NoError(err)
 
 	tasks, err := bot.fs.FilesAndDirs("today")
@@ -195,7 +219,7 @@ func TestAddTaskWithSpecCharsToToday(t *testing.T) {
 	err = bot.Reply(tg.NewUpd(-1, "New task\nUrl! https://g.com (Also_text] ##header\n-item1\n-item2\n1+1=2"))
 	r.NoError(err)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", "0"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", inboxMsgHash(t, userFS, 0)})))
 	r.NoError(err)
 
 	tasks, err := bot.fs.FilesAndDirs("today")
@@ -229,7 +253,7 @@ func TestAddTaskWithOnlyWhitespace(t *testing.T) {
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", "0"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", inboxMsgHash(t, userFS, 0)})))
 	r.NoError(err)
 
 	err = bot.Reply(tg.NewUpd(-1, "   \t\n"))
@@ -261,7 +285,7 @@ func TestAddTaskWithLeadingAndTrailingSpaces(t *testing.T) {
 	err = bot.Reply(tg.NewUpd(-1, "   Task with spaces   "))
 	r.NoError(err)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", "0"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", inboxMsgHash(t, userFS, 0)})))
 	r.NoError(err)
 
 	tasks, err := bot.fs.FilesAndDirs("today")
@@ -316,7 +340,7 @@ func TestSaveFromTextMsgWithUnicodeCharacters(t *testing.T) {
 	err = bot.Reply(tg.NewUpd(-1, unicodeText))
 	r.NoError(err)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", "0"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", inboxMsgHash(t, userFS, 0)})))
 	r.NoError(err)
 
 	tasks, err := bot.fs.FilesAndDirs("today")
@@ -422,7 +446,7 @@ func TestSaveFromPhotoWithCaption(t *testing.T) {
 	r.NoError(err)
 	r.Equal("#### 11 August, Sunday\n- [ ] `09:54` ![](media/tg_PHOTO_ID)\nCaption\n", content)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", "0"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", inboxMsgHash(t, userFS, 0)})))
 	r.NoError(err)
 
 	files, err := bot.fs.FilesAndDirs("today")
@@ -465,7 +489,7 @@ func TestSaveFromPhotoWithLongCaption(t *testing.T) {
 	r.NoError(err)
 	r.Equal("#### 11 August, Sunday\n- [ ] `09:54` ![](media/tg_PHOTO_ID)\nAaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n", content)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", "0"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", inboxMsgHash(t, userFS, 0)})))
 	r.NoError(err)
 
 	content, err = bot.fs.Read("today", fmt.Sprintf("A%s....md", strings.Repeat("a", 32)))
@@ -502,7 +526,7 @@ func TestSaveFromPhotoWithSanitizedCaption(t *testing.T) {
 	r.NoError(err)
 	r.Equal("#### 11 August, Sunday\n- [ ] `09:54` ![](media/tg_PHOTO_ID)\nCaption/\n", content)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", "0"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", inboxMsgHash(t, userFS, 0)})))
 	r.NoError(err)
 
 	files, err := bot.fs.FilesAndDirs("today")
@@ -550,7 +574,7 @@ func TestSaveFromPhotoWithoutCaption(t *testing.T) {
 	r.NoError(err)
 	r.Equal("#### 11 August, Sunday\n- [ ] `09:54` ![](media/tg_PHOTO_ID)\n", content)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", "0"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", inboxMsgHash(t, userFS, 0)})))
 	r.NoError(err)
 
 	files, err := bot.fs.FilesAndDirs("today")
@@ -902,7 +926,7 @@ func TestAddSingleItemToChecklist(t *testing.T) {
 	err = bot.Reply(tg.NewUpd(-1, "Item"))
 	r.NoError(err)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv_to_chk", []string{"0", "-checklist1-"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv_to_chk", []string{inboxMsgHash(t, userFS, 0), "-checklist1-"})))
 	r.NoError(err)
 
 	files, err := userFS.FilesAndDirs("-checklist1-")
@@ -935,7 +959,7 @@ func TestAddMultipleItemsToChecklist(t *testing.T) {
 	err = bot.Reply(tg.NewUpd(-1, "Item\nItem2\nItem3"))
 	r.NoError(err)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv_to_chk", []string{"0", "-checklist1-"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv_to_chk", []string{inboxMsgHash(t, userFS, 0), "-checklist1-"})))
 	r.NoError(err)
 
 	files, err := userFS.FilesAndDirs("-checklist1-")
@@ -1312,13 +1336,14 @@ func TestShowToFileNoDirs(t *testing.T) {
 	tgram := tg.NewFakeTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.showMoveToFileOrDir([]string{"0"})
+	const h = "fakehash"
+	err = bot.showMoveToFileOrDir([]string{h})
 	r.NoError(err)
 
 	r.Equal(tg.NewKeyboard([]tg.Row{
-		tg.NewRow(tg.NewBtn("Note", tg.NewCmd("mf", []string{"345fb", "0"}))),
+		tg.NewRow(tg.NewBtn("Note", tg.NewCmd("mf", []string{"345fb", h}))),
 		tg.NewBtn("Search", tg.NewCustomCmd("search", nil, "iq")),
-		tg.NewRow(tg.NewBtn("🗂 New Dir", tg.NewCmd("new_dir", []string{"0"}))),
+		tg.NewRow(tg.NewBtn("🗂 New Dir", tg.NewCmd("new_dir", []string{h}))),
 	},
 	), tgram.LastSentKeyboard)
 }
@@ -1336,14 +1361,15 @@ func TestShowMoveToFile(t *testing.T) {
 	tgram := tg.NewFakeTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.showMoveToFileOrDir([]string{"0"})
+	const h = "fakehash"
+	err = bot.showMoveToFileOrDir([]string{h})
 	r.NoError(err)
 
 	r.Equal(tg.NewKeyboard([]tg.Row{
 		tg.NewBtn("Search", tg.NewCustomCmd("search", nil, "iq")),
 		tg.NewRow(
-			tg.NewBtn("🗂️ Dir", tg.NewCmd("mv", []string{"73600", "0"})),
-			tg.NewBtn("🗂 New Dir", tg.NewCmd("new_dir", []string{"0"})),
+			tg.NewBtn("🗂️ Dir", tg.NewCmd("mv", []string{"73600", h})),
+			tg.NewBtn("🗂 New Dir", tg.NewCmd("new_dir", []string{h})),
 		),
 	}), tgram.LastSentKeyboard)
 }
@@ -1489,7 +1515,7 @@ func TestMoveToExistingFile(t *testing.T) {
 
 	tgram := tg.NewFakeTG()
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	upd := tg.NewUpdCmd(-1, tg.NewCmd("mf", []string{"1c8f819d075", "0"}))
+	upd := tg.NewUpdCmd(-1, tg.NewCmd("mf", []string{"1c8f819d075", inboxMsgHash(t, userFS, 0)}))
 	err = bot.Reply(upd)
 	r.NoError(err)
 
@@ -1518,7 +1544,7 @@ func TestMoveToExistingFileExistingRecord(t *testing.T) {
 
 	tgram := tg.NewFakeTG()
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	upd := tg.NewUpdCmd(-1, tg.NewCmd("mf", []string{"1c8f819d075", "0"}))
+	upd := tg.NewUpdCmd(-1, tg.NewCmd("mf", []string{"1c8f819d075", inboxMsgHash(t, userFS, 0)}))
 	err = bot.Reply(upd)
 	r.NoError(err)
 
@@ -1559,15 +1585,16 @@ func TestShowMoveTo(t *testing.T) {
 
 	r.Equal("Saved to <b>today</b>!", tgram.SentTexts[0])
 
+	h := inboxMsgHash(t, userFS, 0)
 	kb := tg.NewKeyboard([]tg.Row{
 		[]tg.Btn{
-			{Name: "🌚 To tmrw", Cmd: tg.Cmd{Name: "sc_tmrw", Params: []string{"0"}, Type: "cmd"}},
-			{Name: "⏳ To later", Cmd: tg.Cmd{Name: "mv_later", Params: []string{"0"}, Type: "cmd"}},
-			{Name: "📆 To a day", Cmd: tg.Cmd{Name: "sc_day", Params: []string{"0"}, Type: "cmd"}},
+			{Name: "🌚 To tmrw", Cmd: tg.Cmd{Name: "sc_tmrw", Params: []string{h}, Type: "cmd"}},
+			{Name: "⏳ To later", Cmd: tg.Cmd{Name: "mv_later", Params: []string{h}, Type: "cmd"}},
+			{Name: "📆 To a day", Cmd: tg.Cmd{Name: "sc_day", Params: []string{h}, Type: "cmd"}},
 		},
 		[]tg.Btn{
-			{Name: "📄 To File", Cmd: tg.Cmd{Name: "to_file", Params: []string{"0"}, Type: "cmd"}},
-			{Name: "💚 To Journal", Cmd: tg.Cmd{Name: "mv_to_journal", Params: []string{"0"}, Type: "cmd"}},
+			{Name: "📄 To File", Cmd: tg.Cmd{Name: "to_file", Params: []string{h}, Type: "cmd"}},
+			{Name: "💚 To Journal", Cmd: tg.Cmd{Name: "mv_to_journal", Params: []string{h}, Type: "cmd"}},
 		},
 	},
 	)
@@ -1745,7 +1772,7 @@ func TestMoveToChecklistSplittable(t *testing.T) {
 	r.NoError(err)
 	r.Equal("#### 11 August, Sunday\n- [ ] `09:54` Item1\nitem2\n", content)
 
-	err = bot.moveToDirChecklist([]string{"0", "-checklist-"})
+	err = bot.moveToDirChecklist([]string{inboxMsgHash(t, userFS, 0), "-checklist-"})
 	r.NoError(err)
 
 	files, err := userFS.FilesAndDirs("-checklist-")
@@ -1873,7 +1900,7 @@ func TestMoveToJournal(t *testing.T) {
 	tgram := tg.NewFakeTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv_to_journal", []string{"0"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv_to_journal", []string{inboxMsgHash(t, userFS, 0)})))
 	r.NoError(err)
 
 	files, err := userFS.FilesAndDirs("journal")
@@ -2136,7 +2163,7 @@ func TestSchedule(t *testing.T) {
 	err = bot.Reply(tg.NewUpd(-1, "Task"))
 	r.NoError(err)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("sc", []string{"0", "345600", "0 0 * * 1-5"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("sc", []string{inboxMsgHash(t, userFS, 0), "345600", "0 0 * * 1-5"})))
 	r.NoError(err)
 
 	tasksForToday, err := userFS.FilesAndDirs("today")
@@ -2179,7 +2206,7 @@ func TestScheduleNoRepeat(t *testing.T) {
 	err = bot.Reply(tg.NewUpd(-1, "Task"))
 	r.NoError(err)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("sc", []string{"0", "345600", ""})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("sc", []string{inboxMsgHash(t, userFS, 0), "345600", ""})))
 	r.NoError(err)
 
 	tasksForToday, err := userFS.FilesAndDirs("today")
@@ -2519,19 +2546,19 @@ func TestSaveToNewTask(t *testing.T) {
 
 	kb := tg.NewKeyboard([]tg.Row{
 		tg.NewRow(
-			tg.NewBtn("🌚 To tmrw", tg.NewCmd("sc_tmrw", []string{"0"})),
-			tg.NewBtn("⏳ To later", tg.NewCmd("mv_later", []string{"0"})),
-			tg.NewBtn("📆 To a day", tg.NewCmd("sc_day", []string{"0"})),
+			tg.NewBtn("🌚 To tmrw", tg.NewCmd("sc_tmrw", []string{inboxMsgHash(t, userFS, 0)})),
+			tg.NewBtn("⏳ To later", tg.NewCmd("mv_later", []string{inboxMsgHash(t, userFS, 0)})),
+			tg.NewBtn("📆 To a day", tg.NewCmd("sc_day", []string{inboxMsgHash(t, userFS, 0)})),
 		),
 		tg.NewRow(
-			tg.NewBtn("📄 To File", tg.NewCmd("to_file", []string{"0"})),
-			tg.NewBtn("💚 To Journal", tg.NewCmd("mv_to_journal", []string{"0"})),
+			tg.NewBtn("📄 To File", tg.NewCmd("to_file", []string{inboxMsgHash(t, userFS, 0)})),
+			tg.NewBtn("💚 To Journal", tg.NewCmd("mv_to_journal", []string{inboxMsgHash(t, userFS, 0)})),
 			tg.NewBtn("👌", tg.NewCmd("today", []string{})),
 		),
 	})
 	r.Equal(kb, tgram.LastSentKeyboard)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", "0"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", inboxMsgHash(t, userFS, 0)})))
 	r.NoError(err)
 
 	content, err := userFS.Read("today", "New task.md")
@@ -2590,34 +2617,34 @@ func TestSaveToExistingFile(t *testing.T) {
 
 	kb := tg.NewKeyboard([]tg.Row{
 		tg.NewRow(
-			tg.NewBtn("🌚 To tmrw", tg.NewCmd("sc_tmrw", []string{"1"})),
-			tg.NewBtn("⏳ To later", tg.NewCmd("mv_later", []string{"1"})),
-			tg.NewBtn("📆 To a day", tg.NewCmd("sc_day", []string{"1"})),
+			tg.NewBtn("🌚 To tmrw", tg.NewCmd("sc_tmrw", []string{inboxMsgHash(t, userFS, 1)})),
+			tg.NewBtn("⏳ To later", tg.NewCmd("mv_later", []string{inboxMsgHash(t, userFS, 1)})),
+			tg.NewBtn("📆 To a day", tg.NewCmd("sc_day", []string{inboxMsgHash(t, userFS, 1)})),
 		),
 		tg.NewRow(
-			tg.NewBtn("📄 To File", tg.NewCmd("to_file", []string{"1"})),
-			tg.NewBtn("💚 To Journal", tg.NewCmd("mv_to_journal", []string{"1"})),
+			tg.NewBtn("📄 To File", tg.NewCmd("to_file", []string{inboxMsgHash(t, userFS, 1)})),
+			tg.NewBtn("💚 To Journal", tg.NewCmd("mv_to_journal", []string{inboxMsgHash(t, userFS, 1)})),
 			tg.NewBtn("👌", tg.NewCmd("today", []string{})),
 		),
 	})
 	r.Equal(kb, tgram.LastSentKeyboard)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("to_file", []string{"1"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("to_file", []string{inboxMsgHash(t, userFS, 1)})))
 	r.NoError(err)
 
 	selectFileKB := tg.NewKeyboard([]tg.Row{
 		tg.NewRow(
-			tg.NewBtn("File", tg.NewCmd("mf", []string{"7595e", "1"})),
+			tg.NewBtn("File", tg.NewCmd("mf", []string{"7595e", inboxMsgHash(t, userFS, 1)})),
 		),
 		tg.NewBtn("Search", tg.NewCustomCmd("search", nil, "iq")),
 		tg.NewRow(
-			tg.NewBtn("🗂️ Habits", tg.NewCmd("mv", []string{"51fc0", "1"})),
-			tg.NewBtn("🗂 New Dir", tg.NewCmd("new_dir", []string{"1"})),
+			tg.NewBtn("🗂️ Habits", tg.NewCmd("mv", []string{"51fc0", inboxMsgHash(t, userFS, 1)})),
+			tg.NewBtn("🗂 New Dir", tg.NewCmd("new_dir", []string{inboxMsgHash(t, userFS, 1)})),
 		),
 	})
 	r.Equal(selectFileKB, tgram.LastEditedKeyboard)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mf", []string{"7595e", "1"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mf", []string{"7595e", inboxMsgHash(t, userFS, 1)})))
 	r.NoError(err)
 
 	r.Nil(tgram.LastEditedKeyboard)
@@ -2678,34 +2705,34 @@ func TestSaveToExistingFileModeTasks(t *testing.T) {
 
 	kb := tg.NewKeyboard([]tg.Row{
 		tg.NewRow(
-			tg.NewBtn("🌚 To tmrw", tg.NewCmd("sc_tmrw", []string{"1"})),
-			tg.NewBtn("⏳ To later", tg.NewCmd("mv_later", []string{"1"})),
-			tg.NewBtn("📆 To a day", tg.NewCmd("sc_day", []string{"1"})),
+			tg.NewBtn("🌚 To tmrw", tg.NewCmd("sc_tmrw", []string{inboxMsgHash(t, userFS, 1)})),
+			tg.NewBtn("⏳ To later", tg.NewCmd("mv_later", []string{inboxMsgHash(t, userFS, 1)})),
+			tg.NewBtn("📆 To a day", tg.NewCmd("sc_day", []string{inboxMsgHash(t, userFS, 1)})),
 		),
 		tg.NewRow(
-			tg.NewBtn("📄 To File", tg.NewCmd("to_file", []string{"1"})),
-			tg.NewBtn("💚 To Journal", tg.NewCmd("mv_to_journal", []string{"1"})),
+			tg.NewBtn("📄 To File", tg.NewCmd("to_file", []string{inboxMsgHash(t, userFS, 1)})),
+			tg.NewBtn("💚 To Journal", tg.NewCmd("mv_to_journal", []string{inboxMsgHash(t, userFS, 1)})),
 			tg.NewBtn("👌", tg.NewCmd("today", []string{})),
 		),
 	})
 	r.Equal(kb, tgram.LastSentKeyboard)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("to_file", []string{"1"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("to_file", []string{inboxMsgHash(t, userFS, 1)})))
 	r.NoError(err)
 
 	selectFileKB := tg.NewKeyboard([]tg.Row{
 		tg.NewRow(
-			tg.NewBtn("File", tg.NewCmd("mf", []string{"7595e", "1"})),
+			tg.NewBtn("File", tg.NewCmd("mf", []string{"7595e", inboxMsgHash(t, userFS, 1)})),
 		),
 		tg.NewBtn("Search", tg.NewCustomCmd("search", nil, "iq")),
 		tg.NewRow(
-			tg.NewBtn("🗂️ Habits", tg.NewCmd("mv", []string{"51fc0", "1"})),
-			tg.NewBtn("🗂 New Dir", tg.NewCmd("new_dir", []string{"1"})),
+			tg.NewBtn("🗂️ Habits", tg.NewCmd("mv", []string{"51fc0", inboxMsgHash(t, userFS, 1)})),
+			tg.NewBtn("🗂 New Dir", tg.NewCmd("new_dir", []string{inboxMsgHash(t, userFS, 1)})),
 		),
 	})
 	r.Equal(selectFileKB, tgram.LastEditedKeyboard)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mf", []string{"7595e", "0"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mf", []string{"7595e", inboxMsgHash(t, userFS, 0)})))
 	r.NoError(err)
 
 	r.Nil(tgram.LastEditedKeyboard)
@@ -2767,31 +2794,31 @@ func TestSaveToNewFile(t *testing.T) {
 
 	kb := tg.NewKeyboard([]tg.Row{
 		tg.NewRow(
-			tg.NewBtn("🌚 To tmrw", tg.NewCmd("sc_tmrw", []string{"1"})),
-			tg.NewBtn("⏳ To later", tg.NewCmd("mv_later", []string{"1"})),
-			tg.NewBtn("📆 To a day", tg.NewCmd("sc_day", []string{"1"})),
+			tg.NewBtn("🌚 To tmrw", tg.NewCmd("sc_tmrw", []string{inboxMsgHash(t, userFS, 1)})),
+			tg.NewBtn("⏳ To later", tg.NewCmd("mv_later", []string{inboxMsgHash(t, userFS, 1)})),
+			tg.NewBtn("📆 To a day", tg.NewCmd("sc_day", []string{inboxMsgHash(t, userFS, 1)})),
 		),
 		tg.NewRow(
-			tg.NewBtn("📄 To File", tg.NewCmd("to_file", []string{"1"})),
-			tg.NewBtn("💚 To Journal", tg.NewCmd("mv_to_journal", []string{"1"})),
+			tg.NewBtn("📄 To File", tg.NewCmd("to_file", []string{inboxMsgHash(t, userFS, 1)})),
+			tg.NewBtn("💚 To Journal", tg.NewCmd("mv_to_journal", []string{inboxMsgHash(t, userFS, 1)})),
 			tg.NewBtn("👌", tg.NewCmd("today", []string{})),
 		),
 	})
 	r.Equal(kb, tgram.LastSentKeyboard)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("to_file", []string{"1"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("to_file", []string{inboxMsgHash(t, userFS, 1)})))
 	r.NoError(err)
 
 	selectFileKB := tg.NewKeyboard([]tg.Row{
 		tg.NewBtn("Search", tg.NewCustomCmd("search", nil, "iq")),
 		tg.NewRow(
-			tg.NewBtn("🗂️ Habits", tg.NewCmd("mv", []string{"51fc0", "1"})),
-			tg.NewBtn("🗂 New Dir", tg.NewCmd("new_dir", []string{"1"})),
+			tg.NewBtn("🗂️ Habits", tg.NewCmd("mv", []string{"51fc0", inboxMsgHash(t, userFS, 1)})),
+			tg.NewBtn("🗂 New Dir", tg.NewCmd("new_dir", []string{inboxMsgHash(t, userFS, 1)})),
 		),
 	})
 	r.Equal(selectFileKB, tgram.LastEditedKeyboard)
 
-	//err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mf", []string{"23200", "0"})))
+	//err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mf", []string{"23200", inboxMsgHash(t, userFS, 0)})))
 	//r.NoError(err)
 	err = bot.Reply(tg.NewUpd(-1, "Myfile"))
 	r.NoError(err)
@@ -2849,36 +2876,36 @@ func TestSaveToNewDirFull(t *testing.T) {
 
 	kb := tg.NewKeyboard([]tg.Row{
 		tg.NewRow(
-			tg.NewBtn("🌚 To tmrw", tg.NewCmd("sc_tmrw", []string{"0"})),
-			tg.NewBtn("⏳ To later", tg.NewCmd("mv_later", []string{"0"})),
-			tg.NewBtn("📆 To a day", tg.NewCmd("sc_day", []string{"0"})),
+			tg.NewBtn("🌚 To tmrw", tg.NewCmd("sc_tmrw", []string{inboxMsgHash(t, userFS, 0)})),
+			tg.NewBtn("⏳ To later", tg.NewCmd("mv_later", []string{inboxMsgHash(t, userFS, 0)})),
+			tg.NewBtn("📆 To a day", tg.NewCmd("sc_day", []string{inboxMsgHash(t, userFS, 0)})),
 		),
 		tg.NewRow(
-			tg.NewBtn("📄 To File", tg.NewCmd("to_file", []string{"0"})),
-			tg.NewBtn("💚 To Journal", tg.NewCmd("mv_to_journal", []string{"0"})),
+			tg.NewBtn("📄 To File", tg.NewCmd("to_file", []string{inboxMsgHash(t, userFS, 0)})),
+			tg.NewBtn("💚 To Journal", tg.NewCmd("mv_to_journal", []string{inboxMsgHash(t, userFS, 0)})),
 			tg.NewBtn("👌", tg.NewCmd("today", []string{})),
 		),
 	})
 	r.Equal(kb, tgram.LastSentKeyboard)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("to_file", []string{"0"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("to_file", []string{inboxMsgHash(t, userFS, 0)})))
 	r.NoError(err)
 
 	selectFileKB := tg.NewKeyboard([]tg.Row{
 		tg.NewBtn("Search", tg.NewCustomCmd("search", nil, "iq")),
 		tg.NewRow(
-			tg.NewBtn("🗂️ Habits", tg.NewCmd("mv", []string{"51fc0", "0"})),
-			tg.NewBtn("🗂 New Dir", tg.NewCmd("new_dir", []string{"0"})),
+			tg.NewBtn("🗂️ Habits", tg.NewCmd("mv", []string{"51fc0", inboxMsgHash(t, userFS, 0)})),
+			tg.NewBtn("🗂 New Dir", tg.NewCmd("new_dir", []string{inboxMsgHash(t, userFS, 0)})),
 		),
 	})
 	r.Equal(selectFileKB, tgram.LastEditedKeyboard)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("new_dir", []string{"0"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("new_dir", []string{inboxMsgHash(t, userFS, 0)})))
 	r.NoError(err)
 
 	r.Equal("OK. Send me the name for your new dir", tgram.LastEditedText)
 	r.Nil(tgram.LastEditedKeyboard)
-	r.Equal(tg.NewCmd("mv_to_new_dir", []string{"0", "%s"}), *database.InputExpectation())
+	r.Equal(tg.NewCmd("mv_to_new_dir", []string{inboxMsgHash(t, userFS, 0), "%s"}), *database.InputExpectation())
 
 	err = bot.Reply(tg.NewUpd(-1, "My dir"))
 	r.NoError(err)
@@ -2936,36 +2963,36 @@ func TestSaveToNewDir(t *testing.T) {
 
 	kb := tg.NewKeyboard([]tg.Row{
 		tg.NewRow(
-			tg.NewBtn("🌚 To tmrw", tg.NewCmd("sc_tmrw", []string{"0"})),
-			tg.NewBtn("⏳ To later", tg.NewCmd("mv_later", []string{"0"})),
-			tg.NewBtn("📆 To a day", tg.NewCmd("sc_day", []string{"0"})),
+			tg.NewBtn("🌚 To tmrw", tg.NewCmd("sc_tmrw", []string{inboxMsgHash(t, userFS, 0)})),
+			tg.NewBtn("⏳ To later", tg.NewCmd("mv_later", []string{inboxMsgHash(t, userFS, 0)})),
+			tg.NewBtn("📆 To a day", tg.NewCmd("sc_day", []string{inboxMsgHash(t, userFS, 0)})),
 		),
 		tg.NewRow(
-			tg.NewBtn("📄 To File", tg.NewCmd("to_file", []string{"0"})),
-			tg.NewBtn("💚 To Journal", tg.NewCmd("mv_to_journal", []string{"0"})),
+			tg.NewBtn("📄 To File", tg.NewCmd("to_file", []string{inboxMsgHash(t, userFS, 0)})),
+			tg.NewBtn("💚 To Journal", tg.NewCmd("mv_to_journal", []string{inboxMsgHash(t, userFS, 0)})),
 			tg.NewBtn("👌", tg.NewCmd("today", []string{})),
 		),
 	})
 	r.Equal(kb, tgram.LastSentKeyboard)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("to_file", []string{"0"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("to_file", []string{inboxMsgHash(t, userFS, 0)})))
 	r.NoError(err)
 
 	selectFileKB := tg.NewKeyboard([]tg.Row{
 		tg.NewBtn("Search", tg.NewCustomCmd("search", nil, "iq")),
 		tg.NewRow(
-			tg.NewBtn("🗂️ Habits", tg.NewCmd("mv", []string{"51fc0", "0"})),
-			tg.NewBtn("🗂 New Dir", tg.NewCmd("new_dir", []string{"0"})),
+			tg.NewBtn("🗂️ Habits", tg.NewCmd("mv", []string{"51fc0", inboxMsgHash(t, userFS, 0)})),
+			tg.NewBtn("🗂 New Dir", tg.NewCmd("new_dir", []string{inboxMsgHash(t, userFS, 0)})),
 		),
 	})
 	r.Equal(selectFileKB, tgram.LastEditedKeyboard)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("new_dir", []string{"0"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("new_dir", []string{inboxMsgHash(t, userFS, 0)})))
 	r.NoError(err)
 
 	r.Equal("OK. Send me the name for your new dir", tgram.LastEditedText)
 	r.Nil(tgram.LastEditedKeyboard)
-	r.Equal(tg.NewCmd("mv_to_new_dir", []string{"0", "%s"}), *database.InputExpectation())
+	r.Equal(tg.NewCmd("mv_to_new_dir", []string{inboxMsgHash(t, userFS, 0), "%s"}), *database.InputExpectation())
 
 	err = bot.Reply(tg.NewUpd(-1, "My dir"))
 	r.NoError(err)
@@ -3025,34 +3052,34 @@ func TestSaveToNewMultilineFile(t *testing.T) {
 
 	kb := tg.NewKeyboard([]tg.Row{
 		tg.NewRow(
-			tg.NewBtn("🌚 To tmrw", tg.NewCmd("sc_tmrw", []string{"0"})),
-			tg.NewBtn("⏳ To later", tg.NewCmd("mv_later", []string{"0"})),
-			tg.NewBtn("📆 To a day", tg.NewCmd("sc_day", []string{"0"})),
+			tg.NewBtn("🌚 To tmrw", tg.NewCmd("sc_tmrw", []string{inboxMsgHash(t, userFS, 0)})),
+			tg.NewBtn("⏳ To later", tg.NewCmd("mv_later", []string{inboxMsgHash(t, userFS, 0)})),
+			tg.NewBtn("📆 To a day", tg.NewCmd("sc_day", []string{inboxMsgHash(t, userFS, 0)})),
 		),
 		tg.NewRow(
-			tg.NewBtn("📄 To File", tg.NewCmd("to_file", []string{"0"})),
-			tg.NewBtn("💚 To Journal", tg.NewCmd("mv_to_journal", []string{"0"})),
+			tg.NewBtn("📄 To File", tg.NewCmd("to_file", []string{inboxMsgHash(t, userFS, 0)})),
+			tg.NewBtn("💚 To Journal", tg.NewCmd("mv_to_journal", []string{inboxMsgHash(t, userFS, 0)})),
 			tg.NewBtn("👌", tg.NewCmd("today", []string{})),
 		),
 	})
 	r.Equal(kb, tgram.LastSentKeyboard)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("to_file", []string{"0"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("to_file", []string{inboxMsgHash(t, userFS, 0)})))
 	r.NoError(err)
 
 	selectFileKB := tg.NewKeyboard([]tg.Row{
 		tg.NewRow(
-			tg.NewBtn("Text", tg.NewCmd("mf", []string{"23200", "0"})),
+			tg.NewBtn("Text", tg.NewCmd("mf", []string{"23200", inboxMsgHash(t, userFS, 0)})),
 		),
 		tg.NewBtn("Search", tg.NewCustomCmd("search", nil, "iq")),
 		tg.NewRow(
-			tg.NewBtn("🗂️ Habits", tg.NewCmd("mv", []string{"51fc0", "0"})),
-			tg.NewBtn("🗂 New Dir", tg.NewCmd("new_dir", []string{"0"})),
+			tg.NewBtn("🗂️ Habits", tg.NewCmd("mv", []string{"51fc0", inboxMsgHash(t, userFS, 0)})),
+			tg.NewBtn("🗂 New Dir", tg.NewCmd("new_dir", []string{inboxMsgHash(t, userFS, 0)})),
 		),
 	})
 	r.Equal(selectFileKB, tgram.LastEditedKeyboard)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mf", []string{"23200", "0"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mf", []string{"23200", inboxMsgHash(t, userFS, 0)})))
 	r.NoError(err)
 
 	r.Empty(tgram.LastEditedKeyboard)
@@ -3108,26 +3135,26 @@ func TestSaveToNewCustomFile(t *testing.T) {
 
 	kb := tg.NewKeyboard([]tg.Row{
 		tg.NewRow(
-			tg.NewBtn("🌚 To tmrw", tg.NewCmd("sc_tmrw", []string{"0"})),
-			tg.NewBtn("⏳ To later", tg.NewCmd("mv_later", []string{"0"})),
-			tg.NewBtn("📆 To a day", tg.NewCmd("sc_day", []string{"0"})),
+			tg.NewBtn("🌚 To tmrw", tg.NewCmd("sc_tmrw", []string{inboxMsgHash(t, userFS, 0)})),
+			tg.NewBtn("⏳ To later", tg.NewCmd("mv_later", []string{inboxMsgHash(t, userFS, 0)})),
+			tg.NewBtn("📆 To a day", tg.NewCmd("sc_day", []string{inboxMsgHash(t, userFS, 0)})),
 		),
 		tg.NewRow(
-			tg.NewBtn("📄 To File", tg.NewCmd("to_file", []string{"0"})),
-			tg.NewBtn("💚 To Journal", tg.NewCmd("mv_to_journal", []string{"0"})),
+			tg.NewBtn("📄 To File", tg.NewCmd("to_file", []string{inboxMsgHash(t, userFS, 0)})),
+			tg.NewBtn("💚 To Journal", tg.NewCmd("mv_to_journal", []string{inboxMsgHash(t, userFS, 0)})),
 			tg.NewBtn("👌", tg.NewCmd("today", []string{})),
 		),
 	})
 	r.Equal(kb, tgram.LastSentKeyboard)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("to_file", []string{"0"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("to_file", []string{inboxMsgHash(t, userFS, 0)})))
 	r.NoError(err)
 
 	selectFileKB := tg.NewKeyboard([]tg.Row{
 		tg.NewBtn("Search", tg.NewCustomCmd("search", nil, "iq")),
 		tg.NewRow(
-			tg.NewBtn("🗂️ Habits", tg.NewCmd("mv", []string{"51fc0", "0"})),
-			tg.NewBtn("🗂 New Dir", tg.NewCmd("new_dir", []string{"0"})),
+			tg.NewBtn("🗂️ Habits", tg.NewCmd("mv", []string{"51fc0", inboxMsgHash(t, userFS, 0)})),
+			tg.NewBtn("🗂 New Dir", tg.NewCmd("new_dir", []string{inboxMsgHash(t, userFS, 0)})),
 		),
 	})
 	r.Equal(selectFileKB, tgram.LastEditedKeyboard)
@@ -3190,33 +3217,33 @@ func TestSaveToRecentFile(t *testing.T) {
 
 	kb := tg.NewKeyboard([]tg.Row{
 		tg.NewRow(
-			tg.NewBtn("🌚 To tmrw", tg.NewCmd("sc_tmrw", []string{"0"})),
-			tg.NewBtn("⏳ To later", tg.NewCmd("mv_later", []string{"0"})),
-			tg.NewBtn("📆 To a day", tg.NewCmd("sc_day", []string{"0"})),
+			tg.NewBtn("🌚 To tmrw", tg.NewCmd("sc_tmrw", []string{inboxMsgHash(t, userFS, 0)})),
+			tg.NewBtn("⏳ To later", tg.NewCmd("mv_later", []string{inboxMsgHash(t, userFS, 0)})),
+			tg.NewBtn("📆 To a day", tg.NewCmd("sc_day", []string{inboxMsgHash(t, userFS, 0)})),
 		),
 		tg.NewRow(
-			tg.NewBtn("📄 To File", tg.NewCmd("to_file", []string{"0"})),
-			tg.NewBtn("💚 To Journal", tg.NewCmd("mv_to_journal", []string{"0"})),
+			tg.NewBtn("📄 To File", tg.NewCmd("to_file", []string{inboxMsgHash(t, userFS, 0)})),
+			tg.NewBtn("💚 To Journal", tg.NewCmd("mv_to_journal", []string{inboxMsgHash(t, userFS, 0)})),
 			tg.NewBtn("👌", tg.NewCmd("today", []string{})),
 		),
 	})
 	r.Equal(kb, tgram.LastSentKeyboard)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("to_file", []string{"0"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("to_file", []string{inboxMsgHash(t, userFS, 0)})))
 	r.NoError(err)
 
 	selectFileKeyboard := tg.NewKeyboard([]tg.Row{
 		tg.NewRow(
-			tg.NewBtn("Text", tg.NewCmd("mf", []string{"23200", "0"})),
+			tg.NewBtn("Text", tg.NewCmd("mf", []string{"23200", inboxMsgHash(t, userFS, 0)})),
 		),
 		tg.NewBtn("Search", tg.NewCustomCmd("search", nil, "iq")),
 		tg.NewRow(
-			tg.NewBtn("🗂 New Dir", tg.NewCmd("new_dir", []string{"0"})),
+			tg.NewBtn("🗂 New Dir", tg.NewCmd("new_dir", []string{inboxMsgHash(t, userFS, 0)})),
 		),
 	})
 	r.Equal(selectFileKeyboard, tgram.LastEditedKeyboard)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mf", []string{"23200", "0"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mf", []string{"23200", inboxMsgHash(t, userFS, 0)})))
 	r.NoError(err)
 
 	r.Empty(tgram.LastEditedKeyboard)
@@ -3235,14 +3262,14 @@ func TestSaveToRecentFile(t *testing.T) {
 
 	kb = tg.NewKeyboard([]tg.Row{
 		tg.NewRow(
-			tg.NewBtn("🌚 To tmrw", tg.NewCmd("sc_tmrw", []string{"0"})),
-			tg.NewBtn("⏳ To later", tg.NewCmd("mv_later", []string{"0"})),
-			tg.NewBtn("📆 To a day", tg.NewCmd("sc_day", []string{"0"})),
+			tg.NewBtn("🌚 To tmrw", tg.NewCmd("sc_tmrw", []string{inboxMsgHash(t, userFS, 0)})),
+			tg.NewBtn("⏳ To later", tg.NewCmd("mv_later", []string{inboxMsgHash(t, userFS, 0)})),
+			tg.NewBtn("📆 To a day", tg.NewCmd("sc_day", []string{inboxMsgHash(t, userFS, 0)})),
 		),
 		tg.NewRow(
-			tg.NewBtn("📄 To File", tg.NewCmd("to_file", []string{"0"})),
-			tg.NewBtn("💚 To Journal", tg.NewCmd("mv_to_journal", []string{"0"})),
-			tg.NewBtn("⭐️ Text", tg.NewCmd("mf", []string{"23200", "0"})),
+			tg.NewBtn("📄 To File", tg.NewCmd("to_file", []string{inboxMsgHash(t, userFS, 0)})),
+			tg.NewBtn("💚 To Journal", tg.NewCmd("mv_to_journal", []string{inboxMsgHash(t, userFS, 0)})),
+			tg.NewBtn("⭐️ Text", tg.NewCmd("mf", []string{"23200", inboxMsgHash(t, userFS, 0)})),
 		),
 		tg.NewRow(
 			tg.NewBtn("👌", tg.NewCmd("today", []string{})),
@@ -3294,10 +3321,10 @@ func TestSaveToTodayTask(t *testing.T) {
 
 	kb := tg.NewKeyboard([]tg.Row{
 		tg.NewBtn("Existing task", tg.NewCmd("check_item", []string{"db0a776589b", "04fcfb3c2ef"})),
-		tg.NewBtn("New task", tg.NewCmd("c_ch", []string{"0"})),
+		tg.NewBtn("New task", tg.NewCmd("c_ch", []string{inboxMsgHash(t, userFS, 0)})),
 	})
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("add_item", []string{"db0a776589b", "0"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("add_item", []string{"db0a776589b", inboxMsgHash(t, userFS, 0)})))
 	r.NoError(err)
 
 	kb = tg.NewKeyboard([]tg.Row{
@@ -3320,7 +3347,7 @@ func TestCollapseToMsg(t *testing.T) {
 	r := require.New(t)
 
 	clean := func() {
-		firstMsgIndicies.Range(func(key, value interface{}) bool {
+		firstMsgHashes.Range(func(key, value interface{}) bool {
 			firstMsgTimes.Delete(key)
 			return true
 		})
@@ -3332,7 +3359,7 @@ func TestCollapseToMsg(t *testing.T) {
 	clean()
 
 	// Collapse same second messages
-	setFirstMsgIndex(userID, 0, 100)
+	setFirstMsgHash(userID, "h", 100)
 	setFirstMsgTime(userID, 100)
 	_, shouldCollapse := collapseToMsg(userID, 100)
 	r.True(shouldCollapse)
@@ -3340,7 +3367,7 @@ func TestCollapseToMsg(t *testing.T) {
 	clean()
 
 	// Collapse next second messages
-	setFirstMsgIndex(userID, 0, 100)
+	setFirstMsgHash(userID, "h", 100)
 	setFirstMsgTime(userID, 100)
 	_, shouldCollapse = collapseToMsg(userID, 101)
 	require.True(t, shouldCollapse, "Expected to collapse the message")
@@ -3348,7 +3375,7 @@ func TestCollapseToMsg(t *testing.T) {
 	clean()
 
 	// Do not collapse distant messages
-	setFirstMsgIndex(userID, 0, 100)
+	setFirstMsgHash(userID, "h", 100)
 	setFirstMsgTime(userID, 100)
 	_, shouldCollapse = collapseToMsg(userID, 103)
 	require.False(t, shouldCollapse, "Expected not to collapse the message")
@@ -3356,7 +3383,7 @@ func TestCollapseToMsg(t *testing.T) {
 	clean()
 
 	// Collapse consecutive batch messages
-	setFirstMsgIndex(userID, 0, 200)
+	setFirstMsgHash(userID, "h", 200)
 	setFirstMsgTime(userID, 200)
 	// Loop to simulate a series of consecutive messages within a one-second interval
 	for i := 0; i < 5; i++ {
@@ -3420,7 +3447,7 @@ func TestCollapseForwardedMessages(t *testing.T) {
 	r.Equal("#### 1 January, Thursday\n- [ ] `00:00` First msg\nSecond msg\nThird msg\n- [ ] `00:00` Fourth msg\n", content)
 
 	// Clean
-	firstMsgIndicies.Range(func(key, value interface{}) bool {
+	firstMsgHashes.Range(func(key, value interface{}) bool {
 		firstMsgTimes.Delete(key)
 		return true
 	})
@@ -3574,7 +3601,7 @@ func TestSaveFromImage_NewFile(t *testing.T) {
 	err = bot.saveFromImage(upd)
 	r.NoError(err)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", "0"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", inboxMsgHash(t, userFS, 0)})))
 	r.NoError(err)
 
 	files, err := bot.fs.FilesAndDirs("today")
@@ -3610,7 +3637,7 @@ func TestSaveFromImage_LongCaption(t *testing.T) {
 	err = bot.saveFromImage(upd)
 	r.NoError(err)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", "0"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", inboxMsgHash(t, userFS, 0)})))
 	r.NoError(err)
 
 	filename := fmt.Sprintf("A%s....md", strings.Repeat("a", 32))
@@ -3655,7 +3682,7 @@ func TestSaveFromImage_MultilineCaption(t *testing.T) {
 	r.NoError(err)
 	r.Equal("#### 11 August, Sunday\n- [ ] `09:54` ![](media/tg_PHOTO_ID)\nAbc\ndef\n", content)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", "0"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", inboxMsgHash(t, userFS, 0)})))
 	r.NoError(err)
 
 	filename := fmt.Sprintf("Abc.md")
@@ -3730,7 +3757,7 @@ func TestSaveFromImage_EmptyCaption(t *testing.T) {
 	err = bot.saveFromImage(upd)
 	r.NoError(err)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", "0"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", inboxMsgHash(t, userFS, 0)})))
 	r.NoError(err)
 
 	files, err := bot.fs.FilesAndDirs("today")
@@ -3936,7 +3963,7 @@ func TestMoveToExistingNote_Success(t *testing.T) {
 
 	toDirHash := fs.Hash("notes")
 	toFilenameHash := fs.Hash("ExistingNote.md")
-	err = bot.moveToExistingNote([]string{toFilenameHash, toDirHash, "0"})
+	err = bot.moveToExistingNote([]string{toFilenameHash, toDirHash, inboxMsgHash(t, userFS, 0)})
 	r.NoError(err)
 
 	content, err := userFS.Read("notes", "ExistingNote.md")
@@ -4068,7 +4095,7 @@ func FuzzSaveFromTextMsg(f *testing.F) {
 			return
 		}
 
-		err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", "0"})))
+		err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", inboxMsgHash(t, userFS, 0)})))
 		r.NoError(err)
 
 		tasks, err := bot.fs.FilesAndDirs("today")
@@ -4356,12 +4383,15 @@ func TestShowToday_InboxMixedFormat(t *testing.T) {
 
 	firstBtn, ok := tgram.LastSentKeyboard.Btns[0].(tg.Btn)
 	r.True(ok)
-	r.Equal(tg.Cmd{Name: CmdCompleteFromInbox, Params: []string{"0"}, Type: "cmd"}, firstBtn.Cmd)
+	r.Equal(tg.Cmd{Name: CmdCompleteFromInbox, Params: []string{inboxBlockHash("`09:00` Legacy msg")}, Type: "cmd"}, firstBtn.Cmd)
 	r.Contains(firstBtn.Name, "Legacy msg")
 
 	secondBtn, ok := tgram.LastSentKeyboard.Btns[1].(tg.Btn)
 	r.True(ok)
-	r.Equal(tg.Cmd{Name: CmdCompleteFromInbox, Params: []string{"1"}, Type: "cmd"}, secondBtn.Cmd)
+	// The completed `- [x] `09:10` Done msg` entry is hidden, but the
+	// remaining new-format entry keeps its own stable hash (unchanged by
+	// completion-toggle behaviour).
+	r.Equal(tg.Cmd{Name: CmdCompleteFromInbox, Params: []string{inboxBlockHash("- [ ] `09:05` New msg")}, Type: "cmd"}, secondBtn.Cmd)
 	r.Contains(secondBtn.Name, "New msg")
 }
 
@@ -4434,7 +4464,7 @@ func TestScheduleForTmrw(t *testing.T) {
 	err = bot.Reply(tg.NewUpd(-1, "Task for tomorrow"))
 	r.NoError(err)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("sc_tmrw", []string{"0"})))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("sc_tmrw", []string{inboxMsgHash(t, userFS, 0)})))
 	r.NoError(err)
 
 	laterMD, err := userFS.Read(fs.DirUserRoot, fs.LaterFilename)

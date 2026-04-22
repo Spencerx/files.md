@@ -14,7 +14,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"slices"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -507,7 +506,7 @@ func (b *Bot) saveFromTextMsg(u Update) error {
 		return b.addToRepliedFile(replyMsgID, msg)
 	}
 
-	msgIndex, err := b.saveToInbox(msg, b.cfg.Timezone())
+	msgHash, err := b.saveToInbox(msg, b.cfg.Timezone())
 	if err != nil {
 		return fmt.Errorf("save to chat: %w", err)
 	}
@@ -519,15 +518,15 @@ func (b *Bot) saveFromTextMsg(u Update) error {
 	}
 
 	if updateHasTime {
-		setFirstMsgIndex(b.userID, msgIndex, msgTime)
+		setFirstMsgHash(b.userID, msgHash, msgTime)
 		setFirstMsgTime(b.userID, msgTime)
 	}
 
 	if b.cfg.JournalOnlyMode() {
-		return b.moveToJournal([]string{strconv.Itoa(msgIndex)})
+		return b.moveToJournal([]string{msgHash})
 	}
 
-	return b.showMoveTo([]string{strconv.Itoa(msgIndex)})
+	return b.showMoveTo([]string{msgHash})
 }
 
 // TODO test collapsing from both regular messages and images
@@ -555,7 +554,7 @@ func (b *Bot) saveFromImage(u Update) error {
 		return b.addToRepliedFile(replyMsgID, content)
 	}
 
-	msgIndex, err := b.saveToInbox(content, b.cfg.Timezone())
+	msgHash, err := b.saveToInbox(content, b.cfg.Timezone())
 	if err != nil {
 		return fmt.Errorf("save from image: %w", err)
 	}
@@ -569,15 +568,15 @@ func (b *Bot) saveFromImage(u Update) error {
 
 	// Track forwards.
 	if updateHasTime {
-		setFirstMsgIndex(b.userID, msgIndex, msgTime)
+		setFirstMsgHash(b.userID, msgHash, msgTime)
 		setFirstMsgTime(b.userID, msgTime)
 	}
 
 	if b.cfg.JournalOnlyMode() {
-		return b.moveToJournal([]string{strconv.Itoa(msgIndex)})
+		return b.moveToJournal([]string{msgHash})
 	}
 
-	return b.showMoveTo([]string{strconv.Itoa(msgIndex)})
+	return b.showMoveTo([]string{msgHash})
 }
 
 // saveImage saves an image to the filesystem and returns a markdown link to it
@@ -708,12 +707,9 @@ func (b *Bot) answerFileRequest(msg string) error {
 	c := b.db.InputExpectation()
 	if c != nil {
 		b.db.DelInputExpectation()
-		msgIndex, err := strconv.Atoi(c.Params[0])
-		if err != nil {
-			return fmt.Errorf("inline query: can't parse msg index %s: %w", c.Params[0], err)
-		}
+		msgHash := c.Params[0]
 
-		err = b.moveFromInbox(func(content string, timestamp time.Time) error {
+		err := b.moveFromInbox(func(content string, timestamp time.Time) error {
 			if dir == fs.DirUserRoot {
 				// We have a file
 				b.db.SetRecentCommand(CmdMoveToExistingFile)
@@ -724,13 +720,13 @@ func (b *Bot) answerFileRequest(msg string) error {
 				b.db.SetRecentCommandParams([]string{fs.ShortHash(filename), fs.ShortHash(dir)})
 			}
 
-			err = b.addToFile(dir, filename, content)
+			err := b.addToFile(dir, filename, content)
 			if err != nil {
 				return fmt.Errorf("inline query: can't add to file %s: %w", filename, err)
 			}
 
 			return nil
-		}, false, msgIndex)
+		}, false, msgHash)
 		if err != nil {
 			return fmt.Errorf("inline query: can't move from chat: %w", err)
 		}
@@ -923,20 +919,16 @@ func (b *Bot) showMD(probablyInvalidMD string, kb *tg.Keyboard) error {
 }
 
 func (b *Bot) showMoveTo(params []string) error {
-	msgIndexStr := params[0]
-	msgIndex, err := strconv.Atoi(msgIndexStr)
-	if err != nil {
-		return fmt.Errorf("move: can't convert %s to int: %w", msgIndexStr, err)
-	}
+	msgHash := params[0]
 
 	if b.cfg.NotesOnlyMode() {
 		b.delAllKeyboards()
 
-		return b.showMoveToFileOrDir([]string{msgIndexStr})
+		return b.showMoveToFileOrDir([]string{msgHash})
 	}
 
 	var kb tg.Keyboard
-	userMoveToBtns := b.moveToBtns(msgIndex)
+	userMoveToBtns := b.moveToBtns(msgHash)
 	if len(userMoveToBtns) == 0 {
 		b.delAllKeyboards()
 
@@ -944,7 +936,7 @@ func (b *Bot) showMoveTo(params []string) error {
 	}
 
 	// Add recent command if any
-	recentBtn := b.recentCmdBtn(msgIndex)
+	recentBtn := b.recentCmdBtn(msgHash)
 	if recentBtn != nil {
 		userMoveToBtns = append(userMoveToBtns, *recentBtn)
 	}
@@ -964,8 +956,7 @@ func (b *Bot) showMoveTo(params []string) error {
 	b.delAllKeyboards()
 
 	msg := b.tr("Saved to <b>today</b>!")
-	err = b.showHTML(msg, &kb)
-	if err != nil {
+	if err := b.showHTML(msg, &kb); err != nil {
 		return fmt.Errorf("move: %w", err)
 	}
 
@@ -990,22 +981,22 @@ func (b *Bot) showMoveToFromToday(params []string) error {
 		return fmt.Errorf("move from today.md: can't write today file: %w", err)
 	}
 
-	msgIndex, err := b.saveToInbox(task, b.cfg.Timezone())
+	msgHash, err := b.saveToInbox(task, b.cfg.Timezone())
 	if err != nil {
 		return fmt.Errorf("move from today.md: can't save to inbox: %w", err)
 	}
 
-	return b.showMoveTo([]string{strconv.Itoa(msgIndex)})
+	return b.showMoveTo([]string{msgHash})
 }
 
-func (b *Bot) recentCmdBtn(msgIndex int) *tg.Btn {
+func (b *Bot) recentCmdBtn(msgHash string) *tg.Btn {
 	recentCmd, ok := b.db.RecentCommand()
 	if !ok {
 		return nil
 	}
 
 	args, _ := b.db.RecentCommandParams()
-	args = append(args, strconv.Itoa(msgIndex))
+	args = append(args, msgHash)
 	targetFilenameHash := args[0]
 
 	var unhashedTarget string
@@ -1092,22 +1083,21 @@ func (b *Bot) ShowToday(_ []string) error {
 	// Match both legacy `HH:MM` and new `- [ ] HH:MM` / `- [x] HH:MM` prefixes.
 	// Capture group 1 holds the checkbox marker (empty for legacy).
 	inboxEntryRegex := regexp.MustCompile(`^(?:- \[([ xX])\] )?` + "`" + `\d{2}:\d{2}` + "`" + ` `)
-	msgIndex := 0
 	shownCount := 0
 	for _, block := range blocks {
 		m := inboxEntryRegex.FindStringSubmatch(block)
 		if m == nil {
 			continue
 		}
-		// Preserve on-disk ordering for button params (so CompleteFromInbox
-		// resolves back to the right line), but skip already-completed entries
-		// from the visible list.
-		currentIndex := msgIndex
-		msgIndex++
+		// Skip already-completed entries from the visible list. The hash is
+		// the same for `[ ]` / `[x]` variants, so tapping the button after a
+		// completion toggle still resolves to the right line.
 		if m[1] == "x" || m[1] == "X" {
 			continue
 		}
 		shownCount++
+
+		msgHash := inboxBlockHash(block)
 
 		// Strip the matched prefix (optional checkbox + timestamp + space).
 		block = strings.TrimSpace(block[len(m[0]):])
@@ -1126,11 +1116,11 @@ func (b *Bot) ShowToday(_ []string) error {
 		}
 
 		if len([]rune(title)) >= maxHeaderLengthForMobile || txt.HasImage(block) {
-			cmd := tg.NewCmd(CmdShowLongItemFromInbox, []string{strconv.Itoa(currentIndex)})
+			cmd := tg.NewCmd(CmdShowLongItemFromInbox, []string{msgHash})
 			btn := tg.NewBtn(txt.Emoji(i18n.Emoji("eyes"), title), cmd)
 			kb.AddRow(btn)
 		} else {
-			cmd := tg.NewCmd(CmdCompleteFromInbox, []string{strconv.Itoa(currentIndex)})
+			cmd := tg.NewCmd(CmdCompleteFromInbox, []string{msgHash})
 			btn := tg.NewBtn(txt.Emoji(i18n.Emoji(title), title), cmd)
 			kb.AddRow(btn)
 		}
@@ -1668,43 +1658,34 @@ func (b *Bot) showLongItem(params []string) error {
 
 // TODO today.md move to today/later
 func (b *Bot) showLongItemFromInbox(params []string) error {
-	msgIndexStr := params[0]
-	msgIndex, err := strconv.Atoi(msgIndexStr)
-	if err != nil {
-		return fmt.Errorf("show long item: can't parse msgIndex from params: %w", err)
-	}
+	msgHash := params[0]
 
 	inboxMD, err := b.fs.Read(fs.DirUserRoot, fs.InboxFilename)
 	if err != nil {
 		return fmt.Errorf("show long item: can't read inbox file: %w", err)
 	}
 
-	blocks := readBlocks(inboxMD)
-	index := 0
-	for _, block := range blocks {
-		if !strings.HasPrefix(block, "`") {
-			continue
-		}
-		if msgIndex == index {
-			// TODO make it not as dirty
-			if len(block) > 8 {
-				block = strings.TrimSpace(block[8:])
+	_, block, ok := findInboxBlockByHash(inboxMD, msgHash)
+	if !ok {
+		return fmt.Errorf("show long item: msgHash %q not found in inbox", msgHash)
+	}
 
-				kb := tg.NewKeyboard([]tg.Row{
-					tg.NewRow(
-						tg.NewBtn(i18n.StrBack, tg.NewCmd(CmdShowToday, []string{})),
-						tg.NewBtn(i18n.AddEmoji("Move"), tg.NewCmd(CmdShowMoveTo, []string{msgIndexStr})),
-						tg.NewBtn(txt.Emoji(i18n.Emoji("Archive"), "Complete"), tg.NewCmd(CmdCompleteFromInbox, []string{msgIndexStr})),
-					),
-				})
+	// Strip optional `- [ ]` / `- [x] ` prefix + backtick-timestamp prefix.
+	prefixRegex := regexp.MustCompile(`^(?:- \[[ xX]\] )?` + "`" + `\d{2}:\d{2}` + "`" + ` `)
+	if loc := prefixRegex.FindStringIndex(block); loc != nil {
+		block = strings.TrimSpace(block[loc[1]:])
+	}
 
-				err = b.showMD(block, kb)
-				if err != nil {
-					return fmt.Errorf("show long item from inbox: %w", err)
-				}
-			}
-		}
-		index++
+	kb := tg.NewKeyboard([]tg.Row{
+		tg.NewRow(
+			tg.NewBtn(i18n.StrBack, tg.NewCmd(CmdShowToday, []string{})),
+			tg.NewBtn(i18n.AddEmoji("Move"), tg.NewCmd(CmdShowMoveTo, []string{msgHash})),
+			tg.NewBtn(txt.Emoji(i18n.Emoji("Archive"), "Complete"), tg.NewCmd(CmdCompleteFromInbox, []string{msgHash})),
+		),
+	})
+
+	if err := b.showMD(block, kb); err != nil {
+		return fmt.Errorf("show long item from inbox: %w", err)
 	}
 
 	return nil
@@ -1886,15 +1867,7 @@ func (b *Bot) moveToDir(params []string) error {
 	// TODO Remove input expectations if dir is not today
 	toDirHash := params[0]
 
-	msgIndicesStr := strings.Split(params[1], ",")
-	var msgIndices []int
-	for _, msgIndexStr := range msgIndicesStr {
-		msgIndex, err := strconv.Atoi(msgIndexStr)
-		if err != nil {
-			return fmt.Errorf("move to file: can't parse msgIndex from params: %w", err)
-		}
-		msgIndices = append(msgIndices, msgIndex)
-	}
+	msgHashes := strings.Split(params[1], ",")
 
 	toDir, err := b.fs.Unhash(fs.DirUserRoot, toDirHash)
 	canCreateMissingDir := slices.Contains([]string{fs.DirArchive, fs.DirHabits}, toDirHash)
@@ -1928,13 +1901,13 @@ func (b *Bot) moveToDir(params []string) error {
 		}
 
 		return b.createOrAdd(toDir, filename, content)
-	}, true, msgIndices...)
+	}, true, msgHashes...)
 
 	if toDir != fs.DirLater {
 		//b.db.SetRecentCommand(CmdMoveToExistingNote)
 		// Move from dir is today, because quick command
 		// appears when file is in today dir
-		//b.db.SetRecentCommandParams([]string{strconv.Itoa(msgIndex), toDirHash})
+		//b.db.SetRecentCommandParams([]string{msgHash, toDirHash})
 	}
 
 	b.delAllKeyboards()
@@ -1950,22 +1923,10 @@ func (b *Bot) moveToDir(params []string) error {
 func (b *Bot) moveToChecklist(params []string) error {
 	toChecklistHash := params[0]
 
-	msgIndicesStr := strings.Split(params[1], ",")
-	var msgIndices []int
-	for _, msgIndexStr := range msgIndicesStr {
-		msgIndex, err := strconv.Atoi(msgIndexStr)
-		if err != nil {
-			return fmt.Errorf("move to checklist: can't parse msgIndex from params: %w", err)
-		}
-		msgIndices = append(msgIndices, msgIndex)
-	}
-	// Sort indices in descending order to avoid issues with removing items.
-	sort.Slice(msgIndices, func(i, j int) bool {
-		return msgIndices[i] > msgIndices[j]
-	})
+	msgHashes := strings.Split(params[1], ",")
 
-	for _, msgIndex := range msgIndices {
-		_, err := b.addToChecklist(toChecklistHash, msgIndex)
+	for _, msgHash := range msgHashes {
+		_, err := b.addToChecklist(toChecklistHash, msgHash)
 		if err != nil {
 			return fmt.Errorf("move to checklist: can't add to checklist: %w", err)
 		}
@@ -1974,7 +1935,7 @@ func (b *Bot) moveToChecklist(params []string) error {
 	return b.ShowToday(nil)
 }
 
-func (b *Bot) addToChecklist(checklistHash string, msgIndex int) (string, error) {
+func (b *Bot) addToChecklist(checklistHash string, msgHash string) (string, error) {
 	checklist, err := b.fs.Unhash(fs.DirUserRoot, checklistHash)
 	// Create known checklist if it doesn't exist
 	if err != nil {
@@ -2014,7 +1975,7 @@ func (b *Bot) addToChecklist(checklistHash string, msgIndex int) (string, error)
 		item = content
 		md := txt.AddChecklistItem(checklistMD, content, false)
 		return b.fs.Write(fs.DirUserRoot, checklist, md)
-	}, true, msgIndex)
+	}, true, msgHash)
 	if err != nil {
 		return "", fmt.Errorf("move to checklist: can't move from chat: %w", err)
 	}
@@ -2100,15 +2061,7 @@ func (b *Bot) moveToExistingFile(params []string) error {
 	// TODO Remove input expectations if dir is not today (?)
 	existingFilenameHash := params[0]
 
-	msgIndicesStr := strings.Split(params[1], ",")
-	var msgIndices []int
-	for _, msgIndexStr := range msgIndicesStr {
-		msgIndex, err := strconv.Atoi(msgIndexStr)
-		if err != nil {
-			return fmt.Errorf("move to file: can't parse msgIndex from params: %w", err)
-		}
-		msgIndices = append(msgIndices, msgIndex)
-	}
+	msgHashes := strings.Split(params[1], ",")
 
 	existingFilename, err := b.fs.Unhash(fs.DirUserRoot, existingFilenameHash)
 	if err != nil {
@@ -2117,7 +2070,7 @@ func (b *Bot) moveToExistingFile(params []string) error {
 
 	err = b.moveFromInbox(func(content string, timestamp time.Time) error {
 		return b.addToFile(fs.DirUserRoot, existingFilename, content)
-	}, true, msgIndices...)
+	}, true, msgHashes...)
 	if err != nil {
 		return fmt.Errorf("move to file: can't add to existing file '%s': %w", existingFilename, err)
 	}
@@ -2137,15 +2090,7 @@ func (b *Bot) moveToExistingNote(params []string) error {
 	toFilenameHash := params[0]
 	toDirHash := params[1]
 
-	msgIndicesStr := strings.Split(params[2], ",")
-	var msgIndices []int
-	for _, msgIndexStr := range msgIndicesStr {
-		msgIndex, err := strconv.Atoi(msgIndexStr)
-		if err != nil {
-			return fmt.Errorf("move to file: can't parse msgIndex from params: %w", err)
-		}
-		msgIndices = append(msgIndices, msgIndex)
-	}
+	msgHashes := strings.Split(params[2], ",")
 
 	var toDir string
 	if toDirHash == "" {
@@ -2173,7 +2118,7 @@ func (b *Bot) moveToExistingNote(params []string) error {
 		b.db.SetRecentCommandParams([]string{fs.ShortHash(toFilename), fs.ShortHash(toDir)})
 
 		return nil
-	}, false, msgIndices...)
+	}, false, msgHashes...)
 	if err != nil {
 		return fmt.Errorf("move to existing note: can't read content from chat: %w", err)
 	}
@@ -2187,15 +2132,7 @@ func (b *Bot) moveToExistingNote(params []string) error {
 }
 
 func (b *Bot) moveToDirChecklist(params []string) error {
-	msgIndicesStr := strings.Split(params[0], ",")
-	var msgIndices []int
-	for _, msgIndexStr := range msgIndicesStr {
-		msgIndex, err := strconv.Atoi(msgIndexStr)
-		if err != nil {
-			return fmt.Errorf("move to file: can't parse msgIndex from params: %w", err)
-		}
-		msgIndices = append(msgIndices, msgIndex)
-	}
+	msgHashes := strings.Split(params[0], ",")
 	checklistDirHash := params[1]
 
 	checklistDir, err := b.fs.Unhash(fs.DirUserRoot, checklistDirHash)
@@ -2232,7 +2169,7 @@ func (b *Bot) moveToDirChecklist(params []string) error {
 		}
 
 		return nil
-	}, false, msgIndices...)
+	}, false, msgHashes...)
 	if err != nil {
 		return fmt.Errorf("move to checklistDir: can't read content from chat: %w", err)
 	}
@@ -2259,10 +2196,7 @@ func (b *Bot) moveToShop(params []string) error {
 }
 
 func (b *Bot) moveToNewFile(params []string) error {
-	msgIndex, err := strconv.Atoi(params[0])
-	if err != nil {
-		return fmt.Errorf("move to new file: can't parse hash or index from params: %w", err)
-	}
+	msgHash := params[0]
 	newFilenameFromUserInput := fs.Filename(params[1])
 
 	//filename, err := b.fs.Unhash(fs.DirUserRoot, msgIndex)
@@ -2275,7 +2209,7 @@ func (b *Bot) moveToNewFile(params []string) error {
 	//if err != nil {
 	//	return fmt.Errorf("move to new file: can't read file '%s': %w", filename, err)
 	//}
-	err = b.moveFromInbox(func(content string, t time.Time) error {
+	err := b.moveFromInbox(func(content string, t time.Time) error {
 		content = strings.TrimSpace(content)
 		//if len(content) == 0 {
 		//	content = fs.DisplayName(filename)
@@ -2300,7 +2234,7 @@ func (b *Bot) moveToNewFile(params []string) error {
 
 		// TODO add if exists
 		return b.fs.Write(fs.DirUserRoot, newFilenameFromUserInput, content)
-	}, false, msgIndex)
+	}, false, msgHash)
 	if err != nil {
 		return fmt.Errorf("move to new file: can't read content from chat: %w", err)
 	}
@@ -2312,7 +2246,7 @@ func (b *Bot) moveToNewFile(params []string) error {
 }
 
 func (b *Bot) moveToNewChecklist(params []string) error {
-	msgIndexStr := params[0]
+	msgHash := params[0]
 
 	supposedName := params[1]
 	supposedName = fs.SanitizeFilename(supposedName)
@@ -2327,23 +2261,16 @@ func (b *Bot) moveToNewChecklist(params []string) error {
 		err = b.fs.MakeDir(dir)
 	}
 
-	return b.moveToDir([]string{dir, msgIndexStr})
+	return b.moveToDir([]string{dir, msgHash})
 }
 
 func (b *Bot) moveToJournal(params []string) error {
-	var msgIndicies []int
-	for _, indexStr := range params {
-		index, err := strconv.Atoi(indexStr)
-		if err != nil {
-			return fmt.Errorf("move to journal: can't convert index '%s' to int: %w", indexStr, err)
-		}
-		msgIndicies = append(msgIndicies, index)
-	}
+	msgHashes := params
 
 	err := b.moveFromInbox(func(content string, t time.Time) error {
 		// TODO take into account time from chat
 		return journal.AddRecord(b.fs, content, b.cfg.Timezone())
-	}, false, msgIndicies...)
+	}, false, msgHashes...)
 	if err != nil {
 		return fmt.Errorf("failed to move to journal: can't add record: %w", err)
 	}
@@ -2368,12 +2295,12 @@ func (b *Bot) addToJournalAndContinue(params []string) error {
 	}
 
 	// Don't return - continue to save to inbox as well.
-	msgIndex, err := b.saveToInbox(content, b.cfg.Timezone())
+	msgHash, err := b.saveToInbox(content, b.cfg.Timezone())
 	if err != nil {
 		return fmt.Errorf("save to inbox: %w", err)
 	}
 
-	return b.showMoveTo([]string{strconv.Itoa(msgIndex)})
+	return b.showMoveTo([]string{msgHash})
 }
 
 func (b *Bot) addToJournalFromShortcut(params []string) error {
@@ -2435,9 +2362,9 @@ func (b *Bot) addToRecentFileOrNoteFromShortcut(params []string) error {
 }
 
 func (b *Bot) moveToLater(params []string) error {
-	msgIndexStr := params[0]
+	msgHash := params[0]
 
-	return b.moveToChecklist([]string{fs.LaterFilename, msgIndexStr})
+	return b.moveToChecklist([]string{fs.LaterFilename, msgHash})
 }
 
 func (b *Bot) complete(params []string) error {
@@ -2469,10 +2396,7 @@ func (b *Bot) complete(params []string) error {
 // in place. `- [ ]` ↔ `- [x]`. Legacy entries without a prefix are upgraded to
 // `- [x]`. The entry stays in the file; it is no longer archived.
 func (b *Bot) completeFromChat(params []string) error {
-	msgIndex, err := strconv.Atoi(params[0])
-	if err != nil {
-		return fmt.Errorf("complete: can't parse msgIndex from params: %w", err)
-	}
+	msgHash := params[0]
 
 	key, err := b.fs.SafePath(fs.DirUserRoot, "")
 	if err != nil {
@@ -2487,32 +2411,20 @@ func (b *Bot) completeFromChat(params []string) error {
 		return fmt.Errorf("complete: can't read inbox: %w", err)
 	}
 
-	blocks := readBlocks(content)
-	headerRegex := regexp.MustCompile(`^#### `)
-	msgBlockIdx, msgCount := -1, 0
-	for i, block := range blocks {
-		if headerRegex.MatchString(block) {
-			continue
-		}
-		if msgCount == msgIndex {
-			msgBlockIdx = i
-			break
-		}
-		msgCount++
-	}
-	if msgBlockIdx == -1 {
-		return fmt.Errorf("complete: msgIndex %d out of bounds", msgIndex)
+	blockIdx, block, ok := findInboxBlockByHash(content, msgHash)
+	if !ok {
+		return fmt.Errorf("complete: msgHash %q not found in inbox", msgHash)
 	}
 
-	block := blocks[msgBlockIdx]
+	blocks := readBlocks(content)
 	switch {
 	case strings.HasPrefix(block, "- [ ] "):
-		blocks[msgBlockIdx] = "- [x] " + block[6:]
+		blocks[blockIdx] = "- [x] " + block[6:]
 	case strings.HasPrefix(block, "- [x] "), strings.HasPrefix(block, "- [X] "):
-		blocks[msgBlockIdx] = "- [ ] " + block[6:]
+		blocks[blockIdx] = "- [ ] " + block[6:]
 	default:
 		// Legacy entry without a task prefix — upgrade to completed form.
-		blocks[msgBlockIdx] = "- [x] " + block
+		blocks[blockIdx] = "- [x] " + block
 	}
 
 	newContent := strings.TrimSpace(strings.Join(blocks, "\n"))
@@ -2597,10 +2509,7 @@ func (b *Bot) showChecklistItem(params []string) error {
 }
 
 func (b *Bot) schedule(params []string) error {
-	msgIndex, err := strconv.Atoi(params[0])
-	if err != nil {
-		return fmt.Errorf("schedule: can't parse msgIndex from params: %w", err)
-	}
+	msgHash := params[0]
 	timeStr := params[1]
 	cron := params[2]
 
@@ -2609,7 +2518,7 @@ func (b *Bot) schedule(params []string) error {
 		return fmt.Errorf("schedule: can't parse timestamp: %w", err)
 	}
 
-	item, err := b.addToChecklist(fs.LaterFilename, msgIndex)
+	item, err := b.addToChecklist(fs.LaterFilename, msgHash)
 	if err != nil {
 		return fmt.Errorf("schedule: can't move to later: %w", err)
 	}
@@ -2706,11 +2615,7 @@ func (b *Bot) toADayKeyboard(filenameHash string) (*tg.Keyboard, error) {
 }
 
 func (b *Bot) showMoveToFileOrDir(params []string) error {
-	msgIndexStr := params[0]
-	msgIndex, err := strconv.Atoi(msgIndexStr)
-	if err != nil {
-		return fmt.Errorf("to file dialog: can't parse index from params: %w", err)
-	}
+	msgHash := params[0]
 	maxRecentBtns := maxGroupedBtnsInMoveTo
 
 	userWantedAllBtns := len(params) > 1
@@ -2725,7 +2630,7 @@ func (b *Bot) showMoveToFileOrDir(params []string) error {
 	skippedBtns := false
 
 	//fileBtns, err := b.moveToFileBtns(fs.ShortHash(filename))
-	fileBtns, err := b.moveToFileBtns(msgIndex)
+	fileBtns, err := b.moveToFileBtns(msgHash)
 	if err != nil {
 		return fmt.Errorf("to file dialog: %w", err)
 	}
@@ -2742,7 +2647,7 @@ func (b *Bot) showMoveToFileOrDir(params []string) error {
 		kb.AddRow(row)
 	}
 
-	dirBtns, err := b.moveToDirBtns(msgIndex)
+	dirBtns, err := b.moveToDirBtns(msgHash)
 	if err != nil {
 		return fmt.Errorf("to file dialog: %w", err)
 	}
@@ -2756,7 +2661,7 @@ func (b *Bot) showMoveToFileOrDir(params []string) error {
 		// Free up space for the new dir button
 		dirBtns = dirBtns[:len(fileBtns)-1]
 	}
-	btn := tg.NewBtn("🗂 New Dir", tg.NewCmd(CmdRequestNewDir, []string{msgIndexStr}))
+	btn := tg.NewBtn("🗂 New Dir", tg.NewCmd(CmdRequestNewDir, []string{msgHash}))
 	dirBtns = append(dirBtns, btn)
 
 	//shouldAddSeparator := len(fileBtns) > 0
@@ -2770,10 +2675,10 @@ func (b *Bot) showMoveToFileOrDir(params []string) error {
 	}
 
 	if skippedBtns {
-		kb.AddRow(tg.NewBtn(i18n.Tr("More..."), tg.NewCmd(CmdShowMoveToDirOrFile, []string{msgIndexStr, "full"})))
+		kb.AddRow(tg.NewBtn(i18n.Tr("More..."), tg.NewCmd(CmdShowMoveToDirOrFile, []string{msgHash, "full"})))
 	}
 
-	b.db.SetInputExpectation(tg.NewCmd(CmdMoveToNewFile, []string{msgIndexStr, "%s"}))
+	b.db.SetInputExpectation(tg.NewCmd(CmdMoveToNewFile, []string{msgHash, "%s"}))
 
 	err = b.showHTML("📄 Select a file or enter a new name:", kb)
 	if err != nil {
@@ -2801,7 +2706,7 @@ func (b *Bot) showToChecklist(params []string) error {
 	return nil
 }
 
-func (b *Bot) moveToFileBtns(msgIndex int) ([]tg.Btn, error) {
+func (b *Bot) moveToFileBtns(msgHash string) ([]tg.Btn, error) {
 	files, err := b.fs.FilesAndDirs(fs.DirUserRoot)
 	if err != nil {
 		return nil, fmt.Errorf("to doc keyboard: %w", err)
@@ -2815,7 +2720,7 @@ func (b *Bot) moveToFileBtns(msgIndex int) ([]tg.Btn, error) {
 	var buttons []tg.Btn
 	newBtn := func(title, existingFilenameHash string) tg.Btn {
 		title = fmt.Sprintf("%s", title)
-		params := []string{existingFilenameHash, strconv.Itoa(msgIndex)}
+		params := []string{existingFilenameHash, msgHash}
 		return tg.NewBtn(title, tg.NewCmd(CmdMoveToExistingFile, params))
 	}
 	for _, file := range files {
@@ -2825,10 +2730,10 @@ func (b *Bot) moveToFileBtns(msgIndex int) ([]tg.Btn, error) {
 	return buttons, nil
 }
 
-func (b *Bot) moveToDirBtns(msgIndex int) ([]tg.Btn, error) {
+func (b *Bot) moveToDirBtns(msgHash string) ([]tg.Btn, error) {
 	newBtn := func(dir string) tg.Btn {
 		emojifiedDir := fmt.Sprintf("%s %s", i18n.Emoji("dir"), txt.Ucfirst(dir))
-		return tg.NewBtn(emojifiedDir, tg.NewCmd(CmdMoveToExistingDir, []string{fs.ShortHash(dir), strconv.Itoa(msgIndex)}))
+		return tg.NewBtn(emojifiedDir, tg.NewCmd(CmdMoveToExistingDir, []string{fs.ShortHash(dir), msgHash}))
 	}
 
 	dirs, err := b.fs.FilesAndDirs(fs.DirUserRoot)

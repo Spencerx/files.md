@@ -26,8 +26,8 @@ import (
 )
 
 var (
-	firstMsgIndicies sync.Map
-	firstMsgTimes    sync.Map
+	firstMsgHashes sync.Map
+	firstMsgTimes  sync.Map
 )
 
 func firstMsgTime(userID int64) (int, bool) {
@@ -43,16 +43,19 @@ func setFirstMsgTime(userID int64, time int) {
 	firstMsgTimes.Store(userID, time)
 }
 
-func firstMsgIndex(userID int64) (int, bool) {
-	msg, ok := firstMsgIndicies.Load(userID)
+func firstMsgHash(userID int64) (string, bool) {
+	msg, ok := firstMsgHashes.Load(userID)
 	if !ok {
-		return 0, false
+		return "", false
 	}
 
-	return msg.(int), true
+	return msg.(string), true
 }
 
-func setFirstMsgIndex(userID int64, msgIndex int, time int) {
+// setFirstMsgHash records the hash of the first entry in a forward batch.
+// If a batch is already active (within 1-second distance) this is a no-op —
+// only the first message's identity is tracked.
+func setFirstMsgHash(userID int64, msgHash string, time int) {
 	firstTime, ok := firstMsgTime(userID)
 	if ok {
 		diff := time - firstTime
@@ -62,20 +65,20 @@ func setFirstMsgIndex(userID int64, msgIndex int, time int) {
 		}
 	}
 
-	firstMsgIndicies.Store(userID, msgIndex)
+	firstMsgHashes.Store(userID, msgHash)
 }
 
-func collapseToMsg(userID int64, time int) (int, bool) {
+func collapseToMsg(userID int64, time int) (string, bool) {
 	firstTime, ok := firstMsgTime(userID)
 	if !ok {
-		return 0, false
+		return "", false
 	}
 
 	diff := time - firstTime
 	// Sent in exactly same second or second after
 	if diff == 0 || diff == 1 {
-		return firstMsgIndex(userID)
+		return firstMsgHash(userID)
 	}
 
-	return 0, false
+	return "", false
 }

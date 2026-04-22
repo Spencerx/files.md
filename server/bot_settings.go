@@ -2,7 +2,6 @@ package internal
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/zakirullin/files.md/server/config"
 	"github.com/zakirullin/files.md/server/i18n"
@@ -296,7 +295,7 @@ func (b *Bot) delFromMoveToBtns(params []string) error {
 	return b.showMoveToBtnsSettings([]string{})
 }
 
-func (b *Bot) moveToBtns(msgIndex int) []tg.Btn {
+func (b *Bot) moveToBtns(msgHash string) []tg.Btn {
 	moveToBtns := tg.NewRow()
 
 	cmds, err := b.cfg.MoveToCmds()
@@ -307,7 +306,7 @@ func (b *Bot) moveToBtns(msgIndex int) []tg.Btn {
 	for _, cmd := range cmds {
 		for _, btn := range AvailableMoveToBtns {
 			if btn.Cmd.Name == cmd {
-				btn.Cmd.Params = []string{strconv.Itoa(msgIndex)}
+				btn.Cmd.Params = []string{msgHash}
 				moveToBtns = append(moveToBtns, btn)
 				break
 			}
