@@ -95,7 +95,8 @@ That's all you need to take notes.
 My friends and I have been using this setup for five years and it works well.  
 
 Telegram bot: [@FilesMDBot](https://t.me/FilesMDBot) (other messengers will follow).  
-There's a chat window in the web app as well, so you can reuse the same flow.  
+
+You can use do the same in the web app, open `Today` section.  
 
 ## Knowledge vs Experience
 If your goal is to:
@@ -142,7 +143,8 @@ The only thing that matters is your calmness.
 **We reuse same well-familiar messaging pattern is reused for everything.**     
 
 ## Tasks ✅
-You're in the flow. A colleague comes in and asks you to send the report.  
+You're in the flow.  
+A colleague comes in and asks you to send the report.  
 You don't hold this task in your head, it takes energy.
 You drop a message and continue being in the flow.  
 
@@ -154,15 +156,15 @@ No energy is spent, no flow is interrupted.
 Your to-do list shouldn't create a feeling of guilt, it should instead free your mind.   
 
 ## Journaling 💚
-Drop a message.  
+Are you feeling good about something? Send a message.  
 Hover over a bubble and press "To Journal".  
 
 <div align="center">
     <img src="https://github.com/zakirullin/files.md/raw/main/docs/img/journal.png" title="Journaling" width="450"/>
 </div>
 
-Or just use "jj" or "жж" at the end of your message.  
-Your record is gonna be saved nicely at `journal/Year Month.md`.  
+Or just use ` jj` or ` жж` at the end of your message.   
+Your record is gonna be saved nicely at `journal/Year Month.md` file.    
 
 ## Checklists 🛒
 A good friend of yours recommends you a book.  
