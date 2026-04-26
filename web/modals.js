@@ -257,9 +257,9 @@ class SearchModal {
         const list = document.getElementById('search-results');
         list.innerHTML = '';
 
-        // When moving an inbox message, prepend dir entries (dirs first, then
-        // files). Click a dir → message becomes a new file inside it.
-        // Click a file → message is appended to it.
+        // First dirs then files.
+        // We can either move message to a dir (creating new file).
+        // Or to an existing file, prepending text to a file.
         let dirCount = 0;
         if (this.selectedMsgText !== null) {
             const searchVal = (document.getElementById('search-input').value || '').toLowerCase();
