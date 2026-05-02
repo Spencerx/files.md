@@ -1584,7 +1584,6 @@ func TestShowMoveFromTodayAndInbox(t *testing.T) {
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
-	r.NoError(userFS.Write(fs.DirUserRoot, fs.TodayFilename, "- [ ] Today task"))
 	r.NoError(userFS.Write(
 		fs.DirUserRoot, fs.InboxFilename,
 		"#### 29 June, Sunday\n- [ ] `09:00` Inbox body\n- [x] `09:05` Completed body\n",
@@ -1597,7 +1596,6 @@ func TestShowMoveFromTodayAndInbox(t *testing.T) {
 
 	inboxHash := inboxMsgHash(t, userFS, 0)
 	r.Equal(tg.NewKeyboard([]tg.Row{
-		tg.NewBtn("✅ Today task", tg.NewCmd("s_move_t", []string{fs.Hash("Today task")})),
 		tg.NewBtn("💬 Inbox body", tg.NewCmd("s_move", []string{inboxHash})),
 		tg.NewRow(
 			tg.NewBtn("Rename", tg.NewCmd("rename", []string{})),

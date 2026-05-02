@@ -1351,20 +1351,6 @@ func (b *Bot) showPostpone(_ []string) error {
 func (b *Bot) showMoveFromTodayAndInbox(_ []string) error {
 	var kb tg.Keyboard
 
-	// Show tasks from Today.md
-	todayMD, err := b.fs.Read(fs.DirUserRoot, fs.TodayFilename)
-	if err == nil {
-		tasks := txt.IncompleteChecklistItems(todayMD)
-		for _, task := range tasks {
-			title := strings.SplitN(task, "\n", 2)[0]
-			if len([]rune(title)) > maxHeaderLengthForMobile {
-				title = string([]rune(title)[:maxHeaderLengthForMobile]) + "…"
-			}
-			cmd := tg.NewCmd(CmdShowMoveToFromToday, []string{fs.Hash(task)})
-			kb.AddRow(tg.NewBtn("✅ "+title, cmd))
-		}
-	}
-
 	// Show inbox items
 	inboxContent, err := b.fs.Read(fs.DirUserRoot, fs.InboxFilename)
 	if err == nil {
