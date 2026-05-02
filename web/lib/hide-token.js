@@ -88,6 +88,10 @@
                 _this.update();
             };
             this.update = core_1.debounce(function () { return _this.updateImmediately(); }, 100);
+            // PATCHED, run hide-token synchronously with text edits so word/line
+            // deletions and mouse cuts don't leave revealed tokens visible during
+            // the 100ms cursor-activity debounce window (visible jitter).
+            this.changesHandler = function () { _this.updateImmediately(); };
             /** Current user's selections, in each line */
             this._rangesInLine = {};
             // PATCHED, skip cursor over always-hidden linkHref spans.
@@ -130,6 +134,7 @@
                     cm.on("cursorActivity", _this.cursorActivityHandler);
                     cm.on("renderLine", _this.renderLineHandler);
                     cm.on("update", _this.update);
+                    cm.on("changes", _this.changesHandler);
                     cm.on("keydown", _this._skipLinkHref);
                     _this.update();
                     cm.refresh();
@@ -138,6 +143,7 @@
                     cm.off("cursorActivity", _this.cursorActivityHandler);
                     cm.off("renderLine", _this.renderLineHandler);
                     cm.off("update", _this.update);
+                    cm.off("changes", _this.changesHandler);
                     cm.off("keydown", _this._skipLinkHref);
                     _this.update.stop();
                     cm.refresh();
