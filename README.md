@@ -49,14 +49,14 @@ Open a folder to store your files locally.
 
 ## Telegram bot 
 1) Open [@FilesMDBot](https://t.me/FilesMDBot)
-2) Execute `/app` command
-3) Open link in your Chrome browser
+2) Execute the `/app` command
+3) Open the link in your Chrome browser
 4) Done! The app and the bot are synchronized now 
 
 ## Are there enough features and plugins?
 Enough to do the real work.  
 
-1) I used `files.md` to grow my knowledge about brain and software development
+1) I used [files.md](https://files.md) to grow my knowledge about brain and software development
 2) I added new notes to either `brain` or `dev` folders. One idea per note
 3) I made connections between the notes. Everything is connected, just as in our brain
 4) **I spent time travelling through the notes and thinking it through**
