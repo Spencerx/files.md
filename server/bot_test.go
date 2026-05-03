@@ -325,7 +325,7 @@ func TestShowEmptyTodayList(t *testing.T) {
 
 	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("today", nil)))
 	r.NoError(err)
-	r.Equal("🌴 You don't have any tasks!", tgram.LastSentText)
+	r.Equal("🌴 It's empty, send me something!", tgram.LastSentText)
 }
 
 func TestSaveFromTextMsgWithUnicodeCharacters(t *testing.T) {
@@ -3139,7 +3139,7 @@ func TestSaveToNewDirFull(t *testing.T) {
 	err = bot.Reply(tg.NewUpd(-1, "My dir"))
 	r.NoError(err)
 
-	r.Equal("🌴 You don't have any tasks!", tgram.LastSentText)
+	r.Equal("🌴 It's empty, send me something!", tgram.LastSentText)
 
 	content, err := userFS.Read("my dir", "Text.md")
 	r.NoError(err)
@@ -3225,7 +3225,7 @@ func TestSaveToNewDir(t *testing.T) {
 	err = bot.Reply(tg.NewUpd(-1, "My dir"))
 	r.NoError(err)
 
-	r.Equal("🌴 You don't have any tasks!", tgram.LastSentText)
+	r.Equal("🌴 It's empty, send me something!", tgram.LastSentText)
 
 	content, err := userFS.Read("my dir", "Text.md")
 	r.NoError(err)
@@ -4495,7 +4495,7 @@ func TestShowToday_NormalMode(t *testing.T) {
 	r.NoError(err)
 
 	// Should show empty today list
-	r.Equal("🌴 You don't have any tasks!", tgram.LastSentText)
+	r.Equal("🌴 It's empty, send me something!", tgram.LastSentText)
 }
 
 func TestShowToday_NormalModeWithTasks(t *testing.T) {

@@ -230,7 +230,7 @@ You don't have to think about the structure, it is predefined.
 - Projects: `My project.md` (`/*.md`, files in the root directory) - projects, important notes
 - Checklists: `Read.md`, `Watch.md`, `Shop.md` - built-in checklists
 - Journal: `journal/2024.08 August.md` (`journal/<YYYY>.<MM> <Month>.md`)
-- Unsorted: `Today.md` - incoming messages, today's tasks, append-only chat log
+- Today: `Today.md` - incoming messages, today's tasks, append-only chat log
 - Tasks: `Later.md` - checklist-based task lists
 - Habits: `habits/Ate consciously.md` (`habits/*.md`)
 - Media: `media/*` - images (png, jpg, webp, gif)

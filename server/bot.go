@@ -1159,7 +1159,7 @@ func (b *Bot) todayLabel(msgsCount ...int) string {
 	}
 
 	if tasksCount == 0 {
-		return statusBar + i18n.Tr("You don't have any tasks!")
+		return statusBar + i18n.Tr("It's empty, send me something!")
 	}
 
 	return statusBar + fmt.Sprintf(i18n.Tr("<b>%d</b> left%s"), tasksCount, wideSpacer)
