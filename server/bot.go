@@ -1675,7 +1675,7 @@ func (b *Bot) showStart(params []string) error {
 		}
 	}
 
-	return b.showHTML("Welcome! 👋\n\nSend me anything, and I’ll save it to files!\n\nBy default <code>Full Mode</code> is enabled, which can feel a bit overwhelming. You can switch to <b>notes only</b> or <b>tasks only</b> mode in /settings menu.", nil)
+	return b.showHTML("Welcome! 👋\n\nSend me anything, and I’ll save it to files!\n\nBy default <b>Full Mode</b> is enabled, which can feel a bit overwhelming. You can switch to <b>Notes Only</b> or <b>Tasks Only</b> mode in /settings menu.", nil)
 }
 
 func (b *Bot) moveToDirFromToday(params []string) error {
@@ -2681,11 +2681,10 @@ func (b *Bot) openInApp(_ []string) error {
 	return b.showHTML(i18n.Tr("🔗 Here's your <b>one-time</b> link! <b>Desktop-only</b> for now."), kb)
 }
 
-// TODO release add help
 func (b *Bot) showHelp(_ []string) error {
 	kb := tg.NewKeyboard([]tg.Row{tg.NewBtn(i18n.StrToday, tg.NewCmd(CmdShowToday, nil))})
 
-	return b.showHTML("Not yet implemented 🏗!", kb)
+	return b.showHTML("Refer to files.md for help!", kb)
 }
 
 func (b *Bot) download(_ []string) error {

@@ -11,7 +11,7 @@ All files are plain Markdown (.md) stored locally.
 │   └── *.md              # e.g. brain/Memory.md
 ├── *.md                  # Projects, important notes, index notes
 │
-├── Today.md              # Incoming messages, Today's tasks, append-only log
+├── Today.md              # Incoming messages, today's tasks, append-only log
 ├── Later.md              # Postponed tasks (checklist format)
 ├── Read.md               # Reading list (checklist)
 ├── Watch.md              # Watch list (checklist)
