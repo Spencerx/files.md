@@ -2753,9 +2753,6 @@ func (b *Bot) setFullMode(_ []string) error {
 	}
 
 	moveToCmds := []string{
-		CmdScheduleForTmrw,
-		CmdMoveToLater,
-		CmdShowScheduleForDay,
 		CmdShowMoveToDirOrFile,
 		CmdMoveToRead,
 		CmdMoveToShop,
