@@ -36,14 +36,14 @@ func inboxMsgHash(t *testing.T, userFS *fs.FS, nth int) string {
 	if err != nil {
 		return "nohash"
 	}
-	blocks := readBlocks(content)
+	blocks := readChatMsgs(content)
 	i := 0
 	for _, block := range blocks {
 		if strings.HasPrefix(block, "#### ") {
 			continue
 		}
 		if i == nth {
-			return todayBlockHash(block)
+			return chatBlockHash(block)
 		}
 		i++
 	}
@@ -656,7 +656,7 @@ func TestAddTaskToLater(t *testing.T) {
 
 	tgram := tg.NewFakeTG()
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	r.NoError(bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv_later", []string{todayBlockHash("- [ ] First task")}))))
+	r.NoError(bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv_later", []string{chatBlockHash("- [ ] First task")}))))
 
 	todayMD, err := userFS.Read(fs.DirUserRoot, fs.ChatFilename)
 	r.NoError(err)
@@ -682,7 +682,7 @@ func completeTask(t *testing.T, initial, hashed string) string {
 	r.NoError(userFS.Write("/", "Chat.md", initial))
 
 	bot := NewBot(-1, tg.NewFakeTG(), userFS, db.NewFakeDB(), fakeConfig())
-	r.NoError(bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("c", []string{todayBlockHash(hashed)}))))
+	r.NoError(bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("c", []string{chatBlockHash(hashed)}))))
 
 	got, err := userFS.Read("/", "Chat.md")
 	r.NoError(err)
@@ -743,7 +743,7 @@ func TestCompleteTask_Pomodoro_AddsSchedule(t *testing.T) {
 
 	pomodoroBlock := "- [ ] " + fs.PomodoroTask
 	before := time.Now().Unix()
-	r.NoError(bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("c", []string{todayBlockHash(pomodoroBlock)}))))
+	r.NoError(bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("c", []string{chatBlockHash(pomodoroBlock)}))))
 	after := time.Now().Unix()
 
 	todayMD, err := userFS.Read("/", fs.ChatFilename)
@@ -770,7 +770,7 @@ func TestCompleteTask_NonPomodoro_DoesNotSchedule(t *testing.T) {
 	cfg := fakeConfig()
 	bot := NewBot(-1, tg.NewFakeTG(), userFS, db.NewFakeDB(), cfg)
 
-	r.NoError(bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("c", []string{todayBlockHash("- [ ] Regular task")}))))
+	r.NoError(bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("c", []string{chatBlockHash("- [ ] Regular task")}))))
 
 	schedules, err := cfg.Schedules()
 	r.NoError(err)
@@ -908,7 +908,7 @@ func TestTodayMultilineTaskShownAsLong(t *testing.T) {
 	hash := inboxMsgHash(t, userFS, 0)
 	r.Equal("<b>1</b> item"+wideSpacer, tgram.LastSentText)
 	r.Equal(tg.NewKeyboard([]tg.Row{
-		tg.NewBtn("👀 First task", tg.NewCmd(CmdShowLongItemFromToday, []string{hash})),
+		tg.NewBtn("👀 First task", tg.NewCmd(CmdShowLongItem, []string{hash})),
 	}), tgram.LastSentKeyboard)
 }
 
@@ -944,7 +944,7 @@ func TestTodayMixedSingleAndMultilineTasks(t *testing.T) {
 	r.Equal("<b>2</b> items"+wideSpacer, tgram.LastSentText)
 	r.Equal(tg.NewKeyboard([]tg.Row{
 		tg.NewBtn("First task", tg.NewCmd(CmdComplete, []string{first})),
-		tg.NewBtn("👀 Second task", tg.NewCmd(CmdShowLongItemFromToday, []string{second})),
+		tg.NewBtn("👀 Second task", tg.NewCmd(CmdShowLongItem, []string{second})),
 	}), tgram.LastSentKeyboard)
 }
 
@@ -1738,37 +1738,6 @@ func TestShowMoveTo(t *testing.T) {
 	r.Equal(kb, tgram.LastSentKeyboard)
 }
 
-func TestShowMoveFromTodayAndInbox(t *testing.T) {
-	r := require.New(t)
-
-	savedNow := now
-	defer func() { now = savedNow }()
-	now = func() time.Time {
-		return time.Date(2025, 6, 29, 9, 0, 0, 0, time.UTC)
-	}
-
-	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
-	r.NoError(err)
-	r.NoError(userFS.Write(
-		fs.DirUserRoot, fs.ChatFilename,
-		"#### 29 June, Sunday\n- [ ] `09:00` Inbox body\n- [x] `09:05` Completed body\n",
-	))
-
-	tgram := tg.NewFakeTG()
-	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("move", nil)))
-	r.NoError(err)
-
-	inboxHash := inboxMsgHash(t, userFS, 0)
-	r.Equal(tg.NewKeyboard([]tg.Row{
-		tg.NewBtn("💬 Inbox body", tg.NewCmd("s_move", []string{inboxHash})),
-		tg.NewRow(
-			tg.NewBtn("Rename", tg.NewCmd("rename", []string{})),
-			tg.NewBtn("OK", tg.NewCmd("home", []string{})),
-		),
-	}), tgram.LastSentKeyboard)
-}
-
 func TestMoveFromTodayAndInbox_ToLater(t *testing.T) {
 	r := require.New(t)
 
@@ -1991,7 +1960,7 @@ func TestForwardCollapse_HashStableAcrossContinuations(t *testing.T) {
 	// The keyboard on msg 1 still carries msgHash1. After the collapsed append,
 	// moveFromInbox must still resolve it to the first block.
 	var gotContent string
-	err = bot.moveFromToday(func(content string, _ time.Time) error {
+	err = bot.moveFromChat(func(content string, _ time.Time) error {
 		gotContent = content
 		return nil
 	}, false, msgHash1)
@@ -4672,7 +4641,7 @@ func TestShowToday_InboxMixedFormat(t *testing.T) {
 
 	firstBtn, ok := tgram.LastSentKeyboard.Btns[0].(tg.Btn)
 	r.True(ok)
-	r.Equal(tg.Cmd{Name: CmdComplete, Params: []string{todayBlockHash("- [ ] Plain msg")}, Type: "cmd"}, firstBtn.Cmd)
+	r.Equal(tg.Cmd{Name: CmdComplete, Params: []string{chatBlockHash("- [ ] Plain msg")}, Type: "cmd"}, firstBtn.Cmd)
 	r.Contains(firstBtn.Name, "Plain msg")
 
 	secondBtn, ok := tgram.LastSentKeyboard.Btns[1].(tg.Btn)
@@ -4680,7 +4649,7 @@ func TestShowToday_InboxMixedFormat(t *testing.T) {
 	// The completed `- [x] `09:10` Done msg` entry is hidden, but the
 	// remaining unchecked entry keeps its own stable hash (unchanged by
 	// completion-toggle behaviour).
-	r.Equal(tg.Cmd{Name: CmdComplete, Params: []string{todayBlockHash("- [ ] `09:05` New msg")}, Type: "cmd"}, secondBtn.Cmd)
+	r.Equal(tg.Cmd{Name: CmdComplete, Params: []string{chatBlockHash("- [ ] `09:05` New msg")}, Type: "cmd"}, secondBtn.Cmd)
 	r.Contains(secondBtn.Name, "New msg")
 }
 

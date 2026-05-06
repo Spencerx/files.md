@@ -30,7 +30,7 @@ func stripInboxEntryPrefix(block string) string {
 	return inboxEntryPrefix.ReplaceAllString(block, "")
 }
 
-// todayBlockHash returns a stable identifier for an inbox block. We hash only
+// chatBlockHash returns a stable identifier for an inbox block. We hash only
 // the timestamped first line (after stripping the `- [ ]`/`- [x] ` marker)
 // so the identifier survives two mutations the bot makes to a block:
 //   - completion toggle `- [ ]` ↔ `- [x]`
@@ -43,39 +43,39 @@ func stripInboxEntryPrefix(block string) string {
 // this rare in practice, and the outcome (acting on the older entry) is
 // harmless — it's still the user's own content with the same first line.
 // !!! TIME IS INCLUDED in the hash !!!
-func todayBlockHash(block string) string {
+func chatBlockHash(block string) string {
 	stripped := inboxMarkerPrefix.ReplaceAllString(block, "")
 	firstLine := strings.SplitN(stripped, "\n", 2)[0]
 	return fs.Hash(firstLine)
 }
 
-// findTodayBlockByHash returns (blockIndex, block, true) for the first
+// findChatMsgByHash returns (blockIndex, block, true) for the first
 // non-header block whose hash matches msgHash. Returns (-1, "", false) if no
 // match is found.
-func findTodayBlockByHash(content, msgHash string) (int, string, bool) {
-	blocks := readBlocks(content)
+func findChatMsgByHash(content, msgHash string) (int, string, bool) {
+	blocks := readChatMsgs(content)
 	for i, block := range blocks {
 		if inboxHeaderRegex.MatchString(block) {
 			continue
 		}
-		if todayBlockHash(block) == msgHash {
+		if chatBlockHash(block) == msgHash {
 			return i, block, true
 		}
 	}
 	return -1, "", false
 }
 
-// renameTodayBlock replaces the body of the block identified by msgHash with
+// renameChatMsg replaces the body of the block identified by msgHash with
 // newBody, preserving the `- [ ] `/`- [x] ` marker and the “ `HH:MM` “
 // timestamp. Returns the rewritten file content.
-func renameTodayBlock(content, msgHash, newBody string) (string, error) {
-	blocks := readBlocks(content)
+func renameChatMsg(content, msgHash, newBody string) (string, error) {
+	blocks := readChatMsgs(content)
 	idx := -1
 	for i, block := range blocks {
 		if inboxHeaderRegex.MatchString(block) {
 			continue
 		}
-		if todayBlockHash(block) == msgHash {
+		if chatBlockHash(block) == msgHash {
 			idx = i
 			break
 		}
@@ -91,8 +91,8 @@ func renameTodayBlock(content, msgHash, newBody string) (string, error) {
 	return strings.Join(blocks, "\n"), nil
 }
 
-// appendToToday writes a new entry to Inbox.md and returns its stable hash.
-func (b *Bot) appendToToday(content string, timezone *time.Location) (string, error) {
+// appendToChat writes a new entry to Inbox.md and returns its stable hash.
+func (b *Bot) appendToChat(content string, timezone *time.Location) (string, error) {
 	exists, err := b.fs.Exists(fs.DirUserRoot, fs.ChatFilename)
 	if err != nil {
 		return "", fmt.Errorf("appendToInbox: %w", err)
@@ -129,15 +129,15 @@ func (b *Bot) appendToToday(content string, timezone *time.Location) (string, er
 		return "", fmt.Errorf("appendToInbox: %w", err)
 	}
 
-	return todayBlockHash(newEntry), nil
+	return chatBlockHash(newEntry), nil
 }
 
-// moveFromToday passes the messages identified by msgHashes to the callback.
+// moveFromChat passes the messages identified by msgHashes to the callback.
 // On callback success, it removes those messages from the chat file.
-// A msgHash is the stable hash returned by todayBlockHash; it survives the
+// A msgHash is the stable hash returned by chatBlockHash; it survives the
 // `[ ]` ↔ `[x]` completion toggle.
 // On collapse=false the callback is called once per message.
-func (b *Bot) moveFromToday(
+func (b *Bot) moveFromChat(
 	callback func(content string, timestamp time.Time) error,
 	collapse bool,
 	msgHashes ...string,
@@ -156,7 +156,7 @@ func (b *Bot) moveFromToday(
 		return err
 	}
 
-	blocks := readBlocks(content)
+	blocks := readChatMsgs(content)
 
 	// Build hash -> block-index for every non-header block. Validate that all
 	// requested hashes resolve to real blocks.
@@ -167,7 +167,7 @@ func (b *Bot) moveFromToday(
 			continue
 		}
 		hasAnyMsg = true
-		hashToBlockIndex[todayBlockHash(block)] = i
+		hashToBlockIndex[chatBlockHash(block)] = i
 	}
 	if !hasAnyMsg {
 		return fmt.Errorf("no messages found")
@@ -281,9 +281,9 @@ func (b *Bot) moveFromToday(
 	return b.fs.Write(fs.DirUserRoot, fs.ChatFilename, modifiedContent)
 }
 
-// readBlocks parses content into logical blocks
+// readChatMsgs parses content into logical blocks
 // Returns slice where each element is either a header or a complete record
-func readBlocks(content string) []string {
+func readChatMsgs(content string) []string {
 	content = txt.NormNewLines(content)
 	lines := strings.Split(content, "\n")
 

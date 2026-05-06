@@ -3,7 +3,7 @@ package i18n
 // How many refs per every constant? Maybe we can leave literal constants
 const (
 	StrLater           = "⏳"
-	StrToday           = "🏠 Home"
+	StrHome            = "🏠 Home"
 	StrBack            = "⬅️ Back"
 	StrComplete        = "✅ Complete"
 	StrMoveToLaterLong = "⏳ Move to later"

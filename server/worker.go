@@ -139,7 +139,7 @@ func MoveDueTasks(
 			}
 
 			bot := NewBot(userID, telegram, userFS, db.NewDB(userID), userconf)
-			_, err := bot.appendToToday(schedule.Filename, userconf.Timezone())
+			_, err := bot.appendToChat(schedule.Filename, userconf.Timezone())
 			if err != nil {
 				slog.Error("schedule worker: can't append to inbox", "err", err)
 				continue
@@ -284,7 +284,7 @@ func RemoveCompletedChecklistItems(
 // string of the removed items formatted as `- [x] <inbox-content>` so the
 // journal/archive flow can reuse txt.ChecklistItems on it.
 func removeCompletedInboxEntries(md string) (string, string) {
-	blocks := readBlocks(md)
+	blocks := readChatMsgs(md)
 
 	doneMarker := regexp.MustCompile(`^- \[[xX]\] `)
 	tsRegex := regexp.MustCompile(`^(?:- \[[ xX]\] )?` + "`" + `\d{2}:\d{2}` + "`" + ` `)

@@ -131,7 +131,6 @@ const (
 	CmdShowFiles                       = "files"
 	CmdShowDirs                        = "dirs"
 	CmdShowPostpone                    = "postpone"
-	CmdShowMoveFromToday               = "move"
 	CmdShowMoveTo                      = "s_move"
 	CmdShowRename                      = "rename"
 	CmdShowRenameFile                  = "rename_file"
@@ -141,8 +140,8 @@ const (
 	CmdShowHelp                        = "help"
 	CmdComplete                        = "c"
 	CmdPostpone                        = "post"
-	CmdShowLongItem                    = "item"
-	CmdShowLongItemFromToday           = "item_t"
+	CmdShowLongItemFromChecklist       = "item"
+	CmdShowLongItem                    = "item_t"
 	CmdShowFile                        = "file"
 	CmdShowChecklist                   = "checklist"
 	CmdShowChecklistItem               = "check_show"
@@ -153,7 +152,6 @@ const (
 	CmdMoveToExistingDir               = "mv"
 	CmdMoveToChecklist                 = "add_item"
 	CmdCompleteChecklistItem           = "check_item"
-	CmdMoveToExistingDirFromToday      = "mv_t"
 	CmdRequestNewDir                   = "new_dir"
 	CmdMoveToNewDir                    = "mv_to_new_dir"
 	CmdMoveToExistingFile              = "mf"
@@ -337,7 +335,6 @@ func (b *Bot) handlers() map[string]func([]string) error {
 		CmdShowWatchChecklist: b.showWatch,
 		CmdShowShopChecklist:  b.showShop,
 		CmdShowSchedule:       b.showSchedule,
-		CmdShowMoveFromToday:  b.showMoveFromToday,
 		CmdShowSettings:       b.showSettings,
 		CmdShowTimezone:       b.showTimezone,
 		CmdSetTimezone:        b.setTimezone,
@@ -346,8 +343,8 @@ func (b *Bot) handlers() map[string]func([]string) error {
 		CmdDownload:           b.download,
 		// Button's commands (callbacks)
 		CmdShowRenameFile:                  b.showRenameFile,
+		CmdShowLongItemFromChecklist:       b.showLongItemFromChecklist,
 		CmdShowLongItem:                    b.showLongItem,
-		CmdShowLongItemFromToday:           b.showLongItemFromInbox,
 		CmdShowFile:                        b.showFile,
 		CmdShowChecklist:                   b.showChecklist,
 		CmdCompleteListItem:                b.completeListItem,
@@ -358,7 +355,6 @@ func (b *Bot) handlers() map[string]func([]string) error {
 		CmdMoveToExistingDir:               b.moveToDir,
 		CmdMoveToChecklist:                 b.moveToChecklist,
 		CmdCompleteChecklistItem:           b.completeChecklistItem,
-		CmdMoveToExistingDirFromToday:      b.moveToDirFromToday,
 		CmdRequestNewDir:                   b.requestNewDirName,
 		CmdMoveToNewDir:                    b.moveToNewDir,
 		CmdMoveToExistingFile:              b.moveToExistingFile,
@@ -500,7 +496,7 @@ func (b *Bot) saveFromTextMsg(u Update) error {
 		return b.addToRepliedFile(replyMsgID, msg)
 	}
 
-	msgHash, err := b.appendToToday(msg, b.cfg.Timezone())
+	msgHash, err := b.appendToChat(msg, b.cfg.Timezone())
 	if err != nil {
 		return fmt.Errorf("save to chat: %w", err)
 	}
@@ -548,7 +544,7 @@ func (b *Bot) saveFromImage(u Update) error {
 		return b.addToRepliedFile(replyMsgID, content)
 	}
 
-	msgHash, err := b.appendToToday(content, b.cfg.Timezone())
+	msgHash, err := b.appendToChat(content, b.cfg.Timezone())
 	if err != nil {
 		return fmt.Errorf("save from image: %w", err)
 	}
@@ -703,7 +699,7 @@ func (b *Bot) answerFileRequest(msg string) error {
 		b.db.DelInputExpectation()
 		msgHash := c.Params[0]
 
-		err := b.moveFromToday(func(content string, timestamp time.Time) error {
+		err := b.moveFromChat(func(content string, timestamp time.Time) error {
 			if dir == fs.DirUserRoot {
 				// We have a file
 				b.db.SetRecentCommand(CmdMoveToExistingFile)
@@ -1014,7 +1010,7 @@ func (b *Bot) ShowHome(_ []string) error {
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return fmt.Errorf("show today: can't read chat file: %w", err)
 	}
-	blocks := readBlocks(content)
+	blocks := readChatMsgs(content)
 	// Today entry: `- [ ] body` or `- [ ] `HH:MM` body` (timestamp optional).
 	inboxEntryRegex := regexp.MustCompile(`^- \[([ xX])\] (?:` + "`" + `\d{2}:\d{2}` + "` )?")
 	shownCount := 0
@@ -1031,7 +1027,7 @@ func (b *Bot) ShowHome(_ []string) error {
 		}
 		shownCount++
 
-		msgHash := todayBlockHash(block)
+		msgHash := chatBlockHash(block)
 
 		// Strip the matched prefix (optional checkbox + optional timestamp).
 		block = strings.TrimSpace(block[len(m[0]):])
@@ -1051,7 +1047,7 @@ func (b *Bot) ShowHome(_ []string) error {
 
 		isMultiline := len(parts) > 1
 		if len([]rune(title)) >= maxHeaderLengthForMobile || txt.HasImage(block) || isMultiline {
-			cmd := tg.NewCmd(CmdShowLongItemFromToday, []string{msgHash})
+			cmd := tg.NewCmd(CmdShowLongItem, []string{msgHash})
 			btn := tg.NewBtn(txt.Emoji(i18n.Emoji("eyes"), title), cmd)
 			kb.AddRow(btn)
 		} else {
@@ -1118,7 +1114,7 @@ func (b *Bot) showLaterTasks(_ []string) error {
 			kb.AddRow(btn)
 		}
 	}
-	kb.AddRow(tg.NewBtn(i18n.StrToday, tg.NewCmd(CmdShowHome, nil)))
+	kb.AddRow(tg.NewBtn(i18n.StrHome, tg.NewCmd(CmdShowHome, nil)))
 
 	msg := b.tr("⏳ Your tasks for <b>later</b>:")
 	err = b.showHTML(msg, &kb)
@@ -1217,7 +1213,7 @@ func (b *Bot) showFiles(_ []string) error {
 
 	footer := tg.NewRow(tg.NewBtn(i18n.Tr("🔎 Search"), inlineCmd))
 	if !b.cfg.NotesOnlyMode() {
-		footer = append(footer, tg.NewBtn(i18n.StrToday, tg.NewCmd(CmdShowHome, nil)))
+		footer = append(footer, tg.NewBtn(i18n.StrHome, tg.NewCmd(CmdShowHome, nil)))
 	}
 	kb.AddRow(footer)
 
@@ -1252,7 +1248,7 @@ func (b *Bot) showDirs(_ []string) error {
 	inlineCmd := tg.NewCustomCmd(CmdInlineQuerySearchEveryWhere, nil, tg.CmdTypeInlineQueryCurrentChat)
 	footer := tg.NewRow(tg.NewBtn(i18n.Tr("🔎 Search"), inlineCmd))
 	if !b.cfg.NotesOnlyMode() {
-		footer = append(footer, tg.NewBtn(i18n.StrToday, tg.NewCmd(CmdShowHome, nil)))
+		footer = append(footer, tg.NewBtn(i18n.StrHome, tg.NewCmd(CmdShowHome, nil)))
 	}
 	kb.AddRow(footer)
 
@@ -1294,7 +1290,7 @@ func (b *Bot) showPostpone(_ []string) error {
 	// Inbox items also show in /postpone so the user can send them to Later.md.
 	inboxMD, err := b.fs.Read(fs.DirUserRoot, fs.ChatFilename)
 	if err == nil {
-		for _, block := range readBlocks(inboxMD) {
+		for _, block := range readChatMsgs(inboxMD) {
 			if inboxHeaderRegex.MatchString(block) {
 				continue
 			}
@@ -1305,7 +1301,7 @@ func (b *Bot) showPostpone(_ []string) error {
 			if len([]rune(preview)) > maxHeaderLengthForMobile {
 				preview = string([]rune(preview)[:maxHeaderLengthForMobile]) + "…"
 			}
-			cmd := tg.NewCmd(CmdPostpone, []string{todayBlockHash(block)})
+			cmd := tg.NewCmd(CmdPostpone, []string{chatBlockHash(block)})
 			kb.AddRow(tg.NewBtn("💬 "+preview, cmd))
 		}
 	}
@@ -1323,47 +1319,10 @@ func (b *Bot) showPostpone(_ []string) error {
 	return nil
 }
 
-func (b *Bot) showMoveFromToday(_ []string) error {
-	var kb tg.Keyboard
-
-	// Show today inbox items
-	inboxContent, err := b.fs.Read(fs.DirUserRoot, fs.ChatFilename)
-	if err == nil {
-		blocks := readBlocks(inboxContent)
-		for _, block := range blocks {
-			if inboxHeaderRegex.MatchString(block) {
-				continue
-			}
-			// Skip already-completed entries — they're about to be swept anyway.
-			if strings.HasPrefix(block, "- [x] ") || strings.HasPrefix(block, "- [X] ") {
-				continue
-			}
-			preview := strings.SplitN(stripInboxEntryPrefix(block), "\n", 2)[0]
-			if len([]rune(preview)) > maxHeaderLengthForMobile {
-				preview = string([]rune(preview)[:maxHeaderLengthForMobile]) + "…"
-			}
-			cmd := tg.NewCmd(CmdShowMoveTo, []string{todayBlockHash(block)})
-			kb.AddRow(tg.NewBtn("💬 "+preview, cmd))
-		}
-	}
-
-	kb.AddRow(tg.NewRow(
-		tg.NewBtn(b.tr("Rename"), tg.NewCmd(CmdShowRename, []string{})),
-		tg.NewBtn(b.tr("OK"), tg.NewCmd(CmdShowHome, []string{})),
-	))
-
-	err = b.showHTML(b.tr("🦥 Select an item to move:"), &kb)
-	if err != nil {
-		return fmt.Errorf("show move from today: %w", err)
-	}
-
-	return nil
-}
-
 func (b *Bot) postpone(params []string) error {
 	hash := params[0]
 
-	err := b.moveFromToday(func(content string, _ time.Time) error {
+	err := b.moveFromChat(func(content string, _ time.Time) error {
 		laterMD, rerr := b.fs.Read(fs.DirUserRoot, fs.LaterFilename)
 		if rerr != nil && !errors.Is(rerr, os.ErrNotExist) {
 			return fmt.Errorf("postpone: can't read later file: %w", rerr)
@@ -1382,7 +1341,7 @@ func (b *Bot) showRename(_ []string) error {
 
 	inboxMD, err := b.fs.Read(fs.DirUserRoot, fs.ChatFilename)
 	if err == nil {
-		for _, block := range readBlocks(inboxMD) {
+		for _, block := range readChatMsgs(inboxMD) {
 			if inboxHeaderRegex.MatchString(block) {
 				continue
 			}
@@ -1393,12 +1352,12 @@ func (b *Bot) showRename(_ []string) error {
 			if len([]rune(preview)) > maxHeaderLengthForMobile {
 				preview = string([]rune(preview)[:maxHeaderLengthForMobile]) + "…"
 			}
-			cmd := tg.NewCmd(CmdShowRenameFile, []string{fs.ChatFilename, todayBlockHash(block)})
+			cmd := tg.NewCmd(CmdShowRenameFile, []string{fs.ChatFilename, chatBlockHash(block)})
 			kb.AddRow(tg.NewBtn("💬 "+preview, cmd))
 		}
 	}
 
-	kb.AddRow(tg.NewBtn(i18n.StrToday, tg.NewCmd(CmdShowHome, nil)))
+	kb.AddRow(tg.NewBtn(i18n.StrHome, tg.NewCmd(CmdShowHome, nil)))
 
 	err = b.showHTML(b.homeLabel(), &kb)
 	if err != nil {
@@ -1438,7 +1397,7 @@ func (b *Bot) rename(params []string) error {
 	}
 
 	if checklist == fs.ChatFilename {
-		md, err = renameTodayBlock(md, itemHash, newItemNameFromUserInput)
+		md, err = renameChatMsg(md, itemHash, newItemNameFromUserInput)
 		if err != nil {
 			return fmt.Errorf("rename: %w", err)
 		}
@@ -1461,7 +1420,7 @@ func (b *Bot) showStats(_ []string) error {
 		return fmt.Errorf("show stats: %w", err)
 	}
 
-	kb := tg.NewKeyboard([]tg.Row{tg.NewBtn(i18n.StrToday, tg.NewCmd(CmdShowHome, nil))})
+	kb := tg.NewKeyboard([]tg.Row{tg.NewBtn(i18n.StrHome, tg.NewCmd(CmdShowHome, nil))})
 	err = b.showHTML(strings.TrimSpace(report), kb)
 	if err != nil {
 		return fmt.Errorf("show stats: %w", err)
@@ -1480,7 +1439,7 @@ func (b *Bot) showSchedule(_ []string) error {
 		schedule = i18n.Tr("You don't have any scheduled tasks! 🌴")
 	}
 
-	kb := tg.NewKeyboard([]tg.Row{tg.NewBtn(i18n.StrToday, tg.NewCmd(CmdShowHome, nil))})
+	kb := tg.NewKeyboard([]tg.Row{tg.NewBtn(i18n.StrHome, tg.NewCmd(CmdShowHome, nil))})
 	err = b.showHTML(schedule, kb)
 	if err != nil {
 		return fmt.Errorf("show stats: %w", err)
@@ -1502,7 +1461,7 @@ func (b *Bot) showShop(_ []string) error {
 }
 
 // TODO Chat.md move to today/later
-func (b *Bot) showLongItem(params []string) error {
+func (b *Bot) showLongItemFromChecklist(params []string) error {
 	checklistHash := params[0]
 	itemHash := params[1]
 
@@ -1538,16 +1497,15 @@ func (b *Bot) showLongItem(params []string) error {
 	return nil
 }
 
-// TODO Chat.md move to today/later
-func (b *Bot) showLongItemFromInbox(params []string) error {
+func (b *Bot) showLongItem(params []string) error {
 	msgHash := params[0]
 
-	inboxMD, err := b.fs.Read(fs.DirUserRoot, fs.ChatFilename)
+	chatMD, err := b.fs.Read(fs.DirUserRoot, fs.ChatFilename)
 	if err != nil {
 		return fmt.Errorf("show long item: can't read inbox file: %w", err)
 	}
 
-	_, block, ok := findTodayBlockByHash(inboxMD, msgHash)
+	_, block, ok := findChatMsgByHash(chatMD, msgHash)
 	if !ok {
 		return fmt.Errorf("show long item: msgHash %q not found in inbox", msgHash)
 	}
@@ -1604,7 +1562,7 @@ func (b *Bot) showFile(params []string) error {
 			row = append(row, tg.NewBtn(i18n.Tr("🖨 Share"), cmd))
 		}
 	}
-	row = append(row, tg.NewBtn(i18n.StrToday, tg.NewCmd(CmdShowHome, nil)))
+	row = append(row, tg.NewBtn(i18n.StrHome, tg.NewCmd(CmdShowHome, nil)))
 	kb := tg.NewKeyboard([]tg.Row{row})
 
 	md := fmt.Sprintf("**%s**\n\n%s", fs.DisplayName(filename), content)
@@ -1646,7 +1604,7 @@ func (b *Bot) showChecklist(params []string) error {
 	kb := tg.NewKeyboard(nil)
 	for _, item := range items {
 		if len([]rune(item)) >= maxHeaderLengthForMobile {
-			cmd := tg.NewCmd(CmdShowLongItem, []string{fs.Hash(checklist), fs.Hash(item)})
+			cmd := tg.NewCmd(CmdShowLongItemFromChecklist, []string{fs.Hash(checklist), fs.Hash(item)})
 			btn := tg.NewBtn(txt.Emoji(i18n.Emoji("eyes"), item), cmd)
 			kb.AddRow(btn)
 		} else {
@@ -1655,7 +1613,7 @@ func (b *Bot) showChecklist(params []string) error {
 			kb.AddRow(btn)
 		}
 	}
-	kb.AddRow(tg.NewBtn(i18n.StrToday, tg.NewCmd(CmdShowHome, nil)))
+	kb.AddRow(tg.NewBtn(i18n.StrHome, tg.NewCmd(CmdShowHome, nil)))
 
 	title := checklistTitle(checklist)
 	err = b.showHTML(title+wideSpacer, kb)
@@ -1685,58 +1643,6 @@ func (b *Bot) showStart(params []string) error {
 	return err
 }
 
-func (b *Bot) moveToDirFromToday(params []string) error {
-	// TODO Remove input expectations if dir is not today
-	toDirHash := params[0]
-	fromDirHash := params[1]
-	fromFilenameHash := params[2]
-
-	oldDir, err := b.fs.Unhash(fs.DirUserRoot, fromDirHash)
-	if err != nil {
-		return fmt.Errorf("move: can't unhash old dir: %w", err)
-	}
-
-	filename, err := b.fs.Unhash(oldDir, fromFilenameHash)
-	if err != nil {
-		return fmt.Errorf("move: can't unhash old filename: %w", err)
-	}
-	newFilename := filename
-	if len(params) > 3 {
-		newFilename = params[3]
-	}
-
-	toDir, err := b.fs.Unhash(fs.DirUserRoot, toDirHash)
-	if err != nil {
-		return fmt.Errorf("move: can't unhash new dir %s: %w", toDir, err)
-	}
-
-	// TODO touch
-	// TODO multiline ?
-	err = b.fs.Rename(oldDir, filename, toDir, newFilename)
-	if err != nil {
-		return fmt.Errorf("move: can't move: %w", err)
-	}
-
-	notesDir := fs.OnlyNoteDirs([]fs.File{{Name: toDir}})
-	isNotesDir := len(notesDir) == 1
-	if isNotesDir {
-		// We can tolerate this, as this is informative logging
-		_ = journal.AddRecord(b.fs, fmt.Sprintf("📌 %s", fs.DisplayName(filename)), b.cfg.Timezone())
-	}
-
-	b.db.SetRecentCommand(CmdMoveToExistingNote)
-	// Move from dir is today, because quick command
-	// appears when file is in today dir
-	b.db.SetRecentCommandParams([]string{fs.Hash(filename), toDirHash})
-
-	b.delAllKeyboards()
-	msg := txt.Emoji(i18n.Emoji("dir"), fmt.Sprintf(i18n.Tr("Moved to <b>%s</b>"), fs.DisplayName(toDir)))
-	// Just an informative messages
-	_, _ = b.tg.Send(b.userID, msg, nil, tg.MarkupHTML)
-
-	return b.ShowHome(nil)
-}
-
 func (b *Bot) moveToDir(params []string) error {
 	// TODO Remove input expectations if dir is not today
 	toDirHash := params[0]
@@ -1754,7 +1660,7 @@ func (b *Bot) moveToDir(params []string) error {
 		}
 	}
 
-	err = b.moveFromToday(func(content string, timestamp time.Time) error {
+	err = b.moveFromChat(func(content string, timestamp time.Time) error {
 		var sanitizedTitle string
 		sanitizedTitle, content, err = b.extractHeaderAndBody(content, maxHeaderLength)
 		if err != nil {
@@ -1832,7 +1738,7 @@ func (b *Bot) addToChecklist(checklistHash string, msgHash string) (string, erro
 	}
 
 	var item string
-	err = b.moveFromToday(func(content string, timestamp time.Time) error {
+	err = b.moveFromChat(func(content string, timestamp time.Time) error {
 		item = content
 		md := txt.AddChecklistItem(checklistMD, content, false)
 		return b.fs.Write(fs.DirUserRoot, checklist, md)
@@ -1922,7 +1828,7 @@ func (b *Bot) moveToExistingFile(params []string) error {
 		return fmt.Errorf("move to file: can't unhash existing file '%s': %w", existingFilenameHash, err)
 	}
 
-	err = b.moveFromToday(func(content string, timestamp time.Time) error {
+	err = b.moveFromChat(func(content string, timestamp time.Time) error {
 		return b.addToFile(fs.DirUserRoot, existingFilename, content)
 	}, true, msgHashes...)
 	if err != nil {
@@ -1962,7 +1868,7 @@ func (b *Bot) moveToExistingNote(params []string) error {
 		return fmt.Errorf("move to existing note:: %w", err)
 	}
 
-	err = b.moveFromToday(func(content string, t time.Time) error {
+	err = b.moveFromChat(func(content string, t time.Time) error {
 		err = b.addToFile(toDir, toFilename, content)
 		if err != nil {
 			return fmt.Errorf("move to existing note: can't add to file %s: %w", toFilename, err)
@@ -1994,7 +1900,7 @@ func (b *Bot) moveToDirChecklist(params []string) error {
 		return fmt.Errorf("move to checklistDir: %w", err)
 	}
 
-	err = b.moveFromToday(func(content string, t time.Time) error {
+	err = b.moveFromChat(func(content string, t time.Time) error {
 		isMultiline := txt.IsMultiline(content)
 
 		if isMultiline && b.cfg.ShouldSplitChecklist(checklistDir) {
@@ -2057,7 +1963,7 @@ func (b *Bot) moveToNewFile(params []string) error {
 	//if err != nil {
 	//	return fmt.Errorf("move to new file: can't read file '%s': %w", filename, err)
 	//}
-	err := b.moveFromToday(func(content string, t time.Time) error {
+	err := b.moveFromChat(func(content string, t time.Time) error {
 		content = strings.TrimSpace(content)
 		//if len(content) == 0 {
 		//	content = fs.DisplayName(filename)
@@ -2115,7 +2021,7 @@ func (b *Bot) moveToNewChecklist(params []string) error {
 func (b *Bot) moveToJournal(params []string) error {
 	msgHashes := params
 
-	err := b.moveFromToday(func(content string, t time.Time) error {
+	err := b.moveFromChat(func(content string, t time.Time) error {
 		// TODO take into account time from chat
 		return journal.AddRecord(b.fs, content, b.cfg.Timezone())
 	}, false, msgHashes...)
@@ -2143,7 +2049,7 @@ func (b *Bot) addToJournalAndContinue(params []string) error {
 	}
 
 	// Don't return - continue to save to inbox as well.
-	msgHash, err := b.appendToToday(content, b.cfg.Timezone())
+	msgHash, err := b.appendToChat(content, b.cfg.Timezone())
 	if err != nil {
 		return fmt.Errorf("save to inbox: %w", err)
 	}
@@ -2689,13 +2595,13 @@ func (b *Bot) openInApp(_ []string) error {
 }
 
 func (b *Bot) showHelp(_ []string) error {
-	kb := tg.NewKeyboard([]tg.Row{tg.NewBtn(i18n.StrToday, tg.NewCmd(CmdShowHome, nil))})
+	kb := tg.NewKeyboard([]tg.Row{tg.NewBtn(i18n.StrHome, tg.NewCmd(CmdShowHome, nil))})
 
 	return b.showHTML("Refer to files.md for help!", kb)
 }
 
 func (b *Bot) download(_ []string) error {
-	kb := tg.NewKeyboard([]tg.Row{tg.NewBtn(i18n.StrToday, tg.NewCmd(CmdShowHome, nil))})
+	kb := tg.NewKeyboard([]tg.Row{tg.NewBtn(i18n.StrHome, tg.NewCmd(CmdShowHome, nil))})
 
 	return b.showHTML("Not yet implemented 🏗!", kb)
 }

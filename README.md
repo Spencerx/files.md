@@ -17,7 +17,7 @@ Chatbot for access from anywhere.
 Try it out: [app.files.md](https://app.files.md).
 
 ## Taking notes is extremely simple
-Just drop your note into the chat-like input and press `Enter`.
+Open the chat, write a note and press `Enter`.
 
 <div align="center">
     <img src="https://github.com/zakirullin/files.md/raw/main/web/img/note1.png" alt="Taking notes" title="Taking notes" width="350"/>
