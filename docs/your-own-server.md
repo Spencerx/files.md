@@ -69,3 +69,6 @@ Execute `git init` in your folder before that, to init a git repository.
 
 If you have non-ASCI character in filenames, disable quoting:
 `git config --global core.quotePath false`
+
+Systemd journal:  
+`sudo journalctl -u filesmd`
