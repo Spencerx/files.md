@@ -424,13 +424,24 @@ async function syncMedia() {
                 }
                 const base64String = btoa(binaryString);
 
-                const { error } = await post('syncMediaFile', {
-                    filename: mediaFilename,
-                    data: base64String,
+                // Raw fetch: the upload reply is empty (not JSON), so the
+                // JSON-based post() helper doesn't apply here.
+                const response = await fetch(`${API_URL}/syncMediaFile`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Version': getCurrentVersion(),
+                    },
+                    body: JSON.stringify({
+                        filename: mediaFilename,
+                        data: base64String,
+                    }),
                 });
-                if (error) {
-                    logError(`Failed to sync media file ${mediaFilename}:`, error);
+                if (!response.ok) {
+                    logError(`Failed to sync media file ${mediaFilename}: ${response.status}`);
                 } else {
+                    markServerOk();
                     server['media'][mediaFilename] = {
                         isFile: true,
                         lastModified: 0, // We don't track binary files modifications.
