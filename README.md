@@ -83,29 +83,26 @@ Are you feeling good about something? Send a message.
     <img src="https://github.com/zakirullin/files.md/raw/main/web/img/journal.png" title="Journaling" width="350"/>
 </div>
 
-Then click "Move To Journal".  
-Or just add ` jj` or ` жж` at the end of your message.   
+Then click "To Journal".  
+Or just add ` jj` or ` жж` at the end of your message.  
 
-Your record is gonna be saved nicely in the `journal/Year Month.md` file.
+Your record is gonna be saved nicely in the `journal/YYYY.MM Month.md` file.
 
 ## Tasks ✅
 You're in the flow.  
-A colleague comes in and asks you to send the report.  
-You don't hold this task in your head, it takes energy.
-You drop a message and continue being in the flow.
+A colleague asks you to send a report.  
+Holding that in your head drains energy.  
+Drop a message and stay in flow.  
 
 <div align="center">
     <img src="https://github.com/zakirullin/files.md/raw/main/web/img/task.png" title="Adding a task" width="350"/>
 </div>
 
-No energy is spent, no flow is interrupted.
-
 Add only small, actionable items.  
 Not things like `Plan a vacation`.  
 Add the first tiny step of what should be done anyway.     
-Not what you wish to be done, but don't have motivation just yet.  
+**Not what you wish to be done, but don't have motivation just yet.**    
 **Your task list should not create a feeling of guilt**.  
-It should clear your head.
 
 ## Checklists 🛒
 A friend recommends a book.  
