@@ -214,6 +214,14 @@ async function newFile() {
     editor.setCursor({ line: 1, ch: 0 });
     editor.focus();
 
+    const folder = dirPath === '/' ? '/' : dirPath.replace(/^\//, '').replace(/\/$/, '');
+    const toastMsg = document.createElement('span');
+    toastMsg.append('Created at ');
+    const bold = document.createElement('b');
+    bold.textContent = folder;
+    toastMsg.appendChild(bold);
+    showToast(toastMsg);
+
     await renderSidebar();
 }
 
@@ -327,9 +335,18 @@ function normNewLines(text) {
 
 function showToast(msg, ms = 1500) {
     const toast = document.createElement('div');
-    toast.textContent = msg;
+    if (msg instanceof Node) {
+        toast.appendChild(msg);
+    } else {
+        toast.textContent = msg;
+    }
+    // Center over the editor area (not the whole viewport) so the toast
+    // sits above the content rather than drifting onto the sidebar.
+    const editorContainer = document.getElementById('editor-container');
+    const rect = editorContainer ? editorContainer.getBoundingClientRect() : null;
+    const centerX = rect ? rect.left + rect.width / 2 : window.innerWidth / 2;
     toast.style.cssText = `
-        position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+        position: fixed; top: 8px; left: ${centerX}px; transform: translateX(-50%);
         background: var(--col-bg-alt); color: var(--col-tx); padding: 8px 16px; border-radius: 5px;
         border: 1px solid var(--col-border);
         z-index: 9999; font-size: 14px;
