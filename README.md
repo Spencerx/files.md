@@ -15,7 +15,9 @@ All in plain `.md` files, local-first. LLM-friendly.
 Chatbot for access from anywhere.  
 
 Try it out: [app.files.md](https://app.files.md)  
-Telegram bot: [@FilesMDBot](https://t.me/FilesMDBot) 
+Telegram bot: [@FilesMDBot](https://t.me/FilesMDBot)  
+
+**Other messengers will follow**.  
 
 ## Saving things is simple 
 Open the chat, write something and press `Enter`:
@@ -57,8 +59,6 @@ Maybe. But this time:
 
 Pin the bot in your contact list, so that it is easily accessible.  
 
-**Other messengers will follow**.   
-
 ## Taking notes in the web app
 Open the chat and send a message:    
 <div align="center">
@@ -98,7 +98,7 @@ Add only small, actionable items.
 Not things like "Plan a vacation".  
 Add the first tiny step of what should be done anyway.     
 **Not what you wish to be done, but don't have motivation just yet.**    
-**Your task list should not create a feeling of guilt**.  
+Your task list should not create a feeling of guilt.  
 
 ## Checklists 🛒
 A friend recommends a book.  
@@ -171,7 +171,7 @@ Reading without action is entertainment. A form of procrastination.
 What can help is psychotherapy, rescripting and chair work. Meditation.  
 **Healing happens by feeling.**  
 
-Notes and intellectual work can actually prevent healing, see below.  
+Notes and intellectual work can actually prevent healing.  
 
 ## Notes can prevent experience
 When it comes to real personal changes, collecting too many notes **can prevent us from actual experience.**  
@@ -182,12 +182,7 @@ When it comes to real personal changes, collecting too many notes **can prevent 
 
 The worst thing is that **we don’t let new experiences emerge because we already have knowledge**. It's a knowledge barrier. Life gives us opportunities to live through new experiences, but we refuse, because "we already know".
 
-You loved an idea.  
-You can use the initial impulse and actually try it.    
-Or, you can spend your energy on writing it down.   
-In the hope that **one day, you'll actually try it**.   
-
-## Files structure 🗂
+## Files structure
 You don't have to think about the structure, it is predefined.  
 
 - Chat: `Chat.md`
@@ -204,7 +199,7 @@ You don't have to think about the structure, it is predefined.
 Scheme is also available at [files.md/llms.txt](https://files.md/llms.txt).  
 You can copy-paste it into `CLAUDE.md` or `AGENTS.md`, so that your AI agent would understand the structure.  
 
-## Hotkeys 🎹
+## Hotkeys
 
 | Hotkey                     | Action                         |
 |----------------------------|--------------------------------|
