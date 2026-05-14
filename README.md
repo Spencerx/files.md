@@ -12,12 +12,8 @@ You can store whole your life:
 - ✅ Checklists, Tasks
 
 All in plain `.md` files, local-first. LLM-friendly.  
-Chatbot for access from anywhere.  
 
-Web app: [app.files.md](https://app.files.md)  
-Telegram bot: [@FilesMDBot](https://t.me/FilesMDBot)  
-
-**Other messengers will follow**.  
+Try it out: [app.files.md](https://app.files.md)  
 
 ## Another note-taking app?
 Maybe. But this time: 
