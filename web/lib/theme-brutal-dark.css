@@ -280,7 +280,7 @@
 
 .cm-s-hypermd-light div.HyperMD-codeblock-bg {
     background: var(--col-bg-alt) !important;
-    border-left: 4px solid var(--col-border) !important;
+    border-left: 4px solid #D88FFF !important;
     border-right: none !important;
     border-radius: 0 !important;
 }
