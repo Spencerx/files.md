@@ -21,7 +21,7 @@ Site: [files.md](https://files.md)
 > You grow software around it with an LLM.  
 > Both can last through the ages.   
 
-**My friends and I have been building this project for 5 years**. **[Sponsor it on GitHub 💚](https://github.com/sponsors/zakirullin)**
+**My friends and I have been building this project for 5 years**. **[Sponsor it on GitHub 💚](https://github.com/sponsors/zakirullin)**.
 
 ## Another note taking app? 
 Maybe. But this time:
@@ -86,7 +86,7 @@ That's it.
 
 [Telegram Bot](https://t.me/FilesMDBot)
 
-**Other messengers will follow**
+**Other messengers will follow**.
 
 ## How to grow your knowledge base 
 **Connect ideas. Let them compound. Think through.**
