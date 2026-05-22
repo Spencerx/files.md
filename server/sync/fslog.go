@@ -106,3 +106,48 @@ func RenamesLog(userID, afterTimestamp int64) map[string]string {
 
 	return logEntries
 }
+
+// DeletesLog reads the file system deletes log and returns a map of:
+// path -> deletedAt unix timestamp
+// AfterTimestamp is inclusive. If a path was deleted multiple times,
+// the latest timestamp wins.
+func DeletesLog(userID, afterTimestamp int64) map[string]int64 {
+	lock.RLock()
+	defer lock.RUnlock()
+
+	file, err := os.Open(path.Join(config.ServerCfg.WorkingDir, "fslog"))
+	if err != nil {
+		return nil
+	}
+	defer file.Close()
+
+	logEntries := make(map[string]int64)
+	scanner := bufio.NewScanner(file)
+	userPathPrefix := path.Join(config.ServerCfg.StorageDir, fmt.Sprintf("%d", userID)) + "/"
+	for scanner.Scan() {
+		line := scanner.Text()
+		var timestamp int64
+		var op, filepath string
+		n, err := fmt.Sscanf(line, "%d %s %s", &timestamp, &op, &filepath)
+		if op != Delete {
+			continue
+		}
+		if err != nil || n != 3 || timestamp < afterTimestamp {
+			continue
+		}
+		filepath, err = url.QueryUnescape(filepath)
+		if err != nil {
+			continue
+		}
+		if !strings.HasPrefix(filepath, userPathPrefix) {
+			continue
+		}
+		filepath = strings.TrimPrefix(filepath, userPathPrefix)
+
+		if existing, ok := logEntries[filepath]; !ok || timestamp > existing {
+			logEntries[filepath] = timestamp
+		}
+	}
+
+	return logEntries
+}

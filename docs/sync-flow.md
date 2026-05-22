@@ -118,6 +118,46 @@ The auth token lives in an HttpOnly cookie, so JS can't see it directly. Instead
 
 If the server later 401s, the stamp stays - but the request will simply fail and no sync state advances, so we don't need to clear it.
 
-## Where the recent bug lived, in one sentence
+## File deletion propogation across clients
 
-The `switchAwayEditor` flag was added so that `syncCurrentEditor`, when called from `openFile`'s "save previous editor" path, does not take the orange `Reload` branch - the one that recursed into `openFile` without an `el`. That recursion used to rotate the global `currentEditor` under the outer `openFile`'s feet, which then wrote `.path` onto the wrong editor instance (the red node in the openFile diagram), producing a poisoned state that the red `Rename` block later turned into a destructive file duplication.
+A delete on one device has to travel through the server and reach every other device that still holds the file. The mechanism is an append-only `fslog` on disk: every server-side `userFS.Del` writes a `<ts> del <abs-path>` row, and every `/syncFilenames` response carries the deletes a given client hasn't seen yet.
+
+### Why we need this log at all
+
+Without it, the server only knows what currently exists on disk - it has no memory of what *used* to exist. Sync responses only list present files. So Client B, which still holds the deleted file locally, would see "this path is on my disk but not in the server response" and conclude it's a *new* local file → it would re-upload `foo.md` and the file resurrects. The fslog gives the server a memory of deletions, so it can tell B "yes, this used to exist, but it was deleted at time T - drop your stale copy."
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant A as Client A
+    participant S as Server
+    participant L as fslog<br/>(append-only file)
+    participant B as Client B
+
+    Note over A,B: Steady state: both clients hold foo.md locally,<br/>server has foo.md on disk
+
+    rect rgb(245, 240, 230)
+        Note over A: User deletes foo.md in the PWA
+        A->>A: moveFile("/foo.md", "/archive/foo.md")<br/>(local FS only)
+        A->>S: POST /syncFilenames<br/>{ deleted: ["/foo.md"],<br/>  modified: [{path:"/archive/foo.md", ...}],<br/>  serverTime: <A's cursor> }
+        S->>S: userFS.Del("foo.md")<br/>removes from disk
+        S->>L: append "<now> del /app/storage/<uid>/foo.md"
+        S->>S: deletes = DeletesLog(uid, req.serverTime+1)<br/>→ {"foo.md": <now>}
+        S->>S: suppress echo: drop entries that<br/>match request.Deleted
+        S->>S: write /archive/foo.md
+        S-->>A: response.deleted = {} (A's own delete<br/>was filtered)<br/>response.files = [...]
+    end
+
+    Note over A,B: ...time passes, B opens app or hits sync interval...
+
+    rect rgb(230, 240, 245)
+        B->>S: POST /syncFilenames<br/>{ deleted: [], modified: [...],<br/>  serverTime: <B's cursor, before A's delete> }
+        S->>L: scan fslog for this user
+        S->>S: deletes = DeletesLog(uid, req.serverTime+1)<br/>→ {"foo.md": <ts of A's delete>}<br/>(no suppression: B didn't delete it)
+        S-->>B: response.deleted = {"foo.md": <ts>}<br/>response.files = [archive/foo.md, ...]
+        B->>B: for each (path, deletedAt) in response.deleted:<br/>local = getMemFile(path)<br/>if local && local.lastModified ≤ deletedAt:<br/>  await remove(path); removeServerFile(path)
+        B->>B: write archive/foo.md from response.files
+    end
+
+    Note over A,B: Both clients converged:<br/>foo.md gone, archive/foo.md present
+```

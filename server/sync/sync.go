@@ -43,6 +43,7 @@ type syncRequest struct {
 	Modified   []file           `json:"modified"` // New or modified files from client
 	Deleted    []string         `json:"deleted"`  // Deleted files from client
 	Timestamps map[string]int64 `json:"timestamps"`
+	ServerTime int64            `json:"serverTime"` // latest server-event ts the client has acknowledged; server returns events newer than this
 }
 
 type syncResponse struct {
@@ -50,6 +51,7 @@ type syncResponse struct {
 	Files      []file            `json:"files"`      // Files with content that need syncing
 	Timestamps map[string]int64  `json:"timestamps"` // Current server timestamps in Unix format
 	Renames    map[string]string `json:"renames"`    // What files to rename on client
+	Deleted    map[string]int64  `json:"deleted"`    // path -> deletedAt; client drops local copies older than this
 }
 
 // SyncFilenames sync texts between client and server.
@@ -92,7 +94,7 @@ func SyncFilenames(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		logSync(fmt.Sprintf("❌ Sync texts: deleting file: '%s'", path), r)
-		logDelete(fmt.Sprintf("Deleting file: '%s'", path), r)
+		debugLogDelete(fmt.Sprintf("Deleting file: '%s'", path), r)
 	}
 
 	// TODO using rename log first replace old paths in client request to new so other code will work okay
@@ -110,6 +112,21 @@ func SyncFilenames(w http.ResponseWriter, r *http.Request) {
 	// Don't respond renames on first sync
 	if lastSync != 0 {
 		renames = RenamesLog(userID(r), lastSync)
+	}
+
+	// Server-side events newer than the client's acknowledged watermark.
+	deletes := DeletesLog(userID(r), request.ServerTime+1)
+
+	// Suppress echoes: don't return entries that THIS client just told us
+	// about in request.Deleted. Match by suffix so it works regardless of
+	// whether DeletesLog keys are stripped or absolute.
+	for _, p := range request.Deleted {
+		ownRel := strings.TrimPrefix(strings.TrimPrefix(p, "/"), "/")
+		for key := range deletes {
+			if key == ownRel || strings.HasSuffix(key, "/"+ownRel) {
+				delete(deletes, key)
+			}
+		}
 	}
 
 	// If a file was renamed and changed, on client we would rename then change?
@@ -236,6 +253,7 @@ func SyncFilenames(w http.ResponseWriter, r *http.Request) {
 		Files:      files,
 		Timestamps: dirTimestamps,
 		Renames:    renames,
+		Deleted:    deletes,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -400,7 +418,7 @@ func logSync(msg string, r *http.Request) {
 	}
 }
 
-func logDelete(msg string, r *http.Request) {
+func debugLogDelete(msg string, r *http.Request) {
 	msg = fmt.Sprintf("%d: %s", userID(r), msg)
 	file, err := os.OpenFile("/tmp/del", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {

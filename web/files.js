@@ -260,6 +260,7 @@ async function syncFilesWithServer() {
         modified: modified,
         deleted: deleted,
         timestamps: server['timestamps'] || [],
+        serverTime: server['serverTime'] || 0,
     });
     if (error) {
         logError('syncFilenames failed:', error);
@@ -322,6 +323,25 @@ async function syncFilesWithServer() {
                 }
             }
         }
+        // Apply server-side deletions: drop any local file that was deleted on
+        // server. Local copies older than the recorded deletedAt are deleted.
+        // If local change is newer than deletedAt - we skip deletion.
+        // if (response.deleted) {
+        //     for (const [relPath, deletedAt] of Object.entries(response.deleted)) {
+        //         const path = joinPath('/', relPath);
+        //         const local = getMemFile(path);
+        //         if (!local) continue;
+        //         if (local.lastModified > deletedAt) continue;
+        //         try {
+        //             log('SYNC: deleting locally per server log:', path);
+        //             await remove(path);
+        //             removeServerFile(path);
+        //         } catch (err) {
+        //             logError('SYNC: cant delete locally:', err, path);
+        //         }
+        //     }
+        // }
+
         // Only move timestamp pointers when we were able to sync all the files.
         // Otherwise we can have situation when we synced files only partially,
         // let's say serverFiles is having only half files from server, then they

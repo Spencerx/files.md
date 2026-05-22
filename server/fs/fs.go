@@ -247,13 +247,8 @@ func (fs FS) Del(dir, filename string) error {
 
 	recordQuotaUsage(fs.rootPath, -fileSize)
 
-	// Log deletion.
-	ctime, err := fs.Ctime(filePath, "")
-	// Nothing terrible will happen if we don't log a rename. The client would just have duplicate files.
-	if err == nil {
-		absPath := path.Join(fs.rootPath, filePath)
-		LogDelete(ctime, absPath)
-	}
+	// filePath is already absolute (SafePath joins rootPath in).
+	LogDelete(time.Now().Unix(), filePath)
 
 	return nil
 }
