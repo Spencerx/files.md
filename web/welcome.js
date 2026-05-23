@@ -312,6 +312,8 @@ const WELCOME_FILES = {
     },
     "My project.md": {
         "content":
+            "You can dump project related thoughts here.\n" +
+            "\n" +
             "```mermaid\n" +
             "flowchart LR\n" +
             "    I1[thought] --> H\n" +
@@ -326,8 +328,23 @@ const WELCOME_FILES = {
             "    C --> T[✅ tasks]\n" +
             "    C --> L[🛒 checklists]\n" +
             "    C --> P[💼 project]\n" +
-            "```\n\n" +
-            "You can dump project related thoughts here.",
+            "```\n" +
+            "\n" +
+            "## Humanity's top 10 formulas\n" +
+            "\\[\n" +
+            "\\begin{aligned}\n" +
+            "1.\\;& a^2+b^2=c^2 && \\text{distance, geometry, maps} \\\\\n" +
+            "2.\\;& F=ma && \\text{motion, machines, mechanics} \\\\\n" +
+            "3.\\;& F=G\\frac{m_1m_2}{r^2} && \\text{gravity, planets, space} \\\\\n" +
+            "4.\\;& F=G\\frac{m_1m_2}{r^2} && \\text{gravity, planets, tides, space} \\\\\n" +
+            "5.\\;& e^{i\\pi}+1=0 && \\text{beautiful link between } e,i,\\pi,1,0 \\\\\n" +
+            "6.\\;& \\frac{d}{dx}x^n=nx^{n-1} && \\text{change, speed, optimization} \\\\\n" +
+            "7.\\;& \\int e^x\\,dx=e^x+C && \\text{growth, decay, accumulation} \\\\\n" +
+            "8.\\;& P(A|B)=\\frac{P(B|A)P(A)}{P(B)} && \\text{updating beliefs with evidence} \\\\\n" +
+            "9.\\;& i\\hbar\\partial_t\\Psi=\\hat H\\Psi && \\text{atoms, quantum world, modern tech} \\\\\n" +
+            "10.\\;& S=k_B\\ln\\Omega && \\text{entropy, disorder, information, time}\n" +
+            "\\end{aligned}\n" +
+            "\\]\n",
         isFile: true,
     },
 }
