@@ -3,6 +3,16 @@
     display: inline-block;
     vertical-align: middle;
 }
+/* Suppress the browser's native selection over rendered KaTeX (the
+   blue "inline-block highlight" that bypasses CodeMirror's own
+   selection model and breaks Cmd+X / copy). CodeMirror still draws
+   its themed selection band over the widget when the surrounding
+   text is selected. */
+.CodeMirror .hmd-fold-math,
+.CodeMirror .hmd-fold-math .katex {
+    -webkit-user-select: none;
+    user-select: none;
+}
 .CodeMirror .cm-math {
     line-height: inherit;
     vertical-align: middle;
