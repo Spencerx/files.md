@@ -485,6 +485,7 @@ a:hover {
     border: none;
     cursor: pointer;
     padding: 2px;
+    margin: 0 2px;
 }
 
 button svg {
@@ -500,6 +501,19 @@ button svg circle {
 #toolbar button:hover svg {
     border-radius: 4px;
     stroke:  var(--col-tx) !important;
+}
+
+/* New-file icon: stroked rather than filled to match the other toolbar
+   icons. SVG uses stroke="currentColor" so color drives the line color;
+   nudge up 2px so it lines up with the folder/random-file icons that
+   already sit slightly higher in their viewBox. */
+#new-file svg {
+    color: var(--col-tx-alt);
+    position: relative;
+    top: -1px;
+}
+#new-file:hover svg {
+    color: var(--color-neo-orange);
 }
 
 /* Fast custom tooltip below toolbar buttons + close-sidebar. The native
