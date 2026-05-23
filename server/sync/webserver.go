@@ -136,19 +136,22 @@ func router(serverLogger *log.Logger) *http.ServeMux {
 		userID, err := strconv.ParseInt(r.PathValue("userID"), 10, 64)
 		if err != nil {
 			serverLogger.Printf("failed to parse userID for habits: %v", err)
-			_, _ = w.Write([]byte("can't parse userID"))
+			http.Error(w, "can't parse userID", http.StatusBadRequest)
+			return
 		}
 
 		userFS, err := fs.NewUserFS(userID)
 		if err != nil {
 			serverLogger.Printf("failed to init userFS: %v", err)
-			_, _ = w.Write([]byte("can't init userFS"))
+			http.Error(w, "can't init userFS", http.StatusInternalServerError)
+			return
 		}
 
 		str, err := habits.Render(userID, userFS)
 		if err != nil {
 			serverLogger.Printf("failed to render habits: %v", err)
-			_, _ = w.Write([]byte(err.Error()))
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 		_, err = w.Write(str)
 		if err != nil {
@@ -161,19 +164,22 @@ func router(serverLogger *log.Logger) *http.ServeMux {
 		userID, err := strconv.ParseInt(r.PathValue("userID"), 10, 64)
 		if err != nil {
 			serverLogger.Printf("failed to parse userID: %v", err)
-			_, _ = w.Write([]byte("can't parse userID"))
+			http.Error(w, "can't parse userID", http.StatusBadRequest)
+			return
 		}
 
 		yearDay, err := strconv.ParseInt(r.PathValue("yearDay"), 10, 32)
 		if err != nil {
 			serverLogger.Printf("failed to parse yearDay: %v", err)
-			_, _ = w.Write([]byte("can't parse yearDay"))
+			http.Error(w, "can't parse yearDay", http.StatusBadRequest)
+			return
 		}
 
 		status, err := strconv.ParseInt(r.PathValue("status"), 10, 32)
 		if err != nil {
 			serverLogger.Printf("failed to parse status: %v", err)
-			_, _ = w.Write([]byte("can't parse status"))
+			http.Error(w, "can't parse status", http.StatusBadRequest)
+			return
 		}
 
 		habitName := r.PathValue("habitName")
@@ -181,13 +187,15 @@ func router(serverLogger *log.Logger) *http.ServeMux {
 		userFS, err := fs.NewUserFS(userID)
 		if err != nil {
 			serverLogger.Printf("failed to init user fs: %v", err)
-			_, _ = w.Write([]byte("can't init user fs"))
+			http.Error(w, "can't init user fs", http.StatusInternalServerError)
+			return
 		}
 
 		userHabits, err := habits.Habits(userFS, time.Now().Year())
 		if err != nil {
 			serverLogger.Printf("failed to read habits: %v", err)
-			_, _ = w.Write([]byte("can't read habits"))
+			http.Error(w, "can't read habits", http.StatusInternalServerError)
+			return
 		}
 
 		if _, ok := userHabits[habitName]; !ok {
@@ -197,7 +205,8 @@ func router(serverLogger *log.Logger) *http.ServeMux {
 		err = habits.Write(userFS, time.Now().Year(), userHabits)
 		if err != nil {
 			serverLogger.Printf("failed to write habits: %v", err)
-			_, _ = w.Write([]byte("can't write habits"))
+			http.Error(w, "can't write habits", http.StatusInternalServerError)
+			return
 		}
 
 		emoji := habits.Emoji(userFS, habitName)
@@ -211,14 +220,16 @@ func router(serverLogger *log.Logger) *http.ServeMux {
 		err = journal.AddEmoji(userFS, emoji, userConf.Timezone())
 		if err != nil {
 			serverLogger.Printf("failed to write habit emoji to journal: %v", err)
-			_, _ = w.Write([]byte("can't write habit emoji to journal"))
+			http.Error(w, "can't write habit emoji to journal", http.StatusInternalServerError)
+			return
 		}
 
 		record := fmt.Sprintf("%s %s", emoji, habitName)
 		err = journal.AddRecord(userFS, record, userConf.Timezone())
 		if err != nil {
 			serverLogger.Printf("failed to write habit to journal: %v", err)
-			_, _ = w.Write([]byte("can't write habit to journal"))
+			http.Error(w, "can't write habit to journal", http.StatusInternalServerError)
+			return
 		}
 	})
 
