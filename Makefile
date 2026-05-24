@@ -52,6 +52,9 @@ e2es: # run single test, e2es test="name"
 e2esh: # run single test headed, e2esh test="name"
 	cd tests && npm run test:headed -- $(if $(test),-g "$(test)")
 
+perf:
+	cd tests && npm run test -- perf.spec.js
+
 sync:
 	killall server || true
 	go run ./cmd/server & \
