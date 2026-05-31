@@ -11,6 +11,12 @@
 // User can set his own server apiUrl through localstorage.
 const API_URL = localStorage.getItem('apiUrl') || 'https://api.files.md';
 const CURRENT_FILE_SYNC_INTERVAL = 1000; // ms, how often to save currently open file
+// Matches server's MaxMediaSize (server/sync/sync.go). Server caps the JSON
+// request body, which holds base64 (~33% inflation), so the effective raw
+// file limit is roughly 3/4 of this. Files above MAX_MEDIA_SIZE are rejected
+// outright; files between 3/4 and 1 of MAX_MEDIA_SIZE may still be refused
+// by the server when base64 pushes the body past the cap.
+const MAX_MEDIA_SIZE = 30 * 1024 * 1024;
 
 let isSaving = false;
 let isSyncingFiles = false;
@@ -492,6 +498,10 @@ async function syncMediaFiles() {
                 // TODO improve that hardcode :D
                 let fileHandle = await getFileHandle('media/' + mediaFilename)
                 let file = await fileHandle.getFile();
+                if (file.size > MAX_MEDIA_SIZE) {
+                    logError(`Skipping ${mediaFilename}: ${(file.size / 1024 / 1024).toFixed(1)} MB exceeds ${(MAX_MEDIA_SIZE / 1024 / 1024).toFixed(0)} MB limit`);
+                    continue;
+                }
                 const arrayBuffer = await file.arrayBuffer();
                 const uint8Array = new Uint8Array(arrayBuffer);
                 let binaryString = '';
