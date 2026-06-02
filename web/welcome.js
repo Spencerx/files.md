@@ -61,6 +61,15 @@ async function getTemporaryStorageDirHandle() {
         }
         await createFiles(WELCOME_FILES, root);
 
+        // Retouch My project.md file, so it appears in chat's quick buttons for better demo.
+        if (!archived.has('My project.md')) {
+            await new Promise(r => setTimeout(r, 10));
+            const fh = await root.getFileHandle('My project.md', { create: true });
+            const w = await fh.createWritable();
+            await w.write(WELCOME_FILES['My project.md'].content);
+            await w.close();
+        }
+
         return root;
     } catch (e) {
         console.warn('OPFS unavailable, using in-memory FS:', e.message);

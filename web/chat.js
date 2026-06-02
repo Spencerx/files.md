@@ -406,11 +406,6 @@ function autoResize() {
         chatInput.style.height = '';
         return;
     }
-
-    if (chatInput.value.split('\n').length <= 1) {
-        return;
-    }
-
     chatInput.style.height = 'auto';
     chatInput.style.height = Math.min(chatInput.scrollHeight, 250) + 'px';
 }
