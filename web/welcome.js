@@ -349,12 +349,13 @@ const WELCOME_FILES = {
             "## Checklist\n" +
             "- [x] Completed task\n" +
             "- [ ] Incomplete task\n\n" +
-            "Syntax:\n`- [ ] Item`\n" +
+            "Syntax:\n`- [ ] Item` **(Cmd/Ctrl + Y)**\n" +
             "\n" +
             "## Table\n" +
             "| Header | Header |\n" +
             "| --- | --- |\n" +
             "| Text  | Text   |\n\n" +
+            "Insert a table with **Cmd/Ctrl + T**\n\n" +
             "## Image\n" +
             "![](img/tomas_sanchez.jpg)\n" +
             "\n" +
