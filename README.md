@@ -135,7 +135,7 @@ To achieve all that, **you'll have to use your brain**, not advanced templates o
 My friends and I have been using this simple setup for five years, and it works well.
 
 ## Second Brain?
-I'll quote [I Deleted My Second Brain](https://www.joanwestenberg.com/i-deleted-my-second-brain-692aa40d59d5f06dd5131e43/):
+I'll quote [I Deleted My Second Brain](https://web.archive.org/web/20260518143828/https://www.joanwestenberg.com/i-deleted-my-second-brain-692aa40d59d5f06dd5131e43/):
 
 > Obsidian is a brilliant piece of software. I love it, dearly. But like anything, without restraint, it can also be a trap. Markdown files in nested folders. Plugins that track your productivity. Graph views that suggest omniscience. There’s an illusion of mastery in watching your notes web into constellations. But constellations are projections. They tell stories. They do not guarantee understanding.
 >
