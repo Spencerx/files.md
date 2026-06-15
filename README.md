@@ -95,9 +95,7 @@ Don't worry - it's much simpler than that by default.
 
 [Telegram Bot](https://t.me/FilesMDBot). *Other messengers will follow...*
 
-## How to think deeply 
-**Connect ideas. Let them compound. Think through.**
-
+## How to think deeply
 I used [app.files.md](https://app.files.md) to improve my thinking in brain and software development area.  
 
 How I did that:  
