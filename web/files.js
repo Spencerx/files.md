@@ -1600,6 +1600,54 @@ function encodeLinkPath(path) {
     return path.replace(/ /g, '%20').replace(/\(/g, '%28').replace(/\)/g, '%29');
 }
 
+// Backlink: after a link from `sourcePath` to `targetPath` is inserted, make
+// the target point back - append a link to the source at the bottom of the
+// target, unless the target already links to it.
+async function addBacklink(sourcePath, targetPath) {
+    if (!sourcePath || !targetPath) return;
+    if (!sourcePath.startsWith('/')) sourcePath = '/' + sourcePath;
+    if (!targetPath.startsWith('/')) targetPath = '/' + targetPath;
+    if (sourcePath === targetPath) return; // never self-link
+
+    const url = encodeLinkPath(sourcePath);
+    const name = toFilename(sourcePath).replace(/\.md$/, '');
+    const backlink = `[${name}](${url})`;
+
+    // If the target is open in an editor, append through it so the edit goes
+    // via the normal save path and isn't clobbered by a stale editor save.
+    const open = (editor && editor.path === targetPath && editor)
+        || (editor2 && editor2.path === targetPath && editor2) || null;
+    if (open) {
+        if (open.getValue().includes(`](${url})`)) return; // already links back
+        const doc = open.getDoc();
+        const lastLine = doc.lastLine();
+        const prefix = open.getValue().trim().length === 0 ? '' : '\n\n';
+        doc.replaceRange(prefix + backlink, {line: lastLine, ch: doc.getLine(lastLine).length});
+        return;
+    }
+
+    let content;
+    try {
+        content = await read(targetPath);
+    } catch (e) {
+        logError('Backlink: cannot read target', targetPath, e);
+        return;
+    }
+    if (content.includes(`](${url})`)) return; // already links back
+
+    const body = content.replace(/\s+$/, '');
+    const newContent = (body ? body + '\n\n' : '') + backlink + '\n';
+    try {
+        await write(targetPath, newContent);
+    } catch (e) {
+        logError('Backlink: cannot write target', targetPath, e);
+        return;
+    }
+    const mem = getMemFile(targetPath);
+    if (mem && 'content' in mem) mem.content = newContent;
+    try { await syncLocalFileWithServer(targetPath); } catch (e) { /* best effort */ }
+}
+
 // Dir with no slash at the end.
 // For '/' it returns '/'.
 function toDirPath(path) {

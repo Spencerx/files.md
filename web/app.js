@@ -182,6 +182,18 @@ function createAutocompleteDict() {
     return dict;
 }
 
+// Called when the link autocomplete inserts a completion. For a classic
+// `[name](/path.md)` file link, add a backlink in the target pointing back to
+// the file we inserted from. Ignores wiki/emoji completions (no `](`).
+function onLinkPicked(completionText) {
+    const text = completionText || '';
+    const open = text.lastIndexOf('](');
+    if (open === -1 || text.slice(-1) !== ')') return;
+    const url = text.slice(open + 2, -1);
+    const targetPath = url.replace(/%20/g, ' ').replace(/%28/g, '(').replace(/%29/g, ')');
+    addBacklink(currentEditor.path, targetPath);
+}
+
 async function newFile(parentDir) {
     log('New file clicked');
     // New files always land at the root. The `parentDir` parameter is still
