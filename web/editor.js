@@ -22,9 +22,6 @@ function initEditor(el) {
     let newEditor = HyperMD.fromTextArea(el, {
         dragDrop: false,
         viewportMargin: 10,
-        // Keep the cursor off the viewport edge when it scrolls into view, so
-        // Cmd-Down  leaves breathing room.
-        cursorScrollMargin: 300,
         mode: {
             name: 'hypermd',
             math: true,
@@ -33,6 +30,13 @@ function initEditor(el) {
         extraKeys: {
             // 'Shift-Space': 'autocomplete',
             'Cmd-[': false, 'Cmd-]': false,
+            // Jump to doc end, then leave breathing room below the cursor so the
+            // last line isn't pinned to the bottom edge. Scoped to this explicit
+            // jump only - a global cursorScrollMargin would also shift the view
+            // on every keystroke near an edge.
+            'Cmd-Down': cm => { cm.execCommand('goDocEnd'); cm.scrollIntoView(cm.getCursor(), 300); },
+            'Cmd-End': cm => { cm.execCommand('goDocEnd'); cm.scrollIntoView(cm.getCursor(), 300); },
+            'Ctrl-End': cm => { cm.execCommand('goDocEnd'); cm.scrollIntoView(cm.getCursor(), 300); },
             // Mac's default delWrappedLineLeft is a no-op at column 0, so
             // Cmd-Backspace gets stuck at the line start instead of joining
             // with the previous line. Fall back to delCharBefore there.
