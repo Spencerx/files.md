@@ -209,6 +209,17 @@
                                 // if (DEBUG) console.log("HEAD DOM PATCHED")
                                 changed = true;
                             }
+                            // PATCHED: mirror the task token's hidden state onto the
+                            // preceding list bullet span, so CSS needs no
+                            // :has(+ .cm-formatting-task) sibling probe.
+                            if (span.type === 'task') {
+                                var bullet = domParent.previousElementSibling;
+                                if (bullet && /cm-formatting-list/.test(bullet.className)) {
+                                    if (shallHideTokens ? addClass(bullet, hideClassName) : rmClass(bullet, hideClassName)) {
+                                        changed = true;
+                                    }
+                                }
+                            }
                         }
                         //FIXME: if leading formatting token is separated into two, the latter will not be hidden/shown!
                         // search for the tailing token
@@ -306,6 +317,10 @@
                 // clean CodeMirror measure cache
                 delete lv.measure.heights;
                 lv.measure.cache = {};
+                // PATCHED: revealed/hidden tokens change the line's height;
+                // codemirror.js only re-measures off-screen lines that carry
+                // this flag.
+                lv.mustMeasure = true;
             }
             return changed;
         };

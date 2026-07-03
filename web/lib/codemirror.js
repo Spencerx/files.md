@@ -2006,6 +2006,9 @@
     this.size = this.rest ? lineNo(lst(this.rest)) - lineN + 1 : 1;
     this.node = this.text = null;
     this.hidden = lineIsHidden(doc, line);
+    // PATCHED: freshly built views must get a real height measurement even
+    // when they are outside the visible window (see updateHeightsInViewport).
+    this.mustMeasure = true;
   }
 
   // Create a range of LineView objects for the given lines.
@@ -2106,6 +2109,9 @@
       else if (type == "widget") { updateLineWidgets(cm, lineView, dims); }
     }
     lineView.changes = null;
+    // PATCHED: content/class/widget changes can change the line's height,
+    // so re-measure it even off-screen (see updateHeightsInViewport).
+    lineView.mustMeasure = true;
   }
 
   // Lines with gutter elements, widgets or a background class need to
@@ -3695,14 +3701,29 @@
   function updateHeightsInViewport(cm) {
     var display = cm.display;
     var prevBottom = display.lineDiv.offsetTop;
-    var viewTop = Math.max(0, display.scroller.getBoundingClientRect().top);
+    var scrollerRect = display.scroller.getBoundingClientRect();
+    var viewTop = Math.max(0, scrollerRect.top);
     var oldHeight = display.lineDiv.getBoundingClientRect().top;
     var mustScroll = 0;
+    // PATCHED: with viewportMargin: Infinity every line is rendered, and
+    // measuring them all (getBoundingClientRect per line) on every update
+    // made each keystroke cost O(document size) - the dominant share of
+    // big-file typing lag. Only lines that were just (re)built
+    // (lineView.mustMeasure) or lie near the visible window can have a
+    // changed height; the rest keep their stored height. Gated on wrapping
+    // because the non-wrapping branch also scans line widths for maxLine.
+    var skipFrom = scrollerRect.top - 1000, skipTo = scrollerRect.bottom + 1000;
     for (var i = 0; i < display.view.length; i++) {
       var cur = display.view[i], wrapping = cm.options.lineWrapping;
       var height = (void 0), width = 0;
       if (cur.hidden) { continue }
       oldHeight += cur.line.height;
+      // PATCHED: skip off-screen lines with a trusted stored height.
+      if (!cur.mustMeasure && wrapping &&
+          (oldHeight < skipFrom || oldHeight - cur.line.height > skipTo)) {
+        continue;
+      }
+      cur.mustMeasure = false;
       if (ie && ie_version < 8) {
         var bot = cur.node.offsetTop + cur.node.offsetHeight;
         height = bot - prevBottom;

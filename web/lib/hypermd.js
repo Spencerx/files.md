@@ -351,6 +351,11 @@ var __assign = (this && this.__assign) || Object.assign || function(t) {
             if (state.hmdHashtag !== 0 /* NONE */) {
                 ans += " " + modeCfg.tokenTypeOverrides.hashtag;
             }
+            // PATCHED: mark lines containing an image so CSS can scope url-hiding
+            // without a per-span :has(.cm-image) probe.
+            if (/image-marker/.test(ans)) {
+                ans += " line-hmd-image-line";
+            }
             /** Try to capture some internal functions from CodeMirror Markdown mode closure! */
             if (!rawClosure.htmlBlock && state.htmlState)
                 rawClosure.htmlBlock = state.f;
@@ -462,6 +467,14 @@ var __assign = (this && this.__assign) || Object.assign || function(t) {
                     else if (tokenIsListBullet) {
                         // no space before bullet!
                         ans += " line-HyperMD-list-line line-HyperMD-list-line-" + listLevel;
+                        // PATCHED: line-level marks for task/ordered items so CSS can
+                        // use plain classes instead of per-line :has() probes.
+                        // state.taskList is set by the markdown mode while it consumes
+                        // this very bullet token, before the task token is reached.
+                        if (state.taskList)
+                            ans += " line-HyperMD-task-line";
+                        if (/formatting-list-ol/.test(ans))
+                            ans += " line-HyperMD-list-line-ol";
                     }
                 }
                 //#endregion

@@ -542,6 +542,7 @@ function showEditor2() {
     editor2Container.style.display = 'flex';
     editor2Container.offsetHeight; // Force reflow
     editor2Container.classList.add('show');
+    document.getElementById('content').classList.add('editor2-open');
 
     editor.refresh();
     editor2.focus();
@@ -556,6 +557,7 @@ function hideEditor2() {
     const editor2Container = document.getElementById('editor2-container');
 
     editor2Container.classList.remove('show');
+    document.getElementById('content').classList.remove('editor2-open');
     restoreEditorPos();
 
     // Clear editor2's path so a subsequent openFile for the same path
