@@ -2152,15 +2152,89 @@
     return buildLineContent(cm, lineView)
   }
 
+  // PATCHED: typing usually leaves a line's token structure intact - only
+  // one text node's data changes. Swapping in the freshly built <pre>
+  // (replaceChild below) makes the browser treat the keystroke as a node
+  // insertion among all rendered lines: with viewportMargin: Infinity that
+  // re-runs sibling-selector (incl. :has) invalidation and re-walks block
+  // layout across the whole document. When the built line's element
+  // structure matches the existing DOM, patch the differing text nodes in
+  // place instead - a characterData change cannot affect selector matching
+  // and keeps layout dirtying local to the line. Returns false (caller
+  // falls back to replaceChild) on any structural difference: token
+  // boundaries moved, folds/widgets appeared, etc.
+  function patchLineTextInPlace(lineView, built) {
+    var oldPre = lineView.text, newPre = built.pre;
+    if (!oldPre || !oldPre.parentNode) { return false }
+    var textPatches = [], nodePairs = [];
+    // hide-token toggles this class on existing spans after render; ignore
+    // it so the line being typed on still takes the fast path.
+    function cls(el) {
+      var c = el.className;
+      return typeof c == "string" ? c.replace(/(?:^|\s)hmd-hidden-token(?=\s|$)/g, "") : c
+    }
+    function match(oldN, newN) {
+      if (oldN.nodeType != newN.nodeType) { return false }
+      if (oldN.nodeType == 3) {
+        if (oldN.data != newN.data) { textPatches.push(oldN, newN.data); }
+        nodePairs.push(newN, oldN);
+        return true
+      }
+      if (oldN.nodeType != 1 || oldN.tagName != newN.tagName || cls(oldN) !== cls(newN)) { return false }
+      var oa = oldN.attributes, na = newN.attributes;
+      if (oa.length != na.length) { return false }
+      for (var i = 0; i < na.length; i++) {
+        var name = na[i].name;
+        if (name != "class" && oldN.getAttribute(name) !== na[i].value) { return false }
+      }
+      var oc = oldN.childNodes, nc = newN.childNodes;
+      if (oc.length != nc.length) { return false }
+      for (var j = 0; j < nc.length; j++) {
+        if (!match(oc[j], nc[j])) { return false }
+      }
+      nodePairs.push(newN, oldN);
+      return true
+    }
+    // Compare the pres' subtrees but not the pres themselves - the old
+    // node carries extra state classes (activeline etc.) that the caller
+    // handles via bgClass/textClass.
+    var oldKids = oldPre.childNodes, newKids = newPre.childNodes;
+    if (oldKids.length != newKids.length) { return false }
+    for (var i = 0; i < newKids.length; i++) {
+      if (!match(oldKids[i], newKids[i])) { return false }
+    }
+    // The measure maps built by buildLineContent reference nodes of the
+    // discarded newPre; point them at the retained old nodes. Validate
+    // every entry before mutating anything.
+    var lookup = new Map();
+    for (var p = 0; p < nodePairs.length; p += 2) { lookup.set(nodePairs[p], nodePairs[p + 1]); }
+    var maps = [lineView.measure.map];
+    if (lineView.measure.maps) { maps = maps.concat(lineView.measure.maps); }
+    var remapped = [];
+    for (var mi = 0; mi < maps.length; mi++) {
+      for (var k = 2; k < maps[mi].length; k += 3) {
+        var target = lookup.get(maps[mi][k]);
+        if (!target) { return false }
+        remapped.push(maps[mi], k, target);
+      }
+    }
+    for (var r = 0; r < remapped.length; r += 3) { remapped[r][remapped[r + 1]] = remapped[r + 2]; }
+    for (var t = 0; t < textPatches.length; t += 2) { textPatches[t].data = textPatches[t + 1]; }
+    return true
+  }
+
   // Redraw the line's text. Interacts with the background and text
   // classes because the mode may output tokens that influence these
   // classes.
   function updateLineText(cm, lineView) {
     var cls = lineView.text.className;
     var built = getLineContent(cm, lineView);
-    if (lineView.text == lineView.node) { lineView.node = built.pre; }
-    lineView.text.parentNode.replaceChild(built.pre, lineView.text);
-    lineView.text = built.pre;
+    // PATCHED: in-place fast path, see patchLineTextInPlace.
+    if (!patchLineTextInPlace(lineView, built)) {
+      if (lineView.text == lineView.node) { lineView.node = built.pre; }
+      lineView.text.parentNode.replaceChild(built.pre, lineView.text);
+      lineView.text = built.pre;
+    }
     if (built.bgClass != lineView.bgClass || built.textClass != lineView.textClass) {
       lineView.bgClass = built.bgClass;
       lineView.textClass = built.textClass;
@@ -9194,7 +9268,13 @@
       }),
 
       refreshCursor: methodOp(function() { // PATCHED. We do this partial refresh to avoid flickering when showing tokens via hide-token.js.
-        regChange(this);
+        // regChange(this) rebuilt every rendered line - with
+        // viewportMargin: Infinity that re-rendered the whole document on
+        // each cursor line change (Enter, arrows). The caret only needs a
+        // fresh measurement pass: hide-token already patched the line's DOM
+        // and cleared its measure cache, so a forced display update redraws
+        // the cursor from up-to-date coordinates without rebuilding lines.
+        this.curOp.forceUpdate = true;
       }),
 
       swapDoc: methodOp(function(doc) {
