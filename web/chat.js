@@ -62,6 +62,7 @@ async function sendToChat() {
     });
     const formattedContent = `\n- [ ] \`${timestamp}\` ${text}\n`;
     await writeAtEnd(CHAT_PATH, formattedContent);
+    markSyncDirty();
 
     chatInput.value = '';
     chatIsClean = false;
@@ -159,6 +160,7 @@ async function toggleMicRecording() {
             });
             const formattedContent = `\n- [ ] \`${timestamp}\` ![](media/${encodeLinkPath(fileName)})\n`;
             await writeAtEnd(CHAT_PATH, formattedContent);
+            markSyncDirty();
 
             chatIsClean = false;
             await renderMessages();
@@ -351,6 +353,7 @@ async function saveMessagesToChat(messages) {
     });
 
     await write(CHAT_PATH, content);
+    markSyncDirty();
     lastChatText = content;
 }
 
@@ -383,6 +386,7 @@ async function toggleChatMessage(timestamp, text, done) {
     const writable = await handle.createWritable();
     await writable.write(content);
     await writable.close();
+    markSyncDirty();
     lastChatText = content;
 }
 

@@ -16,7 +16,7 @@ const CURRENT_FILE_SYNC_INTERVAL = 1000; // ms, how often to save currently open
 // file limit is roughly 3/4 of this. Files above MAX_MEDIA_SIZE are rejected
 // outright; files between 3/4 and 1 of MAX_MEDIA_SIZE may still be refused
 // by the server when base64 pushes the body past the cap.
-const MAX_MEDIA_SIZE = 30 * 1024 * 1024;
+const MAX_MEDIA_SIZE = 40 * 1024 * 1024;
 
 let isSaving = false;
 let isSyncingFiles = false;
@@ -36,6 +36,35 @@ const MAX_DIR_NESTING_LEVEL = 10;
 
 function markServerOk() {
     localStorage.setItem(LAST_SERVER_OK_KEY, Date.now().toString());
+}
+
+// Sync indicator for the current file: a quiet dot that turns orange while
+// the server hasn't yet acked what's in the editor - either because you just
+// typed (clears on the next sync tick) or because the server is unreachable.
+// Hidden for local-only setups.
+let lastSyncOkAt = null;
+
+function renderSyncStatus(state) { // 'ok' | 'edits' | 'error'
+    const dot = document.getElementById('sync-status');
+    if (dot === null) {
+        return;
+    }
+    const at = lastSyncOkAt === null
+        ? 'never'
+        : new Date(lastSyncOkAt).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+    dot.style.display = 'block';
+    dot.classList.toggle('bad', state !== 'ok');
+    dot.title = state === 'ok' ? `Synced at ${at}`
+        : state === 'edits' ? `Unsynced changes. Last synced at ${at}`
+        : `Not synced, server unreachable. Last synced at ${at}`;
+}
+
+// Called on every editor change (see initEditor).
+function markSyncDirty() {
+    if (!hasLastServerOk()) {
+        return;
+    }
+    renderSyncStatus('edits');
 }
 
 function hasLastServerOk() {
@@ -423,7 +452,26 @@ async function syncLocalFileWithServer(path) {
         });
         if (error) {
             logError(`syncText ${path} failed:`, error);
+            if (window.currentEditor?.path === path) {
+                renderSyncStatus('error');
+            }
             return;
+        }
+        // The server acked `content` - but only report "synced" if the source
+        // of truth still holds exactly that; edits made mid-flight stay orange
+        // until the next tick confirms them. In chat mode messages are written
+        // straight to the file (not through the editor), so compare against a
+        // fresh read of the file; for the editor, getCurrentContent() (not
+        // getValue()) because the `# Filename` header line is stripped from
+        // what is written and synced.
+        if (window.currentEditor?.path === path) {
+            const truth = (typeof isChat !== 'undefined' && isChat && path === CHAT_PATH)
+                ? await (await (await getFileHandle(path)).getFile()).text()
+                : getCurrentContent();
+            if (truth === content) {
+                lastSyncOkAt = Date.now();
+                renderSyncStatus('ok');
+            }
         }
 
         // For the cases when server was updated only on server, we move lastSyncedAt pointer,

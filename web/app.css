@@ -1051,3 +1051,20 @@ pre.HyperMD-codeblock-end {
 .cm-formatting-task.cm-property {
     opacity: 0.6;
 }
+
+#sync-status {
+    position: fixed;
+    right: 12px;
+    bottom: 12px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--col-tx-alt);
+    opacity: 0.35;
+    z-index: 100;
+}
+
+#sync-status.bad {
+    background: var(--color-neo-orange);
+    opacity: 1;
+}

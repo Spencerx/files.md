@@ -240,6 +240,13 @@ function initEditor(el) {
         }
     }, true);
 
+    // Edits flip the sync dot to "unsynced" until the server acks them.
+    // Programmatic loads (openFile's setValue) are not user edits.
+    newEditor.on('change', function () {
+        if (isMessingWithCurrentEditor) return;
+        markSyncDirty();
+    });
+
     // Force '# ' to remain at first line.
     newEditor.on('change', function (cm, change) {
         if (change.from.line === 0) {
