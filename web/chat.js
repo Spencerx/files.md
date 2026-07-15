@@ -671,6 +671,9 @@ function attachEventListeners() {
 
         let startMessage = message;
         let allMessages = Array.from(chat.querySelectorAll('.message'));
+        const downX = e.clientX;
+        const downY = e.clientY;
+        const onLink = e.target.closest('a') !== null;
 
         function handleMouseMove(e) {
             const currentMessage = e.target.closest('.message');
@@ -690,9 +693,24 @@ function attachEventListeners() {
             }
         }
 
-        function handleMouseUp() {
+        function handleMouseUp(e) {
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
+
+            // Select message text on click
+            const dragged = Math.abs(e.clientX - downX) > 4 || Math.abs(e.clientY - downY) > 4;
+            if (dragged || onLink) {
+                return;
+            }
+            const content = startMessage.querySelector('.message-content');
+            if (!content) {
+                return;
+            }
+            const range = document.createRange();
+            range.selectNodeContents(content);
+            const selection = document.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
         }
 
         document.addEventListener('mousemove', handleMouseMove);
