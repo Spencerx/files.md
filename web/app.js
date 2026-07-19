@@ -772,6 +772,15 @@ window.addEventListener('keydown', async (event) => {
     }
 }, true);
 
+// Cmd/Ctrl+S: no need, everything is autosaved
+document.addEventListener('keydown', (event) => {
+    if ((event.metaKey || event.ctrlKey) && !event.shiftKey && !event.altKey && event.key === 's') {
+        event.preventDefault();
+        const keystroke = navigator.platform.toLowerCase().includes('mac') ? '⌘S' : 'Ctrl+S';
+        showToast(`It is autosaved, no need to press ${keystroke} :)`);
+    }
+});
+
 document.addEventListener('keydown', (event) => {
     // TODO cursor shouldn't jump to top once we hit "esc".
     if (event.key === 'Escape') {
